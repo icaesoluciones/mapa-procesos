@@ -108,7 +108,7 @@ dialog::backdrop{background:#0006}dialog h3{font-size:20px;color:var(--ink);font
 .aed textarea{resize:vertical;min-height:36px}
 .dic{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:0 0 10px;background:var(--soft)}.dic textarea{width:100%;min-height:64px;border:1px solid var(--line);border-radius:6px;padding:7px 8px;font-size:15px;background:var(--panel);margin-top:8px}
 #dicBtn.on{background:var(--acc);border-color:var(--acc);color:#fff}
-.aed .n{width:62px}.aed .t{width:118px}.aed .s{width:84px}.aed .d{width:40px}
+.aed .n{width:62px}.aed .t{width:118px}.aed .s{width:200px}.rama{display:flex;gap:4px;margin-bottom:4px}.rama input[name=rl]{width:72px;flex:none}.rama input[name=rn]{width:58px;flex:none}.rama .x{width:30px;min-height:32px}.ramas .lnk{font-size:13px;padding:0}.aed .d{width:40px}
 #toast{position:fixed;left:50%;bottom:20px;transform:translate(-50%,30px);opacity:0;background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;font-size:14px;transition:.25s;pointer-events:none;max-width:90vw;z-index:30}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 #port,#admin{padding:14px max(2vw,14px)}
@@ -264,13 +264,21 @@ function layoutFlow(d){
     wrapTxt(l,18).forEach((t,j,a)=>{g+=`<text x="${10+lw/2}" y="${y+LH/2+(j-(a.length-1)/2)*18+5}" text-anchor="middle" font-size="15" font-weight="700" fill="#141210">${esc(t)}</text>`})});
   const byOrden={};acts.forEach(a=>{byOrden[a.id]=a});
   acts.forEach((a,i)=>{
-    let tg=(Array.isArray(a.sig)?a.sig:[]).filter(id=>P[id]&&id!==a.id);
-    if(!tg.length&&a.forma!=='Fin'&&acts[i+1])tg=[acts[i+1].id];
-    const p=P[a.id];
-    tg.forEach(t=>{const q=P[t];let path;
-      if(q.i>p.i){const x1=p.x+bw,y1=p.y+bh/2,x2=q.x,y2=q.y+bh/2,m=x1+(cw-bw)/2;path=`M${x1} ${y1} H${m} V${y2} H${x2-2}`}
-      else{const lb=top+(Math.max(p.lane,q.lane)+1)*LH-10,x1=p.x+bw/2,x2=q.x+bw/2;path=`M${x1} ${p.y+bh} V${lb} H${x2} V${q.y+bh+2}`}
-      g+=`<path d="${path}" fill="none" stroke="#555" stroke-width="1.6" marker-end="url(#ar)"/>`})});
+    const p=P[a.id],dec=a.forma==='Decisión';
+    let tg;
+    if(dec&&Array.isArray(a.ramas)&&a.ramas.length)tg=a.ramas.filter(r=>P[r.dest]&&r.dest!==a.id).map(r=>({id:r.dest,lbl:r.etiqueta}));
+    else{tg=(Array.isArray(a.sig)?a.sig:[]).filter(id=>P[id]&&id!==a.id).map(id=>({id,lbl:''}));if(!tg.length&&a.forma!=='Fin'&&acts[i+1])tg=[{id:acts[i+1].id,lbl:''}]}
+    tg.forEach((t,k)=>{const q=P[t.id],cx=p.x+bw/2;let path,lx,ly;
+      if(k===0){const x1=p.x+bw+(dec?4:0),y1=p.y+bh/2;
+        if(q.i>p.i){const m=p.x+bw+(cw-bw)/2,y2=q.y+bh/2;path=`M${x1} ${y1} H${m} V${y2} H${q.x-2}`}
+        else{const lb=top+(Math.max(p.lane,q.lane)+1)*LH-10;path=`M${x1} ${y1} H${p.x+bw+(cw-bw)/2-6} V${lb} H${q.x+bw/2} V${q.y+bh+2}`}
+        lx=x1+4;ly=y1-6}
+      else{const y1=p.y+bh+(dec?6:0),yb=Math.min(top+(p.lane+1)*LH-6,y1+14+(k-1)*8);
+        if(q.i>p.i){const m=q.x-(cw-bw)/2+6+(k-1)*5;path=`M${cx} ${y1} V${yb} H${m} V${q.y+bh/2} H${q.x-2}`}
+        else{path=`M${cx} ${y1} V${yb} H${q.x+bw/2+(k-1)*8} V${q.y+bh+2}`}
+        lx=cx+5;ly=y1+13}
+      g+=`<path d="${path}" fill="none" stroke="#555" stroke-width="1.6" marker-end="url(#ar)"/>`;
+      if(t.lbl)g+=`<text x="${lx}" y="${ly}" font-size="12" font-weight="700" fill="#c8371e">${esc(t.lbl)}</text>`})});
   acts.forEach((a,i)=>{const p=P[a.id],cx=p.x+bw/2,cy=p.y+bh/2,f=a.forma||'Actividad',sub=kids(d.id,a.id).length;
     if(f==='Decisión')g+=`<path d="M${cx} ${p.y-6} L${p.x+bw+4} ${cy} L${cx} ${p.y+bh+6} L${p.x-4} ${cy}Z" fill="#fff" stroke="#141210" stroke-width="1.6"/>`;
     else if(f==='Inicio'||f==='Fin')g+=`<rect x="${p.x}" y="${p.y+8}" width="${bw}" height="${bh-16}" rx="${(bh-16)/2}" fill="${f==='Inicio'?'#e9f2ec':'#f6e4df'}" stroke="#141210" stroke-width="1.6"/>`;
@@ -397,7 +405,7 @@ function panel(force){
   const a=actOf(d,S.act);let h='';
   if(a){
     h+=`<p class="eyebrow">Actividad ${orderActs(d).indexOf(a)+1} · <button class="lnk" data-a="sel-act" data-id="">ver diagrama completo</button></p><h2>${esc(a.nombre)}</h2>
-    <dl class="meta"><dt>Responsable</dt><dd>${esc(a.responsable||'—')}</dd>${a.forma&&a.forma!=='Actividad'?`<dt>Tipo</dt><dd>${esc(a.forma)}</dd>`:''}</dl>
+    <dl class="meta"><dt>Responsable</dt><dd>${esc(a.responsable||'—')}</dd>${a.forma&&a.forma!=='Actividad'?`<dt>Tipo</dt><dd>${esc(a.forma)}</dd>`:''}${a.forma==='Decisión'&&(a.ramas||[]).length?`<dt>Opciones</dt><dd>${a.ramas.map(r=>{const t=actOf(d,r.dest);return esc(r.etiqueta)+' → '+(t?esc(t.nombre):'<i>sin destino</i>')}).join('<br>')}</dd>`:''}</dl>
     ${a.descripcion?`<p class="desc">${esc(a.descripcion)}</p>`:'<p class="mut">Sin descripción.</p>'}${canWrite?'<button class="btn sm" data-a="edit-act">Editar actividad</button>':''}`;
     const ch=kids(d.id,a.id),anc=new Set([d.id,...ancestors(d.id).map(x=>x.d.id)]);
     const cand=Object.values(S.diag).filter(x=>!anc.has(x.id)&&!(x.parentId===d.id&&x.parentActId===a.id)).sort(byName);
@@ -432,44 +440,53 @@ function formHtml(){const t=S.tab,i=S.form.id?(S.items[S.form.id]||{}):{},v=k=>e
 
 /* ---------- formulario de actividades ---------- */
 function responsables(){return [...new Set(Object.values(S.diag).flatMap(d=>(d.actividades||[]).map(a=>String(a.responsable||'').trim())).filter(Boolean))].sort()}
-function actRow(a,i,ord){const nx=(a.sig||[]).map(id=>ord.indexOf(id)+1).filter(n=>n>0).join(', ');
+function ramasOf(a){if(Array.isArray(a.ramas)&&a.ramas.length)return a.ramas;const s=a.sig||[];return [{etiqueta:'Sí',dest:s[0]||''},{etiqueta:'No',dest:s[1]||''}]}
+function ramaRow(r,ord){const n=r.dest?ord.indexOf(r.dest)+1:(r.n||'');return `<div class="rama"><input name="rl" value="${esc(r.etiqueta||'')}" placeholder="Opción" aria-label="Opción"><input name="rn" type="number" min="1" value="${n>0?n:''}" placeholder="#" aria-label="Va a la actividad número"><button type="button" class="x" data-a="rama-del" aria-label="Quitar opción">×</button></div>`}
+function sigCell(a,ord){
+  if((a.forma||'Actividad')==='Decisión')return `<div class="ramas">${ramasOf(a).map(r=>ramaRow(r,ord)).join('')}<button type="button" class="lnk" data-a="rama-add">+ opción</button></div>`;
+  const nx=(a.sig||[]).map(id=>ord.indexOf(id)+1).filter(n=>n>0).join(', ');return `<input name="sig" value="${esc(nx)}" placeholder="auto" aria-label="Va a">`}
+function actRow(a,i,ord){
   return `<tr data-id="${esc(a.id||'')}"><td class="n"><input type="number" min="1" name="orden" value="${i+1}" aria-label="Orden"></td>
   <td><input name="nombre" value="${esc(a.nombre||'')}" placeholder="Nombre de la actividad" aria-label="Actividad"></td>
   <td><input name="responsable" list="dlResp" value="${esc(a.responsable||'')}" placeholder="Área o puesto" aria-label="Responsable"></td>
   <td class="t">${sel('forma',FORMAS,a.forma||'Actividad')}</td>
   <td><textarea name="descripcion" rows="1" placeholder="Breve descripción (se ve al pasar el cursor)" aria-label="Descripción">${esc(a.descripcion||'')}</textarea></td>
-  <td class="s"><input name="sig" value="${esc(nx)}" placeholder="auto" aria-label="Va a"></td>
+  <td class="s">${sigCell(a,ord)}</td>
   <td class="d"><button type="button" class="x" data-a="row-del" aria-label="Quitar fila">×</button></td></tr>`}
 function actsDlg(){
   const d=D(S.cur);if(!d)return;const ord=orderActs(d),ids=ord.map(a=>a.id);
   if(!canWrite){openDlg(`<h3>Actividades · ${esc(d.nombre)}</h3><div class="aed"><table><thead><tr><th>#</th><th>Actividad</th><th>Responsable</th><th>Descripción</th></tr></thead><tbody>${ord.map((a,i)=>`<tr><td>${i+1}</td><td>${esc(a.nombre)}</td><td>${esc(a.responsable||'')}</td><td>${esc(a.descripcion||'')}</td></tr>`).join('')}</tbody></table></div><div class="row end"><button type="button" class="btn" data-a="dlg-close">Cerrar</button></div>`,()=>{},null,true);return}
   openDlg(`<h3>Actividades · ${esc(d.nombre)}</h3>
-  <p class="hint">Cada fila es una actividad. El responsable define el carril del diagrama generado. “Va a” es opcional: números de las actividades siguientes separados por coma (p. ej. “5, 7” en una decisión); vacío = la siguiente en orden.${d.kind!=='form'?' Las filas nuevas no tienen zona en el archivo original: se ven en la vista “Generado” y en la lista.':''}</p>
+  <p class="hint">Cada fila es una actividad. El responsable define el carril del diagrama generado. “Va a” es opcional: número de la actividad siguiente (vacío = la siguiente en orden). En una <b>Decisión</b> defines cada opción (p. ej. Sí → 4, No → 2) y puedes agregar más.${d.kind!=='form'?' Las filas nuevas no tienen zona en el archivo original: se ven en la vista “Generado” y en la lista.':''}</p>
   <datalist id="dlResp">${responsables().map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
   <div class="dic"><div class="row" style="margin:0"><strong style="margin-right:auto">Dictado</strong><button type="button" class="btn sm" id="dicBtn" data-a="dic-start">Dictar con micrófono</button><button type="button" class="btn sm" data-a="dic-apply">Pasar texto al formulario</button></div>
-  <p class="hint" style="margin-top:6px">Di, por ejemplo: “<b>Actividad</b> recibir planos <b>responsable</b> presupuesto <b>descripción</b> se reciben planos del cliente <b>siguiente</b>”. Tipos: actividad, decisión, inicio, fin, documento. Flechas: “<b>conecta con</b> cuatro y dos”. “<b>Borrar</b>” quita la última fila.</p>
+  <p class="hint" style="margin-top:6px">Di, por ejemplo: “<b>Actividad</b> recibir planos <b>responsable</b> presupuesto <b>descripción</b> se reciben planos del cliente <b>siguiente</b>”. Tipos: actividad, decisión, inicio, fin, documento. Flechas: “<b>conecta con</b> cuatro”; en una decisión: “<b>conecta con sí</b> cuatro <b>no</b> dos”. “<b>Borrar</b>” quita la última fila.</p>
   <textarea id="dicTxt" aria-label="Texto dictado" placeholder="Aquí aparece lo dictado. Si el micrófono no está disponible, dicta aquí con el micrófono del teclado del celular o con Win + H en Windows y pulsa “Pasar texto al formulario”."></textarea><p class="hint" id="dicInterim" style="min-height:1.2em;margin:4px 0 0"></p></div>
-  <div class="aed"><table><thead><tr><th>#</th><th>Actividad</th><th>Responsable</th><th>Tipo</th><th>Descripción</th><th>Va a</th><th></th></tr></thead><tbody id="aedBody">${ord.map((a,i)=>actRow(a,i,ids)).join('')}</tbody></table></div>
+  <div class="aed"><table><thead><tr><th>#</th><th>Actividad</th><th>Responsable</th><th>Tipo</th><th>Descripción</th><th>Va a / opciones</th><th></th></tr></thead><tbody id="aedBody">${ord.map((a,i)=>actRow(a,i,ids)).join('')}</tbody></table></div>
   <div class="row"><button type="button" class="btn sm" data-a="row-add">+ Agregar actividad</button></div>
   <div class="row end"><button type="button" class="btn" data-a="dlg-close">Cancelar</button><button class="btn pri">Guardar y diagramar</button></div>`,
   ()=>{
     stopDictado();if($('#dicTxt')&&$('#dicTxt').value.trim())flushDictado(true);
-    const rows=[...document.querySelectorAll('#aedBody tr')].map((tr,i)=>{const g=n=>tr.querySelector(`[name=${n}]`).value;return{id:tr.dataset.id||uid(),o:num(g('orden'))||i+1,i,nombre:g('nombre').trim(),responsable:g('responsable').trim(),forma:g('forma'),descripcion:g('descripcion').trim(),sigTxt:g('sig')}}).filter(r=>r.nombre);
+    const rows=[...document.querySelectorAll('#aedBody tr')].map((tr,i)=>{const g=n=>tr.querySelector(`[name=${n}]`).value;const sg=tr.querySelector('[name=sig]');return{id:tr.dataset.id||uid(),o:num(g('orden'))||i+1,i,nombre:g('nombre').trim(),responsable:g('responsable').trim(),forma:g('forma'),descripcion:g('descripcion').trim(),sigTxt:sg?sg.value:'',
+      ramasTxt:[...tr.querySelectorAll('.rama')].map(x=>({etiqueta:x.querySelector('[name=rl]').value.trim(),n:num(x.querySelector('[name=rn]').value)})).filter(x=>x.etiqueta||x.n)}}).filter(r=>r.nombre);
     const byO={};rows.forEach(r=>{if(!(r.o in byO))byO[r.o]=r.id});
     rows.sort((a,b)=>a.o-b.o||a.i-b.i);
     const gone=(d.actividades||[]).filter(a=>!rows.some(r=>r.id===a.id));
     const blocked=gone.filter(a=>kids(d.id,a.id).length);
     if(blocked.length){toast('No se puede quitar “'+blocked[0].nombre+'”: tiene un flujo de detalle vinculado.');return false}
     const old=Object.fromEntries((d.actividades||[]).map(a=>[a.id,a]));
-    const acts=rows.map((r,k)=>({...(old[r.id]||{}),id:r.id,orden:k+1,nombre:r.nombre,responsable:r.responsable,forma:r.forma,descripcion:r.descripcion,
-      sig:r.sigTxt.split(/[,;\s]+/).map(Number).filter(n=>byO[n]&&byO[n]!==r.id).map(n=>byO[n])}));
+    const acts=rows.map((r,k)=>{const dec=r.forma==='Decisión';return{...(old[r.id]||{}),id:r.id,orden:k+1,nombre:r.nombre,responsable:r.responsable,forma:r.forma,descripcion:r.descripcion,
+      sig:dec?[]:r.sigTxt.split(/[,;\s]+/).map(Number).filter(n=>byO[n]&&byO[n]!==r.id).map(n=>byO[n]),
+      ramas:dec?r.ramasTxt.map((x,j)=>({etiqueta:x.etiqueta||('Opción '+(j+1)),dest:byO[x.n]&&byO[x.n]!==r.id?byO[x.n]:''})):[]}});
+    const inc=acts.filter(a=>a.forma==='Decisión'&&(a.ramas.length<2||a.ramas.some(x=>!x.dest)));
     gone.forEach(a=>itemsAt(d.id,a.id).forEach(it=>put('items',{...it,actividadId:null})));
-    put('diagramas',{...D(d.id),actividades:acts,revisado:true});toast('Actividades guardadas.')},null,true)}
+    put('diagramas',{...D(d.id),actividades:acts,revisado:true});toast(inc.length?'Guardado. Revisa la decisión “'+inc[0].nombre+'”: necesita al menos 2 opciones, cada una con su actividad destino.':'Actividades guardadas.')},null,true)}
 function actDlg(a){const d=D(S.cur);
   openDlg(`<h3>Editar actividad</h3><label>Actividad<input name="nombre" required value="${esc(a.nombre)}"></label>
   <div class="two"><label>Responsable<input name="responsable" list="dlResp1" value="${esc(a.responsable||'')}"></label><label>Tipo${sel('forma',FORMAS,a.forma||'Actividad')}</label></div>
   <datalist id="dlResp1">${responsables().map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
   <label>Descripción breve<textarea name="descripcion" rows="4">${esc(a.descripcion||'')}</textarea></label>
+  ${a.forma==='Decisión'?'<p class="hint">Las opciones de la decisión se editan en “Actividades (formulario)”.</p>':''}
   <div class="row end">${kids(d.id,a.id).length?'':'<button type="button" class="btn" data-a="del-act" style="margin-right:auto">Eliminar actividad</button>'}<button type="button" class="btn" data-a="dlg-close">Cancelar</button><button class="btn pri">Guardar</button></div>`,
   fd=>{const cur=D(d.id);put('diagramas',{...cur,actividades:(cur.actividades||[]).map(x=>x.id===a.id?{...x,nombre:String(fd.get('nombre')).trim(),responsable:String(fd.get('responsable')||'').trim(),forma:fd.get('forma'),descripcion:String(fd.get('descripcion')||'').trim()}:x)})})}
 
@@ -494,11 +511,14 @@ function parseBlock(b){
     if(k.kw in FORMA_KW){r.forma=FORMA_KW[k.kw];r.nombre=cleanV(v)}
     else if(k.kw==='responsable')r.responsable=cleanV(v);
     else if(k.kw==='descripcion')r.descripcion=cleanV(v);
-    else r.sigTxt=toNums(v)});
+    else{r.sigTxt=toNums(v);r.ramasRaw=v}});
+  if(r.forma==='Decisión'){const tk=(deacc(r.ramasRaw||'').match(/\d+|[a-z]+/g)||[]).filter(w=>w!=='y'&&w!=='a'&&w!=='va'&&w!=='la'&&w!=='actividad');const rs=[];let lbl='';
+    tk.forEach(w=>{const n=/^\d+$/.test(w)?+w:NUMW[w];if(n){rs.push({etiqueta:lbl||(rs.length===0?'Sí':rs.length===1?'No':'Opción '+(rs.length+1)),n});lbl=''}else lbl=(w==='si'?'Sí':w[0].toUpperCase()+w.slice(1))});
+    r.ramas=rs.length?rs:[{etiqueta:'Sí',n:''},{etiqueta:'No',n:''}]}
   return r.nombre?r:null}
 function addParsedRow(r){const tb=$('#aedBody');if(!tb)return;const n=tb.rows.length;
   tb.insertAdjacentHTML('beforeend',actRow({nombre:r.nombre,responsable:r.responsable,forma:r.forma,descripcion:r.descripcion},n,[]));
-  const tr=tb.rows[n];tr.querySelector('[name=sig]').value=r.sigTxt;tr.scrollIntoView({block:'nearest'})}
+  const tr=tb.rows[n];if(r.forma==='Decisión')tr.querySelector('td.s').innerHTML=sigCell({forma:'Decisión',ramas:r.ramas},[]);else tr.querySelector('[name=sig]').value=r.sigTxt;tr.scrollIntoView({block:'nearest'})}
 function flushDictado(final){const ta=$('#dicTxt');if(!ta)return;
   const parts=ta.value.split(SEP),keep=final?'':parts.pop();let n=0;
   parts.forEach(p=>{const r=parseBlock(p);if(!r)return;if(r.cmd){const tb=$('#aedBody');if(tb&&tb.rows.length){tb.rows[tb.rows.length-1].remove();n--;toast('Última fila eliminada.')}}else{addParsedRow(r);n++}});
@@ -577,6 +597,8 @@ document.addEventListener('click',async e=>{
     itemsAt(d.id,aid).forEach(it=>put('items',{...it,actividadId:null}));put('diagramas',{...D(d.id),actividades:(D(d.id).actividades||[]).filter(x=>x.id!==aid).map(x=>({...x,sig:(x.sig||[]).filter(s=>s!==aid)}))})}
   else if(a==='row-add'){const tb=$('#aedBody'),n=tb.rows.length;tb.insertAdjacentHTML('beforeend',actRow({},n,[]));tb.rows[n].querySelector('[name=nombre]').focus()}
   else if(a==='row-del'){b.closest('tr').remove()}
+  else if(a==='rama-add'){b.insertAdjacentHTML('beforebegin',ramaRow({etiqueta:'',n:''},[]));b.previousElementSibling.querySelector('[name=rl]').focus()}
+  else if(a==='rama-del'){b.closest('.rama').remove()}
   else if(a==='dic-start'){if(listening){stopDictado();flushDictado(false)}else startDictado()}
   else if(a==='dic-apply'){flushDictado(true)}
   else if(a==='scope'){const d=D(S.cur),ac=actOf(d,S.act);S.scope={d:d.id,a:S.act,label:ac?ac.nombre:d.nombre};S.view='port';$('#fTipo').value=S.tab;render()}
@@ -587,6 +609,8 @@ document.addEventListener('click',async e=>{
 });
 document.addEventListener('change',e=>{const t=e.target;
   if(t.dataset.a==='link-existing'&&t.value){const c=D(t.value);if(c)put('diagramas',{...c,parentId:S.cur,parentActId:S.act})}
+  else if(t.name==='forma'&&t.closest('#aedBody')){const tr=t.closest('tr'),d=D(S.cur),ord=orderActs(d).map(a=>a.id),cell=tr.querySelector('td.s');
+    const cur=t.value==='Decisión'?{forma:'Decisión',ramas:[{etiqueta:'Sí',n:''},{etiqueta:'No',n:''}]}:{forma:t.value,sig:[]};cell.innerHTML=sigCell(cur,ord)}
   else if(t.name==='origen'){const fb=$('#fileBox');if(fb){fb.hidden=t.value!=='file';fb.querySelector('[name=file]').required=t.value==='file'}}});
 document.addEventListener('submit',async e=>{const f=e.target;e.preventDefault();
   if(f.id==='itemForm'){const fd=Object.fromEntries(new FormData(f)),old=S.form&&S.form.id?S.items[S.form.id]:null;
@@ -624,7 +648,7 @@ $('#btnCsv').addEventListener('click',async()=>{const q=v=>'"'+String(v??'').rep
 /* descripción al pasar el cursor */
 const ov=$('#ov'),tip=$('#tip');
 function showTip(e,b){const d=D(S.cur),a=actOf(d,b.dataset.id);if(!a){tip.hidden=true;return}
-  const ch=kids(d.id,a.id).length;tip.innerHTML=`<b>${esc(a.nombre)}</b>${a.responsable?`<i>${esc(a.responsable)}</i>`:''}${a.descripcion?esc(a.descripcion.length>320?a.descripcion.slice(0,320)+'…':a.descripcion):'<i>Sin descripción</i>'}${ch?'<i style="margin-top:4px">Doble clic: abrir flujo de detalle</i>':''}`;tip.hidden=false;moveTip(e)}
+  const ch=kids(d.id,a.id).length;tip.innerHTML=`<b>${esc(a.nombre)}</b>${a.responsable?`<i>${esc(a.responsable)}</i>`:''}${a.descripcion?esc(a.descripcion.length>320?a.descripcion.slice(0,320)+'…':a.descripcion):'<i>Sin descripción</i>'}${a.forma==='Decisión'&&(a.ramas||[]).length?'<i style="margin-top:4px">'+a.ramas.map(r=>{const t=actOf(d,r.dest);return esc(r.etiqueta)+' → '+(t?esc(t.nombre):'sin destino')}).join(' · ')+'</i>':''}${ch?'<i style="margin-top:4px">Doble clic: abrir flujo de detalle</i>':''}`;tip.hidden=false;moveTip(e)}
 function moveTip(e){const r=tip.getBoundingClientRect();let x=e.clientX+14,y=e.clientY+16;if(x+r.width>innerWidth-8)x=e.clientX-r.width-14;if(y+r.height>innerHeight-8)y=e.clientY-r.height-12;tip.style.left=Math.max(8,x)+'px';tip.style.top=Math.max(8,y)+'px'}
 ov.addEventListener('mouseover',e=>{const b=e.target.closest('.hs');if(b&&!drag)showTip(e,b)});
 ov.addEventListener('mousemove',e=>{if(!tip.hidden)moveTip(e)});
