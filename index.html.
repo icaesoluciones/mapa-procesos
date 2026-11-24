@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mapa de procesos</title>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light;--bg:#e7e4df;--panel:#fff;--ink:#141210;--mut:#6b665f;--line:#d3cec6;--acc:#c8371e;--accs:#c8371e1f;--ok:#2f7d4b;--soft:#f4f2ee}
+*{box-sizing:border-box;min-width:0}[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Schibsted Grotesk",system-ui,sans-serif;overflow-x:clip}
+button,input,select,textarea{font:inherit;color:inherit}button{cursor:pointer}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+a{color:var(--acc)}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:14px max(2vw,14px);border-bottom:1px solid var(--line)}
+.brand h1{margin:0;font-size:26px;line-height:1.05}
+.brand small{display:block;color:var(--mut);font-size:13px}
+.mode{font-size:12px;border:1px solid var(--ink);border-radius:20px;padding:1px 9px;margin-left:6px;vertical-align:middle}
+.mode.g{background:var(--ink);color:#fff}
+.views{display:flex;gap:4px;margin-left:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:3px}
+.views button{border:0;background:none;padding:8px 14px;border-radius:6px;min-height:38px}
+.views button.on{background:var(--ink);color:#fff}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:7px;padding:8px 14px;min-height:40px}
+.btn:hover{border-color:var(--ink)}.btn:disabled{opacity:.5;cursor:default}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:500}
+.btn.sm{min-height:34px;padding:5px 11px;font-size:14px}
+.lnk{border:0;background:none;padding:4px 2px;color:var(--acc);text-decoration:underline;text-underline-offset:2px;font-size:14px}
+#banner{padding:8px max(2vw,14px);font-size:14px;background:var(--accs)}#banner:empty{display:none}
+.grid{display:grid;grid-template-columns:240px minmax(0,1fr) 360px;gap:14px;padding:14px max(2vw,14px);align-items:start}
+.col{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+.center{padding:0;overflow:hidden}
+h3{font-size:13px;margin:0 0 8px;color:var(--mut);font-weight:500}
+.tree,.tree ul{list-style:none;margin:0;padding:0}.tree ul{padding-left:12px;border-left:1px solid var(--line);margin-left:8px}
+.tn{display:block;width:100%;text-align:left;border:0;background:none;padding:6px 8px;border-radius:6px}
+.tn span{display:block;font-weight:500}.tn small{color:var(--mut);font-size:13px}
+.tn:hover{background:var(--soft)}.tn.on{background:var(--accs)}
+#crumbs{padding:12px 16px 6px;display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;font-size:14px}
+#crumbs button{border:0;background:none;padding:2px;text-decoration:underline;text-underline-offset:2px;color:var(--mut)}
+#crumbs .via{color:var(--mut);font-size:13px}#crumbs strong{font-size:18px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 16px 12px;border-bottom:1px solid var(--line)}
+.bar select{min-height:40px;max-width:min(340px,100%);border:1px solid var(--line);border-radius:7px;background:var(--panel);padding:6px 8px;font-size:16px}
+.bar .sp{flex:1}
+.chk{display:flex;gap:6px;align-items:center;font-size:14px;color:var(--mut);margin:0}.chk input{width:20px;height:20px;margin:0}
+.ic{width:40px;height:40px;border:1px solid var(--line);background:var(--panel);border-radius:7px}
+.pg{display:flex;align-items:center;gap:4px;font-size:14px}
+.seg{display:flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}.seg button{border:0;background:var(--panel);padding:7px 11px;font-size:14px;min-height:38px}.seg button.on{background:var(--ink);color:#fff}
+#editBar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 16px;background:var(--accs);font-size:14px}
+#viewport{overflow:auto;max-height:calc(100vh - 220px);min-height:380px;padding:16px;background:var(--soft)}
+#stage{position:relative;margin:0 auto;background:#fff;box-shadow:0 1px 3px #0002}
+#stage canvas,#stage img{display:block}
+#ov{position:absolute;inset:0}
+#ov.editing{cursor:crosshair;background:repeating-linear-gradient(45deg,transparent 0 12px,#c8371e08 12px 14px)}
+.hs{position:absolute;border:1.5px solid transparent;background:transparent;border-radius:4px;padding:0}
+.hs:hover{border-color:var(--acc);background:#c8371e14}
+.hs.link{border:1.5px dashed #c8371ea0}
+.hs.sel{border:2.5px solid #c8371e;background:#c8371e24}
+#ov.editing .hs{border:1.5px solid #c8371eb0;background:#c8371e10}
+.bdg{position:absolute;top:-9px;right:-9px;min-width:20px;height:20px;border-radius:10px;background:#c8371e;color:#fff;font-size:12px;line-height:20px;padding:0 5px;font-weight:700}
+.arr{position:absolute;bottom:-2px;right:2px;color:#c8371e;font-size:13px;font-weight:700}
+.draw{position:absolute;border:2px solid #c8371e;background:#c8371e1a;pointer-events:none}
+#tip{position:fixed;z-index:20;max-width:300px;background:var(--ink);color:#fff;border-radius:8px;padding:9px 12px;font-size:13px;line-height:1.45;pointer-events:none;box-shadow:0 4px 14px #0004}
+#tip b{display:block;font-size:14px}#tip i{display:block;font-style:normal;color:#e7e4df;opacity:.8;margin-bottom:3px}
+#empty{padding:28px}
+.guide h2{font-size:30px;line-height:1.1;margin:0 0 14px;text-wrap:balance}
+.guide ol{padding-left:20px;margin:0 0 18px}.guide li{margin:6px 0}
+.eyebrow{margin:0;color:var(--mut);font-size:13px}
+#panel h2{font-size:22px;line-height:1.15;margin:2px 0 8px}
+.desc{white-space:pre-wrap;margin:0 0 8px}
+.sub{border-top:1px solid var(--line);padding:10px 0;margin-top:6px}
+h4{margin:0 0 6px;font-size:14px}
+.child{display:flex;gap:4px;margin-bottom:6px}
+.go{flex:1;text-align:left;background:var(--ink);color:#fff;border-color:var(--ink);font-weight:500}.go small{opacity:.7;font-weight:400}
+.x{border:1px solid var(--line);background:none;border-radius:6px;width:36px;min-height:36px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}.row.end{justify-content:flex-end}
+.row select{min-height:34px;border:1px solid var(--line);border-radius:7px;background:var(--panel);font-size:14px;max-width:100%}
+.mut{color:var(--mut);font-size:14px;margin:4px 0}
+dl.meta{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:14px;margin:0 0 8px}dl.meta dt{color:var(--mut)}dl.meta dd{margin:0;overflow-wrap:anywhere}
+.tabs{display:flex;border-bottom:1px solid var(--line);margin:8px 0 10px}
+.tabs button{flex:1;border:0;background:none;padding:9px 4px;font-size:14px;border-bottom:2px solid transparent;min-height:40px}
+.tabs button.on{border-color:var(--acc);font-weight:700}.tabs b{color:var(--mut);font-weight:500}
+.card{border:1px solid var(--line);border-radius:8px;padding:9px 11px;margin-bottom:8px}
+.ch{display:flex;justify-content:space-between;gap:8px;align-items:start}.acts{display:flex;gap:6px;flex:none}
+.card p{margin:4px 0;font-size:14px;color:var(--mut);white-space:pre-wrap}
+.cm{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:13px;margin-top:4px}
+.chip{border:1px solid var(--line);border-radius:20px;padding:1px 8px}
+.chip.pa{background:#c8371e;color:#fff;border-color:#c8371e}.chip.pm{border-color:var(--acc);color:var(--acc)}
+.nw{white-space:nowrap}
+.prog{flex:1;min-width:60px;height:6px;background:var(--soft);border-radius:3px;overflow:hidden}.prog i{display:block;height:100%;background:var(--ink)}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--line);display:inline-block}.dot.ok{background:var(--ok)}.dot.bad{background:var(--acc)}
+.roll{font-size:13px;color:var(--mut);margin:4px 0 8px}
+.iform{border:1px solid var(--ink);border-radius:8px;padding:10px;margin-top:6px}
+label{display:block;font-size:13px;color:var(--mut);margin:6px 0}
+label input,label select,label textarea{display:block;width:100%;margin-top:3px;font-size:16px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:7px 8px;min-height:40px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.radio{display:flex;gap:16px;flex-wrap:wrap;margin:8px 0}.radio label{display:flex;gap:6px;align-items:center;color:var(--ink);font-size:15px}.radio input{width:18px;height:18px;min-height:0;margin:0}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);width:min(560px,94vw);padding:18px 20px}
+dialog.wide{width:min(1180px,97vw)}
+dialog::backdrop{background:#0006}dialog h3{font-size:20px;color:var(--ink);font-weight:700}
+.hint{font-size:13px;color:var(--mut);margin:2px 0 8px}
+.rev{max-height:50vh;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:6px}
+.ri{display:flex;gap:8px;align-items:center;padding:3px 0}.ri input[name^=n]{flex:1;border:1px solid var(--line);border-radius:5px;padding:5px 7px;font-size:15px}
+.ri input[type=checkbox]{width:20px;height:20px}.ri small{color:var(--mut)}
+.aed{max-height:60vh;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.aed table{min-width:900px}
+.aed td{padding:4px;vertical-align:top;border-bottom:1px solid var(--line)}
+.aed th{position:sticky;top:0;background:var(--panel);z-index:1;padding:8px 6px}
+.aed input,.aed select,.aed textarea{width:100%;border:1px solid var(--line);border-radius:5px;padding:6px;font-size:14px;background:var(--panel);min-height:36px}
+.aed textarea{resize:vertical;min-height:36px}
+.dic{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:0 0 10px;background:var(--soft)}.dic textarea{width:100%;min-height:64px;border:1px solid var(--line);border-radius:6px;padding:7px 8px;font-size:15px;background:var(--panel);margin-top:8px}
+#dicBtn.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.aed .n{width:62px}.aed .t{width:118px}.aed .s{width:84px}.aed .d{width:40px}
+#toast{position:fixed;left:50%;bottom:20px;transform:translate(-50%,30px);opacity:0;background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;font-size:14px;transition:.25s;pointer-events:none;max-width:90vw;z-index:30}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+#port,#admin{padding:14px max(2vw,14px)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.kpi b{display:block;font-size:clamp(26px,4vw,38px);line-height:1.05}.kpi span{font-size:13px;color:var(--mut)}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.filters select,.filters input{min-height:40px;border:1px solid var(--line);border-radius:7px;background:var(--panel);padding:6px 9px;font-size:16px}
+.scope{background:var(--accs);border-radius:20px;padding:4px 6px 4px 12px;font-size:14px}
+.tbl{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:500;color:var(--mut);padding:9px 10px;border-bottom:1px solid var(--ink)}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+td button.lnk{text-align:left}
+.lk{display:flex;gap:6px}.lk input{flex:1;font-size:13px;border:1px solid var(--line);border-radius:6px;padding:6px;min-height:36px;background:var(--soft)}
+.msgbox{max-width:560px;margin:12vh auto;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:28px}
+@media(max-width:1180px){.grid{grid-template-columns:minmax(0,1fr) 340px}#tree{grid-column:1/-1}}
+@media(max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}#viewport{max-height:70vh;min-height:300px}}
+@media(max-width:600px){table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--line)}.stack td{display:flow-root;border:0;padding:3px 10px;padding-inline-start:8em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;color:var(--mut)}.stack td:empty{display:none}.two{grid-template-columns:1fr}.views{margin-left:0}}
+@media(prefers-reduced-motion:reduce){#toast{transition:none}}
+</style>
+<script>window.__errs=[];window.addEventListener('error',function(e){var m=(e.message||'Error')+(e.lineno?' (línea '+e.lineno+':'+e.colno+')':'')+(e.filename?' '+String(e.filename).slice(-60):'');window.__errs.push(m);var b=document.getElementById('jsErr');if(!b){b=document.createElement('pre');b.id='jsErr';b.style.cssText='position:fixed;left:8px;right:8px;bottom:8px;z-index:99;background:#7a1d0e;color:#fff;padding:10px 12px;border-radius:8px;font:12px/1.4 monospace;white-space:pre-wrap;max-height:40vh;overflow:auto';(document.body||document.documentElement).appendChild(b)}b.textContent='Error de la aplicación (envía una captura a soporte):\n'+window.__errs.join('\n')});</script>
+<script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
+</head>
+<body>
+<header class="top" id="top">
+  <div class="brand"><h1>Mapa de procesos<span class="mode" id="modeTag"></span></h1><small id="cliName"></small></div>
+  <nav class="views" id="views"><button data-v="mapa" class="on">Mapa</button><button data-v="port">Portafolio de mejora</button></nav>
+  <button class="btn" id="btnRefresh" title="Traer los cambios de otras personas">Actualizar</button>
+  <button id="btnNew" class="btn pri" hidden>+ Diagrama general</button>
+</header>
+<div id="banner"></div>
+<main id="mapa" class="grid">
+  <aside id="tree" class="col"></aside>
+  <section class="col center">
+    <div id="crumbs"></div>
+    <div class="bar">
+      <select id="actSel" aria-label="Actividad"></select>
+      <label class="chk"><input type="checkbox" id="autoOpen"> Abrir flujo al seleccionar</label>
+      <span class="sp"></span>
+      <div class="seg" id="vistaSeg" hidden><button data-vista="archivo">Original</button><button data-vista="generado">Generado</button></div>
+      <div class="pg" id="pg"><button class="ic" id="pPrev" aria-label="Página anterior">‹</button><span id="pInfo"></span><button class="ic" id="pNext" aria-label="Página siguiente">›</button></div>
+      <button class="ic" id="zOut" aria-label="Alejar">−</button><button class="ic" id="zIn" aria-label="Acercar">+</button>
+      <button id="btnActs" class="btn" hidden>Actividades (formulario)</button>
+      <button id="btnEdit" class="btn" hidden>Más opciones</button>
+    </div>
+    <div id="editBar" hidden>
+      <span id="editHint">Arrastra sobre el diagrama para marcar una actividad.</span>
+      <button class="btn sm" id="btnDetect">Detectar actividades del PDF</button>
+      <button class="btn sm" id="btnMeta">Datos del diagrama</button>
+      <button class="btn sm" id="btnReplace">Reemplazar archivo</button>
+      <button class="btn sm" id="btnDelDiag">Eliminar diagrama</button>
+    </div>
+    <div id="viewport"><div id="stage" hidden><canvas id="cv"></canvas><img id="im" alt="Diagrama" hidden><div id="ov"></div></div><div id="empty"></div></div>
+  </section>
+  <aside id="panel" class="col"></aside>
+</main>
+<main id="port" hidden>
+  <div class="kpis" id="kpis"></div>
+  <div class="filters">
+    <select id="fTipo" aria-label="Tipo"><option value="">Todos los tipos</option><option value="oportunidad">Oportunidades</option><option value="iniciativa">Iniciativas</option><option value="indicador">Indicadores</option></select>
+    <select id="fEst" aria-label="Estado"><option value="">Todos</option><option value="open">Solo abiertos / fuera de meta</option></select>
+    <input id="fQ" type="search" placeholder="Buscar título, responsable o proceso" aria-label="Buscar">
+    <span id="fScope"></span><span style="flex:1"></span>
+    <button class="btn sm" id="btnCsv">Copiar CSV</button>
+  </div>
+  <div class="tbl"><table class="stack"><thead><tr><th>Tipo</th><th>Título</th><th>Ubicación</th><th>Estado / valor</th><th>Responsable</th></tr></thead><tbody id="prows"></tbody></table></div>
+</main>
+<main id="admin" hidden></main>
+<dialog id="dlg"><form id="dlgForm"></form></dialog>
+<div id="tip" hidden></div>
+<div id="toast" role="status"></div>
+<input type="file" id="fileReplace" hidden accept="application/pdf,image/png,image/jpeg,image/svg+xml,image/webp">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+<script>
+/* ===== CONFIGURACIÓN: URL del servidor (Apps Script › Implementar › Gestionar implementaciones › URL que termina en /exec) ===== */
+const API_URL='https://script.google.com/macros/s/AKfycbwdsMuhqMk2BCuMwMAqx8Ih2GX0O_QBVmbEwIGqx7eb82JdCAEhoWjwhVuRGfnKHgjPNQ/exec';
+</script>
+<script>
+{
+const TIPOS=['Funciones cruzadas','VSM','Mapa de procesos','SIPOC','Flujograma','BPMN','Otro'];
+const FORMATOS=['Visio','Lucidchart','Bizagi','Draw.io','PowerPoint','Formulario','Otro'];
+const FORMAS=['Actividad','Decisión','Inicio','Fin','Documento'];
+const IT={oportunidad:{lbl:'Oportunidades',one:'oportunidad',est:['Identificada','En análisis','En implementación','Cerrada']},
+ iniciativa:{lbl:'Iniciativas',one:'iniciativa',est:['No iniciada','En curso','Completada','Detenida']},
+ indicador:{lbl:'Indicadores',one:'indicador',est:[]}};
+const TT=['oportunidad','iniciativa','indicador'];
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,9);
+const clone=o=>JSON.parse(JSON.stringify(o));
+const norm=s=>String(s||'').toLowerCase().replace(/\s+/g,' ').trim();
+const num=v=>{const n=+v;return isFinite(n)?n:0};
+const S={diag:{},items:{},cur:null,act:null,page:1,pages:1,zoom:1,edit:false,view:'mapa',tab:'oportunidad',form:null,auto:false,scope:null};
+let BOOT={mode:'cargando'},C='',K='',canWrite=false;
+const mem={},urls={},pdfCache={},fileReq={},queue={};
+let dlgOk=null,dlgCancel=null,pending=0;
+
+/* ---------- servidor (google.script.run) ---------- */
+async function run(fn,...args){
+  let r;
+  try{r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn,args}),redirect:'follow'})}
+  catch(e){throw new Error('Sin conexión con el servidor. Revisa internet o la URL del servidor.')}
+  let j;try{j=await r.json()}catch(e){throw new Error('El servidor no respondió correctamente (revisa que la implementación tenga acceso “Cualquier persona”).')}
+  if(!j.ok)throw new Error(j.error||'Error del servidor.');return j.data}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),4200)}
+function busy(on){pending=Math.max(0,pending+(on?1:-1));$('#btnRefresh').textContent=pending?'Guardando…':'Actualizar'}
+function enqueue(key,fn){queue[key]=(queue[key]||Promise.resolve()).then(()=>{busy(true);return fn()}).catch(e=>{toast('No se guardó: '+e.message);load()}).finally(()=>busy(false));return queue[key]}
+async function put(col,obj){const k=col==='diagramas'?'diag':'items',o=clone(obj);S[k][o.id]=o;render();if(!canWrite)return;return enqueue(o.id,()=>run('api_save',C,K,col,o))}
+async function del(col,id){const k=col==='diagramas'?'diag':'items';delete S[k][id];render();if(!canWrite)return;return enqueue(id,()=>run('api_delete',C,K,col,id))}
+async function load(){try{const r=await run('api_load',C);S.diag=Object.fromEntries((r.diag||[]).map(d=>[d.id,d]));S.items=Object.fromEntries((r.items||[]).map(i=>[i.id,i]));$('#banner').textContent='';render(true)}catch(e){$('#banner').textContent='No se pudieron cargar los datos: '+e.message}}
+function b64ToBlob(b64,mime){const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new Blob([u],{type:mime})}
+const fileToB64=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]||'');r.onerror=rej;r.readAsDataURL(f)});
+function blobOf(id){if(!id)return Promise.resolve(null);if(mem[id])return Promise.resolve(mem[id]);if(!fileReq[id])fileReq[id]=run('api_file',C,id).then(r=>(mem[id]=b64ToBlob(r.b64,r.mime))).catch(e=>{delete fileReq[id];throw e});return fileReq[id]}
+async function uploadFile(f){
+  const ok=['application/pdf','image/png','image/jpeg','image/svg+xml','image/webp'];
+  if(!ok.includes(f.type))throw new Error('Formato no admitido. Usa PDF, PNG, JPG, SVG o WEBP.');
+  if(f.size>20*1024*1024)throw new Error('El archivo supera 20 MB.');
+  toast('Subiendo archivo…');busy(true);
+  try{const id=await run('api_upload',C,K,f.name,f.type,await fileToB64(f));mem[id]=f;return{id,kind:f.type==='application/pdf'?'pdf':'img'}}finally{busy(false)}}
+
+/* ---------- modelo ---------- */
+const D=id=>id?S.diag[id]:null;
+const byName=(a,b)=>String(a.nombre||'').localeCompare(String(b.nombre||''),'es');
+const kids=(dId,aId)=>Object.values(S.diag).filter(d=>d.parentId===dId&&(aId===undefined||d.parentActId===aId)).sort(byName);
+const roots=()=>Object.values(S.diag).filter(d=>!d.parentId||!D(d.parentId)).sort((a,b)=>String(a.creado||'').localeCompare(String(b.creado||'')));
+function subtree(id,seen=new Set()){if(seen.has(id))return[];seen.add(id);return[id,...kids(id).flatMap(k=>subtree(k.id,seen))]}
+function ancestors(id){const out=[];let d=D(id),g=0;while(d&&d.parentId&&D(d.parentId)&&g++<40){out.unshift({d:D(d.parentId),act:d.parentActId});d=D(d.parentId)}return out}
+const actOf=(d,aId)=>(d&&d.actividades||[]).find(a=>a.id===aId)||null;
+const orderActs=d=>(d&&d.actividades||[]).map((a,i)=>({a,i})).sort((x,y)=>(num(x.a.orden)||1e6+x.i)-(num(y.a.orden)||1e6+y.i)||x.i-y.i).map(x=>x.a);
+function offTarget(i){const m=parseFloat(i.meta),a=parseFloat(i.actual);if(isNaN(m)||isNaN(a))return false;return i.sentido==='min'?a>m:a<m}
+const isOpen=i=>i.tipo==='oportunidad'?i.estado!=='Cerrada':i.tipo==='iniciativa'?!['Completada','Detenida'].includes(i.estado):offTarget(i);
+const itemsAt=(dId,aId,t)=>Object.values(S.items).filter(i=>i.diagramaId===dId&&(i.actividadId||null)===(aId||null)&&(!t||i.tipo===t));
+function scopeIds(dId,aId){const ch=aId?kids(dId,aId):kids(dId);return new Set(ch.flatMap(c=>subtree(c.id)))}
+const rolled=(dId,aId,t)=>{const ids=scopeIds(dId,aId);return Object.values(S.items).filter(i=>ids.has(i.diagramaId)&&(!t||i.tipo===t))};
+function pathOf(i){const d=D(i.diagramaId);if(!d)return'(sin diagrama)';const p=ancestors(d.id).map(x=>x.d.nombre);p.push(d.nombre);const a=actOf(d,i.actividadId);if(a)p.push(a.nombre);return p.join(' › ')}
+const isGen=d=>d&&(d.kind==='form'||d.vista==='generado');
+
+/* ---------- diagrama generado desde el formulario ---------- */
+let genCache={key:'',L:null};
+function wrapTxt(s,n){const w=String(s||'').split(/\s+/),L=[''];w.forEach(x=>{if((L[L.length-1]+' '+x).trim().length>n&&L[L.length-1])L.push(x);else L[L.length-1]=(L[L.length-1]+' '+x).trim()});return L.slice(0,4)}
+function layoutFlow(d){
+  const acts=orderActs(d),key=JSON.stringify([d.nombre,acts,kids(d.id).map(k=>k.parentActId)]);
+  if(genCache.key===key)return genCache.L;
+  const lanes=[...new Set(acts.map(a=>String(a.responsable||'').trim()||'Sin responsable'))];
+  const lw=170,cw=200,LH=140,top=56,bw=160,bh=72,W=Math.max(900,lw+30+Math.max(1,acts.length)*cw),H=top+Math.max(1,lanes.length)*LH+16;
+  const pos={},P={};
+  acts.forEach((a,i)=>{const lane=lanes.indexOf(String(a.responsable||'').trim()||'Sin responsable');const x=lw+20+i*cw+(cw-bw)/2,y=top+lane*LH+(LH-bh)/2;P[a.id]={x,y,lane,i};pos[a.id]={x:x/W,y:y/H,w:bw/W,h:bh/H}});
+  let g=`<rect width="${W}" height="${H}" fill="#fff"/><text x="20" y="36" font-size="22" font-weight="700" fill="#141210">${esc(d.nombre)}</text>`;
+  if(!acts.length)g+=`<text x="20" y="${top+40}" font-size="16" fill="#6b665f">Agrega actividades con el botón “Actividades (formulario)”.</text>`;
+  lanes.forEach((l,i)=>{const y=top+i*LH;g+=`<rect x="10" y="${y}" width="${W-20}" height="${LH}" fill="${i%2?'#f6f4f1':'#fff'}" stroke="#9c968d"/><rect x="10" y="${y}" width="${lw}" height="${LH}" fill="#e7e4df" stroke="#9c968d"/>`;
+    wrapTxt(l,18).forEach((t,j,a)=>{g+=`<text x="${10+lw/2}" y="${y+LH/2+(j-(a.length-1)/2)*18+5}" text-anchor="middle" font-size="15" font-weight="700" fill="#141210">${esc(t)}</text>`})});
+  const byOrden={};acts.forEach(a=>{byOrden[a.id]=a});
+  acts.forEach((a,i)=>{
+    let tg=(Array.isArray(a.sig)?a.sig:[]).filter(id=>P[id]&&id!==a.id);
+    if(!tg.length&&a.forma!=='Fin'&&acts[i+1])tg=[acts[i+1].id];
+    const p=P[a.id];
+    tg.forEach(t=>{const q=P[t];let path;
+      if(q.i>p.i){const x1=p.x+bw,y1=p.y+bh/2,x2=q.x,y2=q.y+bh/2,m=x1+(cw-bw)/2;path=`M${x1} ${y1} H${m} V${y2} H${x2-2}`}
+      else{const lb=top+(Math.max(p.lane,q.lane)+1)*LH-10,x1=p.x+bw/2,x2=q.x+bw/2;path=`M${x1} ${p.y+bh} V${lb} H${x2} V${q.y+bh+2}`}
+      g+=`<path d="${path}" fill="none" stroke="#555" stroke-width="1.6" marker-end="url(#ar)"/>`})});
+  acts.forEach((a,i)=>{const p=P[a.id],cx=p.x+bw/2,cy=p.y+bh/2,f=a.forma||'Actividad',sub=kids(d.id,a.id).length;
+    if(f==='Decisión')g+=`<path d="M${cx} ${p.y-6} L${p.x+bw+4} ${cy} L${cx} ${p.y+bh+6} L${p.x-4} ${cy}Z" fill="#fff" stroke="#141210" stroke-width="1.6"/>`;
+    else if(f==='Inicio'||f==='Fin')g+=`<rect x="${p.x}" y="${p.y+8}" width="${bw}" height="${bh-16}" rx="${(bh-16)/2}" fill="${f==='Inicio'?'#e9f2ec':'#f6e4df'}" stroke="#141210" stroke-width="1.6"/>`;
+    else if(f==='Documento')g+=`<path d="M${p.x} ${p.y} H${p.x+bw} V${p.y+bh-8} Q${p.x+bw*.75} ${p.y+bh-20} ${cx} ${p.y+bh-6} T${p.x} ${p.y+bh-6}Z" fill="#fff" stroke="#141210" stroke-width="1.6"/>`;
+    else g+=`<rect x="${p.x}" y="${p.y}" width="${bw}" height="${bh}" rx="7" fill="#fff" stroke="#141210" stroke-width="${sub?2.6:1.6}"/>${sub?`<line x1="${p.x+9}" y1="${p.y}" x2="${p.x+9}" y2="${p.y+bh}" stroke="#141210"/><line x1="${p.x+bw-9}" y1="${p.y}" x2="${p.x+bw-9}" y2="${p.y+bh}" stroke="#141210"/>`:''}`;
+    g+=`<text x="${p.x+6}" y="${p.y-6}" font-size="11" fill="#6b665f">${i+1}</text>`;
+    wrapTxt(a.nombre,f==='Decisión'?14:19).forEach((t,j,L)=>{g+=`<text x="${cx}" y="${cy+(j-(L.length-1)/2)*16+5}" text-anchor="middle" font-size="13.5" fill="#141210">${esc(t)}</text>`})});
+  const svg=`<svg xmlns="http:\/\/www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="Arial, Helvetica, sans-serif"><defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#555"/></marker></defs>${g}</svg>`;
+  const L={svg,ar:H/W,pos,url:URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}))};
+  if(genCache.L)URL.revokeObjectURL(genCache.L.url);genCache={key,L};return L}
+const zoneOf=(d,a)=>isGen(d)?layoutFlow(d).pos[a.id]:(a.x!=null?a:null);
+
+/* ---------- PDF ---------- */
+if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https:\/\/cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+function getPdf(aid){if(!pdfCache[aid]){pdfCache[aid]=(async()=>{const b=await blobOf(aid);return pdfjsLib.getDocument({data:new Uint8Array(await b.arrayBuffer()),isEvalSupported:false}).promise})();pdfCache[aid].catch(()=>{delete pdfCache[aid]})}return pdfCache[aid]}
+async function extract(pdf){
+  const out=[];
+  for(let p=1;p<=pdf.numPages;p++){
+    const pg=await pdf.getPage(p),vp=pg.getViewport({scale:1}),tc=await pg.getTextContent(),bx=[];
+    for(const it of tc.items){const s=(it.str||'').trim();if(!s)continue;const t=pdfjsLib.Util.transform(vp.transform,it.transform);const h=Math.hypot(t[2],t[3]);if(!h)continue;let w=it.width*vp.scale;if(!w)w=s.length*h*.5;bx.push({x:t[4],y:t[5]-h,w,h,s})}
+    bx.sort((a,b)=>a.y-b.y||a.x-b.x);
+    const bl=[];
+    for(const b of bx){let m=null,same=false;
+      for(const k of bl){const r=b.h/k.fh;if(r<.7||r>1.45)continue;const tol=b.h*1.1;if(!(b.x<k.x2+tol&&b.x+b.w>k.x-tol))continue;
+        const sl=Math.abs(b.y-k.ly)<b.h*.5&&b.x<k.lx2+b.h*1.2,nl=b.y>k.ly+b.h*.3&&b.y-k.y2<b.h*.8;if(sl||nl){m=k;same=sl;break}}
+      if(m){if(same)m.t+=b.x>m.lx2+b.h*.12?' ':'';else if(m.t.endsWith('-'))m.t=m.t.slice(0,-1);else m.t+=' ';m.t+=b.s;
+        m.x=Math.min(m.x,b.x);m.y=Math.min(m.y,b.y);m.x2=Math.max(m.x2,b.x+b.w);m.y2=Math.max(m.y2,b.y+b.h);m.ly=b.y;m.lx2=b.x+b.w}
+      else bl.push({x:b.x,y:b.y,x2:b.x+b.w,y2:b.y+b.h,fh:b.h,t:b.s,ly:b.y,lx2:b.x+b.w})}
+    for(const k of bl){const t=k.t.replace(/\s+/g,' ').trim();if(t.length<3||!/[a-záéíóúñü]/i.test(t))continue;const pd=k.fh*.45;
+      out.push({nombre:t.slice(0,140),pag:p,x:Math.max(0,(k.x-pd)/vp.width),y:Math.max(0,(k.y-pd)/vp.height),w:Math.min(1,(k.x2-k.x+2*pd)/vp.width),h:Math.min(1,(k.y2-k.y+2*pd)/vp.height)})}}
+  return out.slice(0,400).sort((a,b)=>a.pag-b.pag||a.x-b.x||a.y-b.y)}
+async function detect(d){
+  let pdf;try{pdf=await getPdf(d.assetId)}catch(e){toast('No se pudo leer el PDF.');return}
+  toast('Leyendo actividades del PDF…');
+  const c=await extract(pdf),cur=()=>D(d.id)||d;
+  const seen=new Set((cur().actividades||[]).map(a=>a.pag+'|'+norm(a.nombre)));
+  const list=c.filter(x=>!seen.has(x.pag+'|'+norm(x.nombre)));
+  const markDone=()=>{if(!cur().revisado)put('diagramas',{...cur(),revisado:true})};
+  if(!c.length){markDone();toast('El PDF no trae texto legible (¿escaneado?). Marca las zonas a mano o usa el formulario.');return}
+  if(!list.length){markDone();toast('No se encontraron actividades nuevas.');return}
+  openDlg(`<h3>Actividades detectadas</h3><p class="mut">Desmarca títulos de carriles, encabezados y notas. Luego completa responsable y descripción en “Actividades (formulario)”.</p>
+  <div class="row" style="margin:0 0 6px"><button type="button" class="lnk" data-a="chk" data-v="1">Marcar todas</button><button type="button" class="lnk" data-a="chk" data-v="">Ninguna</button></div>
+  <div class="rev">${list.map((x,i)=>`<div class="ri"><input type="checkbox" name="c${i}" checked aria-label="Incluir"><input name="n${i}" value="${esc(x.nombre)}" aria-label="Nombre">${pdf.numPages>1?`<small>p.${x.pag}</small>`:''}</div>`).join('')}</div>
+  <div class="row end"><button type="button" class="btn" data-a="dlg-close">Omitir</button><button class="btn pri">Guardar actividades</button></div>`,
+  fd=>{const base=(cur().actividades||[]).length;const add=list.map((x,i)=>fd.get('c'+i)?{...x,id:uid(),nombre:String(fd.get('n'+i)||x.nombre).trim()||x.nombre,responsable:'',descripcion:'',forma:'Actividad'}:null).filter(Boolean).map((a,i)=>({...a,orden:base+i+1}));
+    put('diagramas',{...cur(),actividades:[...(cur().actividades||[]),...add],revisado:true});toast(add.length+' actividades guardadas. Completa responsable y descripción en el formulario.')},markDone)}
+
+/* ---------- visor ---------- */
+let lastKey='',tok=0,task=null,lastClk={};
+async function drawStage(){
+  const d=D(S.cur),cv=$('#cv'),im=$('#im'),st=$('#stage'),em=$('#empty');
+  if(!d){st.hidden=true;em.hidden=false;em.innerHTML=guide();lastKey='';return}
+  const W=Math.max(280,$('#viewport').clientWidth-34),gen=isGen(d),L=gen?layoutFlow(d):null;
+  const key=[d.id,gen?L.url:d.assetId,S.page,S.zoom,W].join('|');
+  if(key===lastKey){overlay();return}
+  lastKey=key;const my=++tok;st.hidden=false;em.hidden=true;
+  try{
+    if(!gen&&d.kind==='pdf'){
+      if(!window.pdfjsLib)throw new Error('lib');
+      im.hidden=true;cv.hidden=false;
+      const pdf=await getPdf(d.assetId);if(my!==tok)return;
+      S.pages=pdf.numPages;if(S.page>S.pages)S.page=1;
+      const pg=await pdf.getPage(S.page);if(my!==tok)return;
+      const v1=pg.getViewport({scale:1}),vp=pg.getViewport({scale:W/v1.width*S.zoom}),dpr=Math.min(window.devicePixelRatio||1,2);
+      if(task){try{task.cancel()}catch(e){}}
+      cv.width=Math.floor(vp.width*dpr);cv.height=Math.floor(vp.height*dpr);
+      cv.style.width=vp.width+'px';cv.style.height=vp.height+'px';st.style.width=vp.width+'px';st.style.height=vp.height+'px';
+      task=pg.render({canvasContext:cv.getContext('2d'),viewport:vp,transform:dpr!==1?[dpr,0,0,dpr,0,0]:undefined});
+      await task.promise.catch(e=>{if(!e||e.name!=='RenderingCancelledException')throw e});
+    }else{
+      cv.hidden=true;im.hidden=false;S.pages=1;S.page=1;let src,ar;
+      if(gen){src=L.url;ar=L.ar}else{const b=await blobOf(d.assetId);if(my!==tok)return;src=urls[d.assetId]||(urls[d.assetId]=URL.createObjectURL(b))}
+      if(im.getAttribute('src')!==src)im.src=src;
+      if(!(im.complete&&im.naturalWidth))await new Promise(r=>{im.onload=im.onerror=r;setTimeout(r,5000)});
+      if(my!==tok)return;
+      const w=W*S.zoom,h=ar?w*ar:im.naturalWidth?w*im.naturalHeight/im.naturalWidth:w*.6;
+      im.style.width=w+'px';im.style.height=h+'px';st.style.width=w+'px';st.style.height=h+'px';
+    }
+  }catch(e){if(my===tok){st.hidden=true;em.hidden=false;em.innerHTML=`<p class="mut">No se pudo abrir el archivo de este diagrama${window.pdfjsLib?'':' (el lector de PDF no cargó; revisa la conexión)'}.${d.actividades&&d.actividades.length?' Puedes cambiar a la vista “Generado”.':''}</p>`;lastKey=''}return}
+  overlay();toolbar();
+  if(!gen&&d.kind==='pdf'&&!d.revisado&&canWrite&&!S.reviewing){S.reviewing=true;detect(d).finally(()=>{S.reviewing=false})}
+}
+function overlay(){
+  const d=D(S.cur),ov=$('#ov');if(!d){ov.innerHTML='';return}
+  const gen=isGen(d);ov.classList.toggle('editing',S.edit&&!gen);
+  ov.innerHTML=(d.actividades||[]).filter(a=>gen||(a.pag||1)===S.page).map(a=>{const z=zoneOf(d,a);if(!z)return'';
+    const ch=kids(d.id,a.id).length,n=[...itemsAt(d.id,a.id,'oportunidad'),...rolled(d.id,a.id,'oportunidad')].filter(isOpen).length;
+    return `<button class="hs${ch?' link':''}${a.id===S.act?' sel':''}" data-a="sel-act" data-id="${esc(a.id)}" style="left:${num(z.x)*100}%;top:${num(z.y)*100}%;width:${num(z.w)*100}%;height:${num(z.h)*100}%" aria-label="${esc(a.nombre)}">${n?`<span class="bdg">${n}</span>`:''}${ch?'<span class="arr">▸</span>':''}</button>`}).join('')}
+function guide(){return `<div class="guide"><h2>${Object.keys(S.diag).length?'Elige un diagrama':'Del mapa general al detalle, en un solo lugar'}</h2><ol>
+<li>Sube el diagrama general en <b>PDF</b> (exportado desde Visio o Lucidchart) o constrúyelo con el <b>formulario</b>: actividad, responsable y descripción.</li>
+<li>Al pasar el cursor sobre una actividad verás su responsable y descripción.</li>
+<li>Selecciona una actividad y vincula su flujo de detalle; repite en cada nivel.</li>
+<li>Registra oportunidades de mejora, iniciativas e indicadores; el Portafolio los consolida.</li></ol>
+${canWrite?'<button class="btn pri" data-a="new-root">+ Crear diagrama general</button>':'<p class="mut">Este enlace es de consulta.</p>'}</div>`}
+
+/* ---------- render ---------- */
+function render(force){
+  if(S.cur&&!D(S.cur))S.cur=null;if(!S.cur){const r=roots()[0];if(r){S.cur=r.id;S.page=1}}
+  const d=D(S.cur);if(S.act&&!actOf(d,S.act))S.act=null;
+  $('#mapa').hidden=S.view!=='mapa';$('#port').hidden=S.view!=='port';
+  document.querySelectorAll('#views button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.view));
+  if(S.view==='port'){portfolio();return}
+  tree();crumbs();actSel();panel(force);toolbar();drawStage()}
+function toolbar(){const d=D(S.cur),gen=isGen(d);
+  $('#pg').hidden=!d||gen||S.pages<=1;$('#pInfo').textContent=S.page+' / '+S.pages;
+  $('#vistaSeg').hidden=!d||d.kind==='form';document.querySelectorAll('#vistaSeg button').forEach(b=>b.classList.toggle('on',(d&&d.vista==='generado'?'generado':'archivo')===b.dataset.vista));
+  $('#btnActs').hidden=!d;$('#btnActs').textContent=canWrite?'Actividades (formulario)':'Lista de actividades';
+  $('#btnEdit').hidden=!d||!canWrite;$('#btnEdit').textContent=S.edit?'Cerrar opciones':'Más opciones';
+  $('#editBar').hidden=!S.edit||!d;$('#btnDetect').hidden=!d||d.kind!=='pdf'||gen;$('#btnReplace').hidden=!d||d.kind==='form';
+  $('#editHint').hidden=!d||gen;
+  $('#zIn').disabled=$('#zOut').disabled=!d;$('#actSel').disabled=!d}
+function tree(){const r=roots();
+  const li=d=>{const ch=kids(d.id),pa=actOf(D(d.parentId),d.parentActId);return `<li><button class="tn${d.id===S.cur?' on':''}" data-a="open-diag" data-id="${esc(d.id)}"><span>${esc(d.nombre)}</span><small>${esc(d.tipo||'')}${pa?' · desde '+esc(pa.nombre):''}</small></button>${ch.length?`<ul>${ch.map(li).join('')}</ul>`:''}</li>`};
+  $('#tree').innerHTML='<h3>Estructura</h3>'+(r.length?`<ul class="tree">${r.map(li).join('')}</ul>`:'<p class="mut">Aún no hay diagramas.</p>')}
+function crumbs(){const d=D(S.cur);if(!d){$('#crumbs').innerHTML='';return}
+  $('#crumbs').innerHTML=ancestors(d.id).map(x=>{const a=actOf(x.d,x.act);return `<button data-a="open-diag" data-id="${esc(x.d.id)}" data-act="${esc(x.act||'')}">${esc(x.d.nombre)}</button><span class="via">› ${a?esc(a.nombre)+' ›':''}</span>`}).join('')+`<strong>${esc(d.nombre)}</strong>`}
+function actSel(){const d=D(S.cur),sel=$('#actSel');if(!d){sel.innerHTML='<option>Sin diagrama</option>';return}
+  const acts=orderActs(d),opt=(a,i)=>`<option value="${esc(a.id)}">${i+1}. ${esc(a.nombre)}${kids(d.id,a.id).length?' ▸':''}</option>`;
+  sel.innerHTML=`<option value="">— Todo el diagrama (${acts.length} actividades) —</option>`+acts.map(opt).join('');sel.value=S.act||''}
+function sel(n,opts,val,cls){return `<select name="${n}"${cls?` class="${cls}"`:''}>${opts.map(o=>{const [v,l]=Array.isArray(o)?o:[o,o];return `<option value="${esc(v)}"${v===val?' selected':''}>${esc(l)}</option>`}).join('')}</select>`}
+function panel(force){
+  const p=$('#panel');if(!force&&S.form&&p.querySelector('#itemForm'))return;
+  const d=D(S.cur);if(!d){p.innerHTML='<p class="mut">Selecciona o crea un diagrama para ver sus actividades.</p>';return}
+  const a=actOf(d,S.act);let h='';
+  if(a){
+    h+=`<p class="eyebrow">Actividad ${orderActs(d).indexOf(a)+1} · <button class="lnk" data-a="sel-act" data-id="">ver diagrama completo</button></p><h2>${esc(a.nombre)}</h2>
+    <dl class="meta"><dt>Responsable</dt><dd>${esc(a.responsable||'—')}</dd>${a.forma&&a.forma!=='Actividad'?`<dt>Tipo</dt><dd>${esc(a.forma)}</dd>`:''}</dl>
+    ${a.descripcion?`<p class="desc">${esc(a.descripcion)}</p>`:'<p class="mut">Sin descripción.</p>'}${canWrite?'<button class="btn sm" data-a="edit-act">Editar actividad</button>':''}`;
+    const ch=kids(d.id,a.id),anc=new Set([d.id,...ancestors(d.id).map(x=>x.d.id)]);
+    const cand=Object.values(S.diag).filter(x=>!anc.has(x.id)&&!(x.parentId===d.id&&x.parentActId===a.id)).sort(byName);
+    h+=`<div class="sub"><h4>Procesos vinculados</h4>${ch.length?ch.map(c=>`<div class="child"><button class="btn go" data-a="open-diag" data-id="${esc(c.id)}">${esc(c.nombre)} <small>${esc(c.tipo||'')}</small> ›</button>${canWrite?`<button class="x" data-a="unlink" data-id="${esc(c.id)}" title="Desvincular" aria-label="Desvincular">×</button>`:''}</div>`).join(''):'<p class="mut">Sin flujo de detalle vinculado.</p>'}
+    ${canWrite?`<div class="row"><button class="btn sm" data-a="new-child">+ Crear flujo de detalle</button>${cand.length?`<select data-a="link-existing" aria-label="Vincular diagrama existente"><option value="">Vincular existente…</option>${cand.map(x=>`<option value="${esc(x.id)}">${esc(x.nombre)}</option>`).join('')}</select>`:''}</div>`:''}</div>`;
+  }else{
+    const ids=new Set(subtree(d.id)),all=Object.values(S.items).filter(i=>ids.has(i.diagramaId));
+    h+=`<p class="eyebrow">${esc(d.tipo||'Diagrama')}</p><h2>${esc(d.nombre)}</h2><dl class="meta">
+    <dt>Origen</dt><dd>${d.kind==='form'?'Formulario':esc(d.formato||'Archivo')}${/^https:\/{2}/.test(d.enlace||'')?` · <a href="${esc(d.enlace)}" target="_blank" rel="noopener">abrir original</a>`:''}</dd>
+    ${d.dueno?`<dt>Responsable</dt><dd>${esc(d.dueno)}</dd>`:''}
+    <dt>Actividades</dt><dd>${(d.actividades||[]).length} · ${(d.actividades||[]).filter(x=>kids(d.id,x.id).length).length} con flujo de detalle</dd>
+    <dt>En todo el árbol</dt><dd>${all.filter(i=>i.tipo==='oportunidad'&&isOpen(i)).length} oportunidades abiertas · ${all.filter(i=>i.tipo==='iniciativa').length} iniciativas · ${all.filter(i=>i.tipo==='indicador').length} indicadores</dd></dl>
+    <p class="mut">Pasa el cursor sobre una actividad para ver su descripción; haz clic para ver su ficha. Abajo, lo registrado para el diagrama completo.</p>`}
+  const aid=a?a.id:null;
+  h+=`<div class="tabs">${TT.map(t=>`<button data-a="tab" data-t="${t}" class="${S.tab===t?'on':''}">${IT[t].lbl} <b>${itemsAt(d.id,aid,t).length}</b></button>`).join('')}</div>`;
+  const list=itemsAt(d.id,aid,S.tab).sort((x,y)=>Number(isOpen(y))-Number(isOpen(x))||String(x.titulo).localeCompare(String(y.titulo),'es'));
+  h+=list.length?list.map(card).join(''):`<p class="mut">Sin ${IT[S.tab].lbl.toLowerCase()} registradas aquí.</p>`;
+  const r=rolled(d.id,aid,S.tab);if(r.length)h+=`<p class="roll">+${r.length} en procesos de detalle · <button class="lnk" data-a="scope">ver en portafolio</button></p>`;
+  if(canWrite)h+=S.form?formHtml():`<button class="btn sm" data-a="add-item">+ Agregar ${IT[S.tab].one}</button>`;
+  p.innerHTML=h}
+function card(i){const t=i.tipo;let m='';
+  if(t==='oportunidad')m=`<span class="chip ${({Alta:'pa',Media:'pm'})[i.prioridad]||''}">${esc(i.prioridad||'—')}</span><span class="chip">${esc(i.estado||'')}</span>${i.responsable?`<span>${esc(i.responsable)}</span>`:''}`;
+  if(t==='iniciativa'){const av=Math.max(0,Math.min(100,num(i.avance)));m=`<span class="chip">${esc(i.estado||'')}</span>${i.responsable?`<span>${esc(i.responsable)}</span>`:''}${i.fecha?`<span class="nw">${esc(i.fecha)}</span>`:''}<span class="prog"><i style="width:${av}%"></i></span><span class="nw">${av}%</span>`}
+  if(t==='indicador'){const has=String(i.meta??'')!==''&&String(i.actual??'')!=='';m=`<span class="dot ${has?(offTarget(i)?'bad':'ok'):''}"></span><span class="nw">${esc(i.actual||'—')} / meta ${esc(i.meta||'—')} ${esc(i.unidad||'')}</span>${i.frecuencia?`<span>${esc(i.frecuencia)}</span>`:''}`}
+  return `<article class="card"><div class="ch"><strong>${esc(i.titulo)}</strong>${canWrite?`<span class="acts"><button class="lnk" data-a="edit-item" data-id="${esc(i.id)}">Editar</button><button class="lnk" data-a="del-item" data-id="${esc(i.id)}">Eliminar</button></span>`:''}</div>${i.descripcion?`<p>${esc(i.descripcion)}</p>`:''}<div class="cm">${m}</div></article>`}
+function formHtml(){const t=S.tab,i=S.form.id?(S.items[S.form.id]||{}):{},v=k=>esc(i[k]??'');
+  let f=`<label>${t==='indicador'?'Indicador':'Título'}<input name="titulo" required value="${v('titulo')}"></label>`;
+  if(t==='oportunidad')f+=`<label>Descripción / causa<textarea name="descripcion" rows="3">${v('descripcion')}</textarea></label><div class="two"><label>Prioridad${sel('prioridad',['Alta','Media','Baja'],i.prioridad||'Media')}</label><label>Estado${sel('estado',IT.oportunidad.est,i.estado)}</label></div><label>Responsable<input name="responsable" value="${v('responsable')}"></label>`;
+  if(t==='iniciativa')f+=`<label>Descripción<textarea name="descripcion" rows="2">${v('descripcion')}</textarea></label><div class="two"><label>Responsable<input name="responsable" value="${v('responsable')}"></label><label>Fecha meta<input type="date" name="fecha" value="${v('fecha')}"></label><label>Estado${sel('estado',IT.iniciativa.est,i.estado)}</label><label>Avance %<input type="number" name="avance" min="0" max="100" value="${v('avance')||0}"></label></div>`;
+  if(t==='indicador')f+=`<label>Fórmula / definición<textarea name="descripcion" rows="2">${v('descripcion')}</textarea></label><div class="two"><label>Meta<input type="number" step="any" name="meta" value="${v('meta')}"></label><label>Actual<input type="number" step="any" name="actual" value="${v('actual')}"></label><label>Unidad<input name="unidad" value="${v('unidad')}" placeholder="%, días, RD$"></label><label>Frecuencia${sel('frecuencia',['Semanal','Mensual','Trimestral','Anual'],i.frecuencia||'Mensual')}</label></div><label>Sentido${sel('sentido',[['max','Mayor es mejor'],['min','Menor es mejor']],i.sentido||'max')}</label><label>Responsable<input name="responsable" value="${v('responsable')}"></label>`;
+  return `<form id="itemForm" class="iform"><h4>${S.form.id?'Editar':'Nueva'} ${IT[t].one}</h4>${f}<div class="row end"><button type="button" class="btn sm" data-a="cancel-form">Cancelar</button><button class="btn pri sm">Guardar</button></div></form>`}
+
+/* ---------- formulario de actividades ---------- */
+function responsables(){return [...new Set(Object.values(S.diag).flatMap(d=>(d.actividades||[]).map(a=>String(a.responsable||'').trim())).filter(Boolean))].sort()}
+function actRow(a,i,ord){const nx=(a.sig||[]).map(id=>ord.indexOf(id)+1).filter(n=>n>0).join(', ');
+  return `<tr data-id="${esc(a.id||'')}"><td class="n"><input type="number" min="1" name="orden" value="${i+1}" aria-label="Orden"></td>
+  <td><input name="nombre" value="${esc(a.nombre||'')}" placeholder="Nombre de la actividad" aria-label="Actividad"></td>
+  <td><input name="responsable" list="dlResp" value="${esc(a.responsable||'')}" placeholder="Área o puesto" aria-label="Responsable"></td>
+  <td class="t">${sel('forma',FORMAS,a.forma||'Actividad')}</td>
+  <td><textarea name="descripcion" rows="1" placeholder="Breve descripción (se ve al pasar el cursor)" aria-label="Descripción">${esc(a.descripcion||'')}</textarea></td>
+  <td class="s"><input name="sig" value="${esc(nx)}" placeholder="auto" aria-label="Va a"></td>
+  <td class="d"><button type="button" class="x" data-a="row-del" aria-label="Quitar fila">×</button></td></tr>`}
+function actsDlg(){
+  const d=D(S.cur);if(!d)return;const ord=orderActs(d),ids=ord.map(a=>a.id);
+  if(!canWrite){openDlg(`<h3>Actividades · ${esc(d.nombre)}</h3><div class="aed"><table><thead><tr><th>#</th><th>Actividad</th><th>Responsable</th><th>Descripción</th></tr></thead><tbody>${ord.map((a,i)=>`<tr><td>${i+1}</td><td>${esc(a.nombre)}</td><td>${esc(a.responsable||'')}</td><td>${esc(a.descripcion||'')}</td></tr>`).join('')}</tbody></table></div><div class="row end"><button type="button" class="btn" data-a="dlg-close">Cerrar</button></div>`,()=>{},null,true);return}
+  openDlg(`<h3>Actividades · ${esc(d.nombre)}</h3>
+  <p class="hint">Cada fila es una actividad. El responsable define el carril del diagrama generado. “Va a” es opcional: números de las actividades siguientes separados por coma (p. ej. “5, 7” en una decisión); vacío = la siguiente en orden.${d.kind!=='form'?' Las filas nuevas no tienen zona en el archivo original: se ven en la vista “Generado” y en la lista.':''}</p>
+  <datalist id="dlResp">${responsables().map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
+  <div class="dic"><div class="row" style="margin:0"><strong style="margin-right:auto">Dictado</strong><button type="button" class="btn sm" id="dicBtn" data-a="dic-start">Dictar con micrófono</button><button type="button" class="btn sm" data-a="dic-apply">Pasar texto al formulario</button></div>
+  <p class="hint" style="margin-top:6px">Di, por ejemplo: “<b>Actividad</b> recibir planos <b>responsable</b> presupuesto <b>descripción</b> se reciben planos del cliente <b>siguiente</b>”. Tipos: actividad, decisión, inicio, fin, documento. Flechas: “<b>conecta con</b> cuatro y dos”. “<b>Borrar</b>” quita la última fila.</p>
+  <textarea id="dicTxt" aria-label="Texto dictado" placeholder="Aquí aparece lo dictado. Si el micrófono no está disponible, dicta aquí con el micrófono del teclado del celular o con Win + H en Windows y pulsa “Pasar texto al formulario”."></textarea><p class="hint" id="dicInterim" style="min-height:1.2em;margin:4px 0 0"></p></div>
+  <div class="aed"><table><thead><tr><th>#</th><th>Actividad</th><th>Responsable</th><th>Tipo</th><th>Descripción</th><th>Va a</th><th></th></tr></thead><tbody id="aedBody">${ord.map((a,i)=>actRow(a,i,ids)).join('')}</tbody></table></div>
+  <div class="row"><button type="button" class="btn sm" data-a="row-add">+ Agregar actividad</button></div>
+  <div class="row end"><button type="button" class="btn" data-a="dlg-close">Cancelar</button><button class="btn pri">Guardar y diagramar</button></div>`,
+  ()=>{
+    stopDictado();if($('#dicTxt')&&$('#dicTxt').value.trim())flushDictado(true);
+    const rows=[...document.querySelectorAll('#aedBody tr')].map((tr,i)=>{const g=n=>tr.querySelector(`[name=${n}]`).value;return{id:tr.dataset.id||uid(),o:num(g('orden'))||i+1,i,nombre:g('nombre').trim(),responsable:g('responsable').trim(),forma:g('forma'),descripcion:g('descripcion').trim(),sigTxt:g('sig')}}).filter(r=>r.nombre);
+    const byO={};rows.forEach(r=>{if(!(r.o in byO))byO[r.o]=r.id});
+    rows.sort((a,b)=>a.o-b.o||a.i-b.i);
+    const gone=(d.actividades||[]).filter(a=>!rows.some(r=>r.id===a.id));
+    const blocked=gone.filter(a=>kids(d.id,a.id).length);
+    if(blocked.length){toast('No se puede quitar “'+blocked[0].nombre+'”: tiene un flujo de detalle vinculado.');return false}
+    const old=Object.fromEntries((d.actividades||[]).map(a=>[a.id,a]));
+    const acts=rows.map((r,k)=>({...(old[r.id]||{}),id:r.id,orden:k+1,nombre:r.nombre,responsable:r.responsable,forma:r.forma,descripcion:r.descripcion,
+      sig:r.sigTxt.split(/[,;\s]+/).map(Number).filter(n=>byO[n]&&byO[n]!==r.id).map(n=>byO[n])}));
+    gone.forEach(a=>itemsAt(d.id,a.id).forEach(it=>put('items',{...it,actividadId:null})));
+    put('diagramas',{...D(d.id),actividades:acts,revisado:true});toast('Actividades guardadas.')},null,true)}
+function actDlg(a){const d=D(S.cur);
+  openDlg(`<h3>Editar actividad</h3><label>Actividad<input name="nombre" required value="${esc(a.nombre)}"></label>
+  <div class="two"><label>Responsable<input name="responsable" list="dlResp1" value="${esc(a.responsable||'')}"></label><label>Tipo${sel('forma',FORMAS,a.forma||'Actividad')}</label></div>
+  <datalist id="dlResp1">${responsables().map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
+  <label>Descripción breve<textarea name="descripcion" rows="4">${esc(a.descripcion||'')}</textarea></label>
+  <div class="row end">${kids(d.id,a.id).length?'':'<button type="button" class="btn" data-a="del-act" style="margin-right:auto">Eliminar actividad</button>'}<button type="button" class="btn" data-a="dlg-close">Cancelar</button><button class="btn pri">Guardar</button></div>`,
+  fd=>{const cur=D(d.id);put('diagramas',{...cur,actividades:(cur.actividades||[]).map(x=>x.id===a.id?{...x,nombre:String(fd.get('nombre')).trim(),responsable:String(fd.get('responsable')||'').trim(),forma:fd.get('forma'),descripcion:String(fd.get('descripcion')||'').trim()}:x)})})}
+
+/* ---------- dictado (sin IA: palabras clave) ---------- */
+const deacc=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const NUMW={un:1,uno:1,una:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9,diez:10,once:11,doce:12,trece:13,catorce:14,quince:15,dieciseis:16,diecisiete:17,dieciocho:18,diecinueve:19,veinte:20};
+const FORMA_KW={actividad:'Actividad',decision:'Decisión',inicio:'Inicio',fin:'Fin',documento:'Documento'};
+const KW=/(^|[\s,.;:])(actividad|decisi[oó]n|inicio|fin|documento|responsable|descripci[oó]n|conecta con|flecha a)(?=[\s,.;:]|$)/gi;
+const SEP=/(?<!\b(?:el|la|lo|los|las|al|del|dia|día|paso|semana|mes|año|turno)\s)\bsiguiente\b[.,;:]?/i;
+const cleanV=s=>{s=String(s||'').replace(/^[\s,.;:]+|[\s,.;:]+$/g,'').replace(/\s+/g,' ');return s?s[0].toUpperCase()+s.slice(1):''};
+const toNums=s=>(deacc(s).match(/\d+|[a-z]+/g)||[]).map(w=>/^\d+$/.test(w)?+w:NUMW[w]).filter(Boolean).join(', ');
+function parseBlock(b){
+  const t=String(b||'').trim();if(!t)return null;
+  if(/^(borrar|borra|borrar fila|deshacer)$/.test(deacc(t).replace(/[.,;:!]/g,'').trim()))return{cmd:'del'};
+  const marks=[];let m;KW.lastIndex=0;
+  while((m=KW.exec(t))){const s=m.index+m[1].length;marks.push({kw:deacc(m[2]),s,e:s+m[2].length})}
+  const f=marks.filter((k,i)=>!(k.kw in FORMA_KW)||(i===0&&!t.slice(0,k.s).trim()));
+  const r={nombre:'',responsable:'',forma:'Actividad',descripcion:'',sigTxt:''};
+  if(!f.length){r.nombre=cleanV(t);return r.nombre?r:null}
+  if(t.slice(0,f[0].s).trim())r.nombre=cleanV(t.slice(0,f[0].s));
+  f.forEach((k,i)=>{const v=t.slice(k.e,i+1<f.length?f[i+1].s:t.length);
+    if(k.kw in FORMA_KW){r.forma=FORMA_KW[k.kw];r.nombre=cleanV(v)}
+    else if(k.kw==='responsable')r.responsable=cleanV(v);
+    else if(k.kw==='descripcion')r.descripcion=cleanV(v);
+    else r.sigTxt=toNums(v)});
+  return r.nombre?r:null}
+function addParsedRow(r){const tb=$('#aedBody');if(!tb)return;const n=tb.rows.length;
+  tb.insertAdjacentHTML('beforeend',actRow({nombre:r.nombre,responsable:r.responsable,forma:r.forma,descripcion:r.descripcion},n,[]));
+  const tr=tb.rows[n];tr.querySelector('[name=sig]').value=r.sigTxt;tr.scrollIntoView({block:'nearest'})}
+function flushDictado(final){const ta=$('#dicTxt');if(!ta)return;
+  const parts=ta.value.split(SEP),keep=final?'':parts.pop();let n=0;
+  parts.forEach(p=>{const r=parseBlock(p);if(!r)return;if(r.cmd){const tb=$('#aedBody');if(tb&&tb.rows.length){tb.rows[tb.rows.length-1].remove();n--;toast('Última fila eliminada.')}}else{addParsedRow(r);n++}});
+  ta.value=(keep||'').trim();if(final&&!n&&!parts.some(p=>p.trim()))toast('No hay texto para pasar.');else if(n>0)toast(n===1?'1 actividad agregada.':n+' actividades agregadas.')}
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null,listening=false;
+function stopDictado(){listening=false;if(rec){try{rec.stop()}catch(e){}}rec=null;const b=$('#dicBtn');if(b){b.classList.remove('on');b.textContent='Dictar con micrófono'}const i=$('#dicInterim');if(i)i.textContent=''}
+function startDictado(){
+  if(!SR){toast('Este navegador no permite dictado directo (usa Chrome o Edge). Puedes dictar en el cuadro con el teclado del celular o Win + H.');$('#dicTxt').focus();return}
+  rec=new SR();rec.lang='es-DO';rec.continuous=true;rec.interimResults=true;listening=true;
+  rec.onresult=e=>{let fin='',mid='';for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)fin+=t+' ';else mid+=t}
+    const ta=$('#dicTxt');if(!ta){stopDictado();return}if(fin){ta.value=(ta.value+' '+fin).replace(/\s+/g,' ').trimStart();flushDictado(false)}$('#dicInterim').textContent=mid?'Escuchando: '+mid:''};
+  rec.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){toast('El micrófono está bloqueado en esta página. Dicta en el cuadro con el teclado del celular o Win + H.');stopDictado()}else if(e.error==='network'){toast('El dictado necesita conexión a internet.');stopDictado()}};
+  rec.onend=()=>{if(listening&&$('#dicTxt')){try{rec.start()}catch(e){stopDictado()}}else stopDictado()};
+  try{rec.start()}catch(e){toast('No se pudo iniciar el dictado.');stopDictado();return}
+  const b=$('#dicBtn');b.classList.add('on');b.textContent='Detener dictado';$('#dicInterim').textContent='Escuchando…'}
+
+/* ---------- portafolio ---------- */
+function portRows(){
+  let rows=Object.values(S.items);
+  if(S.scope){const ids=S.scope.a?scopeIds(S.scope.d,S.scope.a):new Set(subtree(S.scope.d));rows=rows.filter(i=>ids.has(i.diagramaId)||(i.diagramaId===S.scope.d&&(!S.scope.a||i.actividadId===S.scope.a)))}
+  const t=$('#fTipo').value,e=$('#fEst').value,q=norm($('#fQ').value);
+  if(t)rows=rows.filter(i=>i.tipo===t);if(e)rows=rows.filter(isOpen);
+  if(q)rows=rows.filter(i=>norm(i.titulo+' '+(i.responsable||'')+' '+pathOf(i)).includes(q));
+  return rows.sort((a,b)=>TT.indexOf(a.tipo)-TT.indexOf(b.tipo)||pathOf(a).localeCompare(pathOf(b),'es'))}
+const valOf=i=>i.tipo==='indicador'?`${i.actual||'—'} / ${i.meta||'—'} ${i.unidad||''}`.trim():i.tipo==='iniciativa'?`${i.estado||''} · ${num(i.avance)}%`:`${i.estado||''} · ${i.prioridad||''}`;
+function portfolio(){
+  const all=Object.values(S.items);
+  const k=[[all.filter(i=>i.tipo==='oportunidad'&&isOpen(i)).length,'Oportunidades abiertas'],[all.filter(i=>i.tipo==='iniciativa'&&i.estado==='En curso').length,'Iniciativas en curso'],[all.filter(i=>i.tipo==='indicador'&&offTarget(i)).length,'Indicadores fuera de meta'],[Object.keys(S.diag).length,'Diagramas mapeados']];
+  $('#kpis').innerHTML=k.map(([n,l])=>`<div class="kpi"><b>${n}</b><span>${l}</span></div>`).join('');
+  $('#fScope').innerHTML=S.scope?`<span class="scope">Ámbito: ${esc(S.scope.label)} <button class="lnk" data-a="clear-scope" aria-label="Quitar ámbito">×</button></span>`:'';
+  const rows=portRows();
+  $('#prows').innerHTML=rows.length?rows.map(i=>`<tr><td>${esc(IT[i.tipo]?IT[i.tipo].one:i.tipo)}</td><td><strong>${esc(i.titulo)}</strong></td><td><button class="lnk" data-a="goto" data-d="${esc(i.diagramaId)}" data-ac="${esc(i.actividadId||'')}">${esc(pathOf(i))}</button></td><td>${i.tipo==='indicador'?`<span class="dot ${offTarget(i)?'bad':'ok'}"></span> `:''}${esc(valOf(i))}</td><td>${esc(i.responsable||'')}</td></tr>`).join(''):`<tr><td colspan="5" class="mut">Sin registros con estos filtros.</td></tr>`}
+
+/* ---------- diálogos ---------- */
+function openDlg(html,ok,cancel,wide){const f=$('#dlgForm'),dg=$('#dlg');dg.classList.toggle('wide',!!wide);f.innerHTML=html;dlgOk=ok;dlgCancel=cancel||null;try{dg.showModal()}catch(e){dg.setAttribute('open','')}const x=f.querySelector('input:not([type=checkbox]):not([type=file]):not([type=radio]),textarea');if(x)x.focus()}
+function closeDlg(cancelled){stopDictado();const dg=$('#dlg');if(cancelled&&dlgCancel)dlgCancel();dlgOk=dlgCancel=null;try{dg.close()}catch(e){dg.removeAttribute('open')}}
+function diagDlg(ex,parent){
+  const e=ex||{},pd=parent&&D(parent.d),pa=parent&&actOf(pd,parent.a);
+  openDlg(`<h3>${ex?'Datos del diagrama':parent?'Flujo de detalle':'Diagrama general'}</h3>${pa?`<p class="mut">Se vinculará a: ${esc(pd.nombre)} › ${esc(pa.nombre)}</p>`:''}
+  <label>Nombre<input name="nombre" required value="${esc(e.nombre||(pa?pa.nombre:''))}"></label>
+  <div class="two"><label>Tipo de diagrama${sel('tipo',TIPOS,e.tipo||(parent?'Flujograma':'Funciones cruzadas'))}</label><label>Responsable del proceso<input name="dueno" value="${esc(e.dueno||'')}"></label></div>
+  ${ex?'':`<div class="radio" role="radiogroup" aria-label="Origen"><label><input type="radio" name="origen" value="form" checked> Construir con formulario</label><label><input type="radio" name="origen" value="file"> Subir archivo (PDF o imagen)</label></div>
+  <div id="fileBox" hidden><div class="two"><label>Hecho en${sel('formato',FORMATOS.filter(x=>x!=='Formulario'),'Visio')}</label><label>Enlace al original (opcional)<input name="enlace" type="url" placeholder="https:\/\/"></label></div>
+  <label>Archivo<input name="file" type="file" accept="application/pdf,image/png,image/jpeg,image/svg+xml,image/webp"></label><p class="hint">PDF recomendado (Archivo › Exportar › PDF). Si conserva el texto, las actividades se detectan solas y luego las completas con el formulario.</p></div>`}
+  ${ex&&ex.kind!=='form'?`<label>Enlace al original (opcional)<input name="enlace" type="url" placeholder="https:\/\/" value="${esc(e.enlace||'')}"></label>`:''}
+  <div class="row end"><button type="button" class="btn" data-a="dlg-close">Cancelar</button><button class="btn pri">${ex?'Guardar':'Crear'}</button></div>`,
+  async fd=>{const base={nombre:String(fd.get('nombre')).trim(),tipo:fd.get('tipo'),dueno:String(fd.get('dueno')||'').trim()};
+    if(ex){put('diagramas',{...D(ex.id),...base,...(fd.has('enlace')?{enlace:String(fd.get('enlace')||'').trim()}:{})});return}
+    const id=uid(),common={id,...base,parentId:parent?parent.d:null,parentActId:parent?parent.a:null,actividades:[],creado:new Date().toISOString()};
+    if(fd.get('origen')==='form'){S.cur=id;S.act=null;S.page=1;S.edit=false;await put('diagramas',{...common,kind:'form',formato:'Formulario',revisado:true});setTimeout(actsDlg,50);return}
+    const f=fd.get('file');if(!f||!f.size){toast('Selecciona un archivo.');return false}
+    let up;try{up=await uploadFile(f)}catch(err){toast(err.message);return false}
+    S.cur=id;S.act=null;S.page=1;S.edit=false;
+    put('diagramas',{...common,kind:up.kind,assetId:up.id,formato:fd.get('formato'),enlace:String(fd.get('enlace')||'').trim(),vista:'archivo',revisado:up.kind!=='pdf'});
+    if(up.kind!=='pdf')toast('Usa “Actividades (formulario)” o “Más opciones” para marcar las actividades.')})}
+
+/* ---------- acciones ---------- */
+function openDiag(id,act){S.cur=id;S.act=act||null;S.form=null;S.view='mapa';const a=actOf(D(id),S.act);S.page=a&&!isGen(D(id))?(a.pag||1):1;render(true)}
+function selAct(id){const d=D(S.cur),a=actOf(d,id);S.act=a?a.id:null;S.form=null;if(a&&!isGen(d)&&(a.pag||1)!==S.page)S.page=a.pag||1;
+  if(a&&S.auto){const ch=kids(d.id,a.id);if(ch.length===1){openDiag(ch[0].id);return}}render(true)}
+function armed(b){if(b.dataset.armed)return true;b.dataset.armed=1;const t=b.textContent;b.textContent='¿Confirmar?';setTimeout(()=>{if(b.isConnected){delete b.dataset.armed;b.textContent=t}},3000);return false}
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,id=b.dataset.id;
+  if(a==='sel-act'){const now=Date.now();if(id&&lastClk.id===id&&now-lastClk.t<450&&!S.edit){lastClk={};const ch=kids(S.cur,id);if(ch.length){openDiag(ch[0].id);return}}lastClk={id,t:now};selAct(id)}
+  else if(a==='open-diag')openDiag(id,b.dataset.act||null);
+  else if(a==='new-root')diagDlg(null,null);
+  else if(a==='new-child')diagDlg(null,{d:S.cur,a:S.act});
+  else if(a==='unlink'){const c=D(id);if(c&&armed(b))put('diagramas',{...c,parentId:null,parentActId:null})}
+  else if(a==='tab'){S.tab=b.dataset.t;S.form=null;render(true)}
+  else if(a==='add-item'){S.form={id:null};render(true)}
+  else if(a==='edit-item'){const it=S.items[id];if(it){S.tab=it.tipo;S.form={id};render(true)}}
+  else if(a==='cancel-form'){S.form=null;render(true)}
+  else if(a==='del-item'){if(armed(b))del('items',id)}
+  else if(a==='edit-act'){const x=actOf(D(S.cur),S.act);if(x)actDlg(x)}
+  else if(a==='del-act'){const d=D(S.cur);if(!armed(b))return;const aid=S.act;closeDlg(false);S.act=null;
+    itemsAt(d.id,aid).forEach(it=>put('items',{...it,actividadId:null}));put('diagramas',{...D(d.id),actividades:(D(d.id).actividades||[]).filter(x=>x.id!==aid).map(x=>({...x,sig:(x.sig||[]).filter(s=>s!==aid)}))})}
+  else if(a==='row-add'){const tb=$('#aedBody'),n=tb.rows.length;tb.insertAdjacentHTML('beforeend',actRow({},n,[]));tb.rows[n].querySelector('[name=nombre]').focus()}
+  else if(a==='row-del'){b.closest('tr').remove()}
+  else if(a==='dic-start'){if(listening){stopDictado();flushDictado(false)}else startDictado()}
+  else if(a==='dic-apply'){flushDictado(true)}
+  else if(a==='scope'){const d=D(S.cur),ac=actOf(d,S.act);S.scope={d:d.id,a:S.act,label:ac?ac.nombre:d.nombre};S.view='port';$('#fTipo').value=S.tab;render()}
+  else if(a==='clear-scope'){S.scope=null;render()}
+  else if(a==='goto'){if(D(b.dataset.d))openDiag(b.dataset.d,b.dataset.ac||null)}
+  else if(a==='dlg-close')closeDlg(true);
+  else if(a==='chk')$('#dlgForm').querySelectorAll('.rev input[type=checkbox]').forEach(c=>c.checked=!!b.dataset.v);
+});
+document.addEventListener('change',e=>{const t=e.target;
+  if(t.dataset.a==='link-existing'&&t.value){const c=D(t.value);if(c)put('diagramas',{...c,parentId:S.cur,parentActId:S.act})}
+  else if(t.name==='origen'){const fb=$('#fileBox');if(fb){fb.hidden=t.value!=='file';fb.querySelector('[name=file]').required=t.value==='file'}}});
+document.addEventListener('submit',async e=>{const f=e.target;e.preventDefault();
+  if(f.id==='itemForm'){const fd=Object.fromEntries(new FormData(f)),old=S.form&&S.form.id?S.items[S.form.id]:null;
+    const it={...(old||{}),...fd,id:old?old.id:uid(),tipo:S.tab,diagramaId:old?old.diagramaId:S.cur,actividadId:old?(old.actividadId||null):(S.act||null),actualizado:new Date().toISOString()};
+    S.form=null;put('items',it)}
+  else if(f.id==='dlgForm'&&dlgOk){const btn=f.querySelector('.btn.pri');if(btn)btn.disabled=true;let r;try{r=await dlgOk(new FormData(f))}finally{if(btn)btn.disabled=false}if(r!==false){dlgCancel=null;closeDlg(false)}}});
+$('#dlg').addEventListener('cancel',()=>{stopDictado();if(dlgCancel)dlgCancel();dlgOk=dlgCancel=null});
+$('#actSel').addEventListener('change',e=>selAct(e.target.value));
+$('#autoOpen').addEventListener('change',e=>{S.auto=e.target.checked});
+document.querySelectorAll('#views button').forEach(b=>b.addEventListener('click',()=>{S.view=b.dataset.v;render(true)}));
+document.querySelectorAll('#vistaSeg button').forEach(b=>b.addEventListener('click',()=>{const d=D(S.cur);if(!d)return;const v=b.dataset.vista;if((d.vista||'archivo')===v)return;S.page=1;
+  if(canWrite)put('diagramas',{...d,vista:v});else{S.diag[d.id]={...d,vista:v};render(true)}}));
+$('#btnNew').addEventListener('click',()=>diagDlg(null,null));
+$('#btnRefresh').addEventListener('click',()=>{if(!pending)load()});
+$('#btnActs').addEventListener('click',actsDlg);
+$('#pPrev').addEventListener('click',()=>{if(S.page>1){S.page--;S.act=null;render(true)}});
+$('#pNext').addEventListener('click',()=>{if(S.page<S.pages){S.page++;S.act=null;render(true)}});
+$('#zIn').addEventListener('click',()=>{S.zoom=Math.min(4,S.zoom*1.25);drawStage()});
+$('#zOut').addEventListener('click',()=>{S.zoom=Math.max(.5,S.zoom/1.25);drawStage()});
+$('#btnEdit').addEventListener('click',()=>{S.edit=!S.edit;render(true)});
+$('#btnDetect').addEventListener('click',()=>{const d=D(S.cur);if(d)detect(d)});
+$('#btnMeta').addEventListener('click',()=>{const d=D(S.cur);if(d)diagDlg(d)});
+$('#btnReplace').addEventListener('click',()=>$('#fileReplace').click());
+$('#fileReplace').addEventListener('change',async e=>{const f=e.target.files[0],d=D(S.cur);e.target.value='';if(!f||!d)return;
+  try{const up=await uploadFile(f),old=d.assetId;lastKey='';put('diagramas',{...D(d.id),assetId:up.id,kind:up.kind,revisado:up.kind==='pdf'?!!d.revisado:true});
+    if(old)run('api_trash',C,K,old).catch(()=>{});toast('Archivo reemplazado. Revisa que las zonas sigan alineadas.')}catch(err){toast(err.message)}});
+$('#btnDelDiag').addEventListener('click',async e=>{const d=D(S.cur);if(!d)return;if(kids(d.id).length){toast('Este diagrama tiene flujos de detalle vinculados. Desvincúlalos primero.');return}
+  if(!armed(e.currentTarget))return;Object.values(S.items).filter(i=>i.diagramaId===d.id).forEach(it=>del('items',it.id));
+  if(d.assetId)run('api_trash',C,K,d.assetId).catch(()=>{});S.cur=d.parentId||null;S.act=d.parentActId||null;S.edit=false;del('diagramas',d.id);toast('Diagrama eliminado.')});
+['fTipo','fEst','fQ'].forEach(i=>$('#'+i).addEventListener('input',portfolio));
+$('#btnCsv').addEventListener('click',async()=>{const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const csv=[['Tipo','Título','Ubicación','Estado/valor','Responsable','Descripción'].map(q).join(','),...portRows().map(i=>[i.tipo,i.titulo,pathOf(i),valOf(i),i.responsable,i.descripcion].map(q).join(','))].join('\n');
+  try{await navigator.clipboard.writeText(csv);toast('CSV copiado. Pégalo en Google Sheets o Excel.')}catch(err){toast('El navegador no permitió copiar.')}});
+
+/* descripción al pasar el cursor */
+const ov=$('#ov'),tip=$('#tip');
+function showTip(e,b){const d=D(S.cur),a=actOf(d,b.dataset.id);if(!a){tip.hidden=true;return}
+  const ch=kids(d.id,a.id).length;tip.innerHTML=`<b>${esc(a.nombre)}</b>${a.responsable?`<i>${esc(a.responsable)}</i>`:''}${a.descripcion?esc(a.descripcion.length>320?a.descripcion.slice(0,320)+'…':a.descripcion):'<i>Sin descripción</i>'}${ch?'<i style="margin-top:4px">Doble clic: abrir flujo de detalle</i>':''}`;tip.hidden=false;moveTip(e)}
+function moveTip(e){const r=tip.getBoundingClientRect();let x=e.clientX+14,y=e.clientY+16;if(x+r.width>innerWidth-8)x=e.clientX-r.width-14;if(y+r.height>innerHeight-8)y=e.clientY-r.height-12;tip.style.left=Math.max(8,x)+'px';tip.style.top=Math.max(8,y)+'px'}
+ov.addEventListener('mouseover',e=>{const b=e.target.closest('.hs');if(b&&!drag)showTip(e,b)});
+ov.addEventListener('mousemove',e=>{if(!tip.hidden)moveTip(e)});
+ov.addEventListener('mouseout',e=>{const b=e.target.closest('.hs');if(b&&!b.contains(e.relatedTarget))tip.hidden=true});
+$('#viewport').addEventListener('scroll',()=>{tip.hidden=true});
+
+/* zonas manuales sobre el archivo original */
+let drag=null;
+ov.addEventListener('pointerdown',e=>{const d=D(S.cur);if(!S.edit||e.target!==ov||!canWrite||isGen(d))return;const r=ov.getBoundingClientRect();drag={r,x:e.clientX-r.left,y:e.clientY-r.top,el:document.createElement('div')};drag.el.className='draw';ov.appendChild(drag.el);ov.setPointerCapture(e.pointerId);tip.hidden=true;e.preventDefault()});
+ov.addEventListener('pointermove',e=>{if(!drag)return;const x=e.clientX-drag.r.left,y=e.clientY-drag.r.top;Object.assign(drag.el.style,{left:Math.min(x,drag.x)+'px',top:Math.min(y,drag.y)+'px',width:Math.abs(x-drag.x)+'px',height:Math.abs(y-drag.y)+'px'});drag.ex=x;drag.ey=y});
+ov.addEventListener('pointerup',()=>{if(!drag)return;const g=drag;drag=null;g.el.remove();if(g.ex==null||Math.abs(g.ex-g.x)<8||Math.abs(g.ey-g.y)<8)return;
+  const z={x:Math.min(g.x,g.ex)/g.r.width,y:Math.min(g.y,g.ey)/g.r.height,w:Math.abs(g.ex-g.x)/g.r.width,h:Math.abs(g.ey-g.y)/g.r.height,pag:S.page};
+  openDlg(`<h3>Nueva actividad</h3><label>Actividad<input name="n" required></label><div class="two"><label>Responsable<input name="r" list="dlResp2"></label><label>Tipo${sel('f',FORMAS,'Actividad')}</label></div><datalist id="dlResp2">${responsables().map(r=>`<option value="${esc(r)}">`).join('')}</datalist><label>Descripción breve<textarea name="ds" rows="3"></textarea></label><div class="row end"><button type="button" class="btn" data-a="dlg-close">Cancelar</button><button class="btn pri">Crear</button></div>`,
+  fd=>{const d=D(S.cur),id=uid();S.act=id;put('diagramas',{...d,actividades:[...(d.actividades||[]),{...z,id,orden:(d.actividades||[]).length+1,nombre:String(fd.get('n')).trim(),responsable:String(fd.get('r')||'').trim(),forma:fd.get('f'),descripcion:String(fd.get('ds')||'').trim()}]})})});
+let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{if(S.view==='mapa'&&(BOOT.mode==='ver'||BOOT.mode==='gestionar'))drawStage()},150)}).observe($('#viewport'));
+
+/* ---------- administración ---------- */
+let adminList=[];
+function adminRender(){
+  $('#admin').innerHTML=`<div class="col" style="max-width:1100px;margin:0 auto"><h2 style="margin:0 0 4px">Clientes</h2><p class="mut">Cada cliente tiene dos enlaces: <b>Ver</b> (solo consulta) y <b>Gestionar</b> (carga y edita). Comparte el de Gestionar solo con quienes deben editar.</p>
+  <form id="newCli" class="row" style="margin:12px 0"><input name="n" placeholder="Nombre del cliente" required style="flex:1;min-height:40px;border:1px solid var(--line);border-radius:7px;padding:6px 10px;font-size:16px"><button class="btn pri">Crear cliente</button></form>
+  <div class="tbl"><table class="stack"><thead><tr><th>Cliente</th><th>Enlace Ver</th><th>Enlace Gestionar</th><th></th></tr></thead><tbody>${adminList.length?adminList.map(c=>`<tr><td><strong>${esc(c.nombre)}</strong><br><button class="lnk" data-x="ren" data-id="${esc(c.id)}">Renombrar</button></td>
+  <td><div class="lk"><input readonly value="${esc(c.ver)}" aria-label="Enlace Ver"><button class="btn sm" data-x="copy">Copiar</button></div></td>
+  <td><div class="lk"><input readonly value="${esc(c.gestionar)}" aria-label="Enlace Gestionar"><button class="btn sm" data-x="copy">Copiar</button></div></td>
+  <td><a class="btn sm" href="${esc(c.gestionar)}" target="_blank" rel="noopener" style="display:inline-block;text-decoration:none;color:inherit">Abrir</a><br><button class="lnk" data-x="key" data-id="${esc(c.id)}">Nueva clave</button></td></tr>`).join(''):'<tr><td colspan="4" class="mut">Aún no hay clientes.</td></tr>'}</tbody></table></div>
+  <p class="hint" style="margin-top:10px">“Nueva clave” invalida el enlace Gestionar anterior (útil si se compartió con alguien que ya no debe editar).</p></div>`}
+async function adminInit(){$('#views').hidden=$('#btnRefresh').hidden=true;$('#mapa').hidden=true;$('#admin').hidden=false;$('#cliName').textContent='Administración';
+  adminRender();try{adminList=await run('api_clients',BOOT.admin);adminRender()}catch(e){toast(e.message)}
+  $('#admin').addEventListener('submit',async e=>{e.preventDefault();const n=e.target.n.value.trim();if(!n)return;try{adminList=await run('api_createClient',BOOT.admin,n);adminRender();toast('Cliente creado.')}catch(err){toast(err.message)}});
+  $('#admin').addEventListener('click',async e=>{const b=e.target.closest('[data-x]');if(!b)return;
+    if(b.dataset.x==='copy'){const inp=b.previousElementSibling;try{await navigator.clipboard.writeText(inp.value);toast('Enlace copiado.')}catch(err){inp.select();toast('Pulsa Ctrl+C para copiar.')}}
+    if(b.dataset.x==='key'){if(!armed(b))return;try{adminList=await run('api_newKey',BOOT.admin,b.dataset.id);adminRender();toast('Clave nueva generada. Envía el nuevo enlace Gestionar.')}catch(err){toast(err.message)}}
+    if(b.dataset.x==='ren'){const c=adminList.find(x=>x.id===b.dataset.id);openDlg(`<h3>Renombrar cliente</h3><label>Nombre<input name="n" required value="${esc(c.nombre)}"></label><div class="row end"><button type="button" class="btn" data-a="dlg-close">Cancelar</button><button class="btn pri">Guardar</button></div>`,async fd=>{try{adminList=await run('api_renameClient',BOOT.admin,c.id,String(fd.get('n')));adminRender()}catch(err){toast(err.message);return false}})}})}
+
+/* ---------- arranque ---------- */
+(async()=>{
+  const q=new URLSearchParams(location.search);
+  $('#mapa').hidden=true;$('#banner').textContent='Cargando…';
+  try{BOOT=await run('api_boot',{admin:q.get('admin')||'',cliente:q.get('cliente')||'',clave:q.get('clave')||''})}
+  catch(e){document.body.innerHTML=`<div class="msgbox"><h2 style="margin-top:0">Mapa de procesos</h2><p>${esc(e.message)}</p></div>`;return}
+  $('#banner').textContent='';
+  if(BOOT.mode==='admin'){$('#modeTag').textContent='Administrador';$('#modeTag').classList.add('g');adminInit();return}
+  C=BOOT.cliente.id;K=BOOT.k||'';canWrite=BOOT.mode==='gestionar';document.title='Mapa de procesos · '+BOOT.cliente.nombre;
+
+  $('#cliName').textContent=BOOT.cliente.nombre;$('#modeTag').textContent=canWrite?'Gestionar':'Ver';$('#modeTag').classList.toggle('g',canWrite);
+  $('#btnNew').hidden=!canWrite;$('#banner').textContent='Cargando…';render(true);load();
+  setInterval(()=>{if(!pending&&!S.form&&!$('#dlg').open&&document.visibilityState==='visible')load()},120000);
+})();
+}
+</script>
+</body>
+</html>
