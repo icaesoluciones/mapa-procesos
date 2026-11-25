@@ -208,6 +208,8 @@ tr.dragging{opacity:.45;background:var(--pri2)}.aed .t{width:120px}.aed .s{width
 .tplbox{display:flex;flex-wrap:wrap;gap:8px;align-items:center;border:1px dashed var(--line2);border-radius:10px;padding:8px 10px;margin:0 0 12px}
 .tplbox select{min-height:36px;border:1px solid var(--line2);border-radius:8px;padding:4px 8px;font-size:14px;max-width:100%}
 .pbox .obj{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:12px;line-height:1.35;opacity:.85;margin:4px 0 2px;font-weight:400;text-align:left}
+.objb{display:flex;gap:12px;align-items:flex-start;background:var(--pri2);border-left:4px solid var(--pri);border-radius:10px;padding:10px 14px;margin:0 0 14px;font-size:14.5px;color:var(--ink)}.objb b{color:var(--pri);white-space:nowrap}.objb .tx{flex:1}.objb.vac{background:var(--soft);border-left-color:var(--line2);color:var(--mut)}
+.subc .obj2{font-size:12.5px;color:var(--ink);margin:-2px 2px 6px;opacity:.85}
 .demo{background:#eef4ff!important;border-color:#c7d7fe!important;color:#1d3a8a}
 </style>
 </head>
@@ -415,20 +417,22 @@ const svBadge=()=>canWrite?`<span class="svst ok" id="svst">Todo guardado</span>
 const cfg=()=>S.items.cfg_mapa||{izq:'Necesidades del cliente',der:'Satisfacción del cliente'};
 const procOrd=c=>mapKids().filter(d=>d.categoria===c).sort((a,b)=>num(a.ordenMapa)-num(b.ordenMapa)||byName(a,b));
 function progSeg(d){const k=stepKeys(d);return `<span class="seg" title="${k.filter(s=>hecho(d,s)).length} de ${k.length} pasos completos">${k.map(s=>`<i class="${hecho(d,s)?'on':''}"></i>`).join('')}</span>`}
-function flowCard(f){const ops=openIn(new Set(subtree(f.id)));return `<div class="subc"><div class="subh"><b>${esc(f.nombre)}</b>${progSeg(f)}</div>${f.dueno||ops?`<p class="mut" style="margin:-4px 2px 6px;font-size:12.5px">${esc(f.dueno||'')}${ops?`${f.dueno?' · ':''}<span style="color:#b42318">${ops} ${ops===1?'oportunidad abierta':'oportunidades abiertas'}</span>`:''}</p>`:''}${goBtns(f)}</div>`}
+function flowCard(f){const ops=openIn(new Set(subtree(f.id)));return `<div class="subc"><div class="subh"><b>${esc(f.nombre)}</b>${progSeg(f)}</div>${f.objetivo?`<p class="obj2">${esc(f.objetivo)}</p>`:''}${f.dueno||ops?`<p class="mut" style="margin:-4px 2px 6px;font-size:12.5px">${esc(f.dueno||'')}${ops?`${f.dueno?' · ':''}<span style="color:#b42318">${ops} ${ops===1?'oportunidad abierta':'oportunidades abiertas'}</span>`:''}</p>`:''}${goBtns(f)}</div>`}
 function goBtns(n){const L=stepsOf(n).filter(s=>FL.includes(s[0]));return `<div class="go">${L.map(([k,l],i)=>`<button class="${hecho(n,k)?'ok':''}" data-a="node" data-id="${esc(n.id)}" data-s="${k}"><b>${hecho(n,k)?'✓':i+1}</b><span>${l}</span>${k==='ops'?`<em>${opsOf(n.id).filter(isOpenOp).length} abiertas</em>`:''}</button>`).join('')}</div>`}
 function areaHTML(d){const fl=flowsOf(d),c=CATS.find(x=>x[0]===d.categoria);
-  return `<div class="sh"><div><h2>${esc(d.nombre)}</h2><p>${c?esc(c[2]):'Proceso sin clasificar'}${d.dueno?' · Responsable: '+esc(d.dueno):''}.${d.objetivo?`<br><b>Objetivo:</b> ${esc(d.objetivo)}`:''}<br>${fl.length?'Estos son sus flujos. Cada uno se caracteriza, se documenta y se analiza por separado.':'Crea el primer flujo de este proceso. Puede tener uno o varios (p. ej. “Cuentas por cobrar” y “Cuentas por pagar”).'}</p></div>
+  return `<div class="sh"><div><h2>${esc(d.nombre)}</h2><p>${c?esc(c[2]):'Proceso sin clasificar'}${d.dueno?' · Responsable: '+esc(d.dueno):''}. ${fl.length?'Estos son sus flujos. Cada uno se caracteriza, se documenta y se analiza por separado.':'Crea el primer flujo de este proceso. Puede tener uno o varios (p. ej. “Cuentas por cobrar” y “Cuentas por pagar”).'}</p></div>
   ${canWrite?`<div class="row"><button class="btn pri" data-a="flow-new" data-p="${esc(d.id)}">+ ${fl.length?'Agregar flujo':'Crear flujo'}</button><button class="btn sm" data-a="node-edit" data-id="${esc(d.id)}">Editar proceso</button></div>`:''}</div>
+  ${objBox(d,'Objetivo del proceso','Para qué existe este proceso. Ej.: Abastecer a tiempo y al mejor costo.')}
   ${fl.length?`<div class="mgrid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">${fl.map(flowCard).join('')}</div>`:`<div class="card empty"><h3>Sin flujos todavía</h3><p>Un flujo describe paso a paso cómo se hace una parte de este proceso.</p>${canWrite?`<button class="btn pri" data-a="flow-new" data-p="${esc(d.id)}">+ Crear flujo</button>`:''}</div>`}
   ${(d.actividades||[]).length?`<div class="card pad" style="margin-top:14px"><p class="mut" style="margin:0">Este proceso tenía actividades registradas en su propio flujo (versión anterior). ${canWrite?`<button class="lnk" data-a="area-migrar">Convertirlas en un flujo de este proceso</button>`:''}</p></div>`:''}
   <div class="foot noprint"><button class="btn ghost" data-a="node" data-id="raiz" data-s="mapa">‹ Mapa de procesos</button><span></span></div>`}
+function objBox(d,lbl,ph){if(!d.objetivo&&!canWrite)return'';return `<div class="objb${d.objetivo?'':' vac'}"><b>${lbl}</b><span class="tx">${d.objetivo?esc(d.objetivo):esc(ph)}</span>${canWrite?`<button class="lnk noprint" data-a="obj-edit" data-id="${esc(d.id)}">${d.objetivo?'Editar':'+ Escribir'}</button>`:''}</div>`}
 function isoHTML(){
   const cf=cfg(),unc=mapKids().filter(d=>!CATS.some(c=>c[0]===d.categoria)),root=D('raiz');
   const band=c=>{const l=procOrd(c[0]);return `<section class="band ${c[3]}"><h3><span>${c[2]}<small>${c[4]}</small></span>${canWrite?`<button class="lnk noprint" data-a="proc-new" data-cat="${c[0]}">+ Agregar</button>`:''}</h3><div class="boxes">${l.length?l.map(d=>{const ops=openIn(new Set(subtree(d.id))),nf=flowsOf(d).length;return `<button class="pbox${S.selMap===d.id?' sel':''}" data-a="mapsel" data-id="${esc(d.id)}"${d.objetivo?` title="${esc(d.objetivo)}"`:''}><b>${esc(d.nombre)}</b>${d.dueno?`<small>${esc(d.dueno)}</small>`:'<small>&nbsp;</small>'}${d.objetivo?`<span class="obj">${esc(d.objetivo)}</span>`:''}<span class="meta2"><span>${nf?nf+(nf===1?' flujo':' flujos'):'Sin flujos'}</span>${ops?`<span class="op">${ops} abiertas</span>`:''}</span></button>`}).join(''):`<span class="emptyb">Aún no hay procesos aquí.</span>`}</div></section>`};
   return `<div class="sh"><div><h2>Mapa de procesos</h2><p>${mapKids().length?'Selecciona un proceso para ver sus flujos o crear uno nuevo. Cada flujo tiene su caracterización, procedimiento y oportunidades.':'Empieza por aquí: agrega los procesos de la empresa en su franja. No hace falta que estén completos; luego se detallan.'}</p></div>
   <div class="row noprint">${S.demo?'':'<button class="btn sm" data-a="demo">Ver un ejemplo completo</button>'}<button class="btn sm" data-a="pdf" data-t="isoMap">Descargar PDF</button></div></div>
-  <div class="card ptarget" id="isoMap"><div class="iso"><div class="iso-side"><span>${esc(cf.izq)}</span></div><div class="iso-b">${CATS.map(band).join('')}</div><div class="iso-side r"><span>${esc(cf.der)}</span></div></div></div>
+  <div class="card ptarget" id="isoMap">${root.objetivo||canWrite?`<div style="padding:14px 14px 0">${objBox(root,'Objetivo de la empresa','Escribe el objetivo general o propósito de la empresa (su razón de ser).')}</div>`:''}<div class="iso"><div class="iso-side"><span>${esc(cf.izq)}</span></div><div class="iso-b">${CATS.map(band).join('')}</div><div class="iso-side r"><span>${esc(cf.der)}</span></div></div></div>
   ${unc.length?`<div class="card pad noprint" style="margin-top:14px"><h4 style="margin:0 0 4px">Procesos sin clasificar (${unc.length})</h4><p class="hint">Selecciónalos y asígnales una franja para que aparezcan en el mapa.</p><div class="row">${unc.map(d=>`<button class="btn sm" data-a="mapsel" data-id="${esc(d.id)}">${esc(d.nombre)}</button>`).join('')}</div></div>`:''}
   ${footNav(root)}`}
 
@@ -436,6 +440,7 @@ function isoHTML(){
 function flujoShell(d){
   const n=(d.actividades||[]).length;
   return `<div class="sh"><div><h2>${d.raiz?'Flujo general de la empresa':'Flujo del proceso'}</h2><p>${n?'Haz clic en una actividad para ver su detalle y bajar a sus flujos de detalle. Para cambiar el orden, arrástrala a la izquierda o a la derecha. Cada responsable es un carril.':'Escribe o dicta las actividades en orden: quién las hace y qué se hace. La herramienta dibuja el diagrama de carriles. También puedes partir de una plantilla.'}</p></div></div>
+  ${d.raiz?objBox(d,'Objetivo de la empresa','Escribe el objetivo general o propósito de la empresa.'):objBox(d,'Objetivo del flujo','Para qué existe este flujo. Ej.: Cobrar a tiempo todas las facturas emitidas.')}
   <div class="card"><div class="fbar noprint" id="fbar"></div>
   ${n?`<div id="viewport"><div id="stage" hidden><canvas id="cv" hidden></canvas><img id="im" alt="Diagrama de ${esc(d.nombre)}" hidden><div id="ov"></div></div><div id="empty"></div></div>`:
   `<div class="empty"><h3>Este flujo aún no tiene actividades</h3><p>Ejemplo: “Recibir solicitud — Comercial”, “Revisar planos — Ingeniería”, “¿Planos completos? — decisión”.</p>${canWrite?'<div class="row" style="justify-content:center"><button class="btn pri" data-a="acts">Escribir actividades</button><button class="btn" data-a="acts" data-tpl="1">Usar una plantilla</button><button class="btn" data-a="acts" data-dictar="1">Dictar por voz</button></div>':''}</div>`}</div>
@@ -633,7 +638,7 @@ function carHTML(d){
   const chip=(a,mi,first,last)=>`<span class="chip2">${first&&mi>0&&canWrite?`<button data-a="mv-act" data-m="${mi}" data-d="-1" title="Pasar a la anterior" aria-label="Pasar a la anterior">‹</button>`:''}${esc(a.nombre)}${last&&mi<k-1&&canWrite?`<button data-a="mv-act" data-m="${mi}" data-d="1" title="Pasar a la siguiente" aria-label="Pasar a la siguiente">›</button>`:''}</span>`;
   const ta=(i,f,ph)=>`<textarea data-s="${f}" data-m="${i}" rows="4" placeholder="${ph}"${ro()}>${esc((W[i].sipoc||{})[f]||'')}</textarea>`;
   const xin=(t,i,f,ph,area)=>area?`<textarea data-x="${t}" data-i="${i}" data-f="${f}" rows="2" placeholder="${ph}"${ro()}>${esc(X[t][i][f]||'')}</textarea>`:`<input data-x="${t}" data-i="${i}" data-f="${f}" value="${esc(X[t][i][f]||'')}" placeholder="${ph}"${ro()}>`;
-  return `<div class="sh"><div><h2>Caracterización</h2><p>El proceso resumido en sus grandes actividades; para cada una, quién entrega, qué entra, qué sale y quién lo recibe (SIPOC). Además, cómo se mide y qué riesgos tiene.</p></div>${svBadge()}</div>
+  return `<div class="sh"><div><h2>Caracterización</h2><p>El proceso resumido en sus grandes actividades; para cada una, quién entrega, qué entra, qué sale y quién lo recibe (SIPOC). Además, cómo se mide y qué riesgos tiene.</p></div>${svBadge()}</div>${d.objetivo?objBox(d,'Objetivo del flujo',''):''}
   <div class="card pad"><h3 style="margin:0 0 4px;font-size:16px">1. Grandes actividades</h3>
   <p class="hint">Se siguió el camino normal del flujo (la primera opción de cada decisión, sin retrocesos); cada decisión queda dentro de la actividad que la precede. Si el flujo es corto, cada actividad es una gran actividad; si es largo, se agrupan en 5 o 6. Renombra cada bloque con <b>verbo + objeto</b> y usa ‹ › para mover actividades entre bloques.</p>
   <div class="chev">${W.map((m,i)=>`<div class="cv"><small>${i+1}</small>${esc(m.nombre||'Sin nombre')}<i>${esc(m.responsable||'')}</i></div>`).join('')}</div>
@@ -659,7 +664,7 @@ function carHTML(d){
 const PF=[['codigo','Código','Ej.: PR-COM-01'],['elaboro','Elaborado por','']];
 const PT=[['objetivo','Objetivo','Para qué existe. Ej.: Establecer los pasos para elaborar y enviar presupuestos.'],['alcance','Alcance','Dónde empieza, dónde termina y a qué áreas aplica.'],['definiciones','Definiciones','Términos que alguien nuevo no entendería (uno por línea).'],['referencias','Documentos y registros','Formularios, plantillas o sistemas que se usan (uno por línea).']];
 const slimA=a=>({id:a.id,orden:a.orden,forma:a.forma,nombre:a.nombre,responsable:a.responsable,descripcion:a.descripcion,sig:a.sig,ramas:a.ramas});
-const firma=(d,p,W,X)=>JSON.stringify({p:{codigo:p.codigo||'',elaboro:p.elaboro||'',objetivo:p.objetivo||'',alcance:p.alcance||'',definiciones:p.definiciones||'',referencias:p.referencias||''},m:W||[],a:orderActs(d).map(slimA),x:X||{ind:[],rie:[]},n:d.nombre,o:d.dueno||''});
+const firma=(d,p,W,X)=>JSON.stringify({p:{codigo:p.codigo||'',elaboro:p.elaboro||'',objetivo:p.objetivo||d.objetivo||'',alcance:p.alcance||'',definiciones:p.definiciones||'',referencias:p.referencias||''},m:W||[],a:orderActs(d).map(slimA),x:X||{ind:[],rie:[]},n:d.nombre,o:d.dueno||''});
 function estadoVer(d){const v=versOf(d.id),last=v[v.length-1],cur=firma(d,S.wp,S.wz,S.wx);
   if(!last)return{n:1,borr:true,last:null,v};return{n:last.datos===cur?num(last.version):num(last.version)+1,borr:last.datos!==cur,last,v}}
 function procShell(d){
@@ -669,7 +674,7 @@ function procShell(d){
   return `<div class="sh"><div><h2>Procedimiento</h2><p>Completa los datos de la izquierda; el documento se arma solo con el flujo y la caracterización. Cuando esté listo, apruébalo para fijar la versión.</p></div><div class="row noprint">${svBadge()}<button class="btn sm" data-a="pdf" data-t="procDoc">Descargar PDF</button><button class="btn sm" data-a="docx">Descargar Word (.docx)</button></div></div>
   <div id="vstat">${vstatHTML(d,E)}</div>
   <div class="pgrid"><div class="card pad">${canWrite?`<div class="two">${PF.map(([k,l,ph])=>`<label>${l}<input data-p="${k}" value="${esc(p[k]||'')}" placeholder="${ph}"></label>`).join('')}</div>
-  ${PT.map(([k,l,ph])=>`<label>${l}<textarea data-p="${k}" rows="3" placeholder="${ph}">${esc(p[k]||'')}</textarea></label>`).join('')}`:'<p class="mut">Vista de consulta.</p>'}
+  ${PT.map(([k,l,ph])=>`<label>${l}<textarea data-p="${k}" rows="3" placeholder="${esc(k==='objetivo'&&d.objetivo?'Si lo dejas vacío se usa el objetivo del flujo: '+d.objetivo:ph)}">${esc(p[k]||'')}</textarea></label>`).join('')}`:'<p class="mut">Vista de consulta.</p>'}
   ${E.v.length?`<div class="vlist"><h4 style="margin:0 0 4px">Versiones aprobadas</h4>${E.v.slice().reverse().map(x=>`<div class="vrow"><span><b>Versión ${esc(x.version)}</b> · ${esc(fmtD(x.fecha))} · ${esc(x.aprobo||'')}<br><span class="mut">${esc(x.cambio||'')}</span></span><button class="btn sm" data-a="ver-pdf" data-id="${esc(x.id)}">PDF</button></div>`).join('')}</div>`:''}</div>
   <div class="pprev card"><div id="procDoc" class="doc ptarget"></div></div></div>${footNav(d)}`}
 function vstatHTML(d,E){return E.last&&!E.borr?`<div class="vstat ok"><b>Versión ${E.n} vigente</b> · aprobada el ${esc(fmtD(E.last.fecha))} por ${esc(E.last.aprobo||'—')}.</div>`:
@@ -684,7 +689,7 @@ function procDoc(d,p,W,X,ver,vers){
   const img='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(layoutFlow(d).svg);
   const titulo=d.raiz?'Flujo general de '+(d.nombre||'la empresa'):d.nombre;let s=6;
   return `<table class="dh"><tr><td rowspan="2" class="dt"><small style="color:#6b7280;font-size:11px">PROCEDIMIENTO</small><br>${esc(titulo)}</td><td>Código<br><b>${esc(p.codigo||'—')}</b></td><td>Versión<br><b>${esc(ver)}</b></td></tr><tr><td>Elaborado por<br><b>${esc(p.elaboro||'—')}</b></td><td>Responsable<br><b>${esc(d.dueno||'—')}</b></td></tr></table>
-  <h3>1. Objetivo</h3>${p.objetivo?`<p>${esc(p.objetivo)}</p>`:'<p class="pend">Pendiente.</p>'}
+  <h3>1. Objetivo</h3>${p.objetivo||d.objetivo?`<p>${esc(p.objetivo||d.objetivo)}</p>`:'<p class="pend">Pendiente.</p>'}
   <h3>2. Alcance</h3>${p.alcance?`<p>${esc(p.alcance)}</p>`:'<p class="pend">Pendiente.</p>'}
   <h3>3. Responsabilidades</h3><ul>${Object.values(resp).map(r=>`<li><b>${esc(r.n)}:</b> ${r.l.map(a=>esc(a.nombre)).join('; ')}.</li>`).join('')}</ul>
   <h3>4. Definiciones</h3>${ulOf(p.definiciones)}
@@ -713,7 +718,7 @@ function opsHTML(d){
   const otros=acts.filter(a=>!inP.has(a.id));
   if(!W.length)groups.push({t:'Actividades',l:otros.splice(0)});else if(otros.length)groups.push({t:'Excepciones y variantes',l:otros});
   const reg=new Set(opsOf(d.id).filter(i=>i.origen).map(i=>i.origen)),ops=opsOf(d.id).sort((a,b)=>Number(isOpenOp(b))-Number(isOpenOp(a))||score(b)-score(a));
-  return `<div class="sh"><div><h2>Oportunidades de mejora</h2><p>Responde unas preguntas sencillas por actividad. Cada “sí” se convierte en una oportunidad. La prioridad se calcula sola con el impacto y el esfuerzo.</p></div>${canWrite?'<button class="btn sm" data-a="op-new">+ Registrar oportunidad</button>':''}</div>
+  return `<div class="sh"><div><h2>Oportunidades de mejora</h2><p>Responde unas preguntas sencillas por actividad. Cada “sí” se convierte en una oportunidad. La prioridad se calcula sola con el impacto y el esfuerzo.</p></div>${canWrite?'<button class="btn sm" data-a="op-new">+ Registrar oportunidad</button>':''}</div>${d.objetivo?objBox(d,'Objetivo del flujo',''):''}
   ${acts.length&&canWrite?`<div class="card pad"><h3 style="margin:0 0 4px;font-size:16px">Preguntas guiadas</h3><ol class="qlist">${QS.map(q=>`<li><b>${esc(q.c)}:</b> ${esc(q.q)}</li>`).join('')}</ol>
   <div class="scroll mx"><table><thead><tr><th>Actividad</th>${QS.map(q=>`<th title="${esc(q.q)}">${esc(q.c)}</th>`).join('')}</tr></thead><tbody>
   ${groups.map(g=>`<tr class="gr"><td colspan="${QS.length+1}">${esc(g.t)}</td></tr>`+g.l.map(a=>`<tr><td>${esc(a.nombre)}<br><small>${esc(a.responsable||'')}</small></td>${QS.map(q=>{const on=(C[a.id]||[]).includes(q.k),done=reg.has(a.id+'|'+q.k);return `<td class="ck"><input type="checkbox" data-q="${q.k}" data-id="${esc(a.id)}"${on||done?' checked':''}${done?' disabled':''} aria-label="${esc(q.c+': '+a.nombre)}"></td>`}).join('')}</tr>`).join('')).join('')}
@@ -805,7 +810,7 @@ async function procDocx(d,p,W,X,ver,vers){
   const titulo=d.raiz?'Flujo general de '+(d.nombre||'la empresa'):d.nombre;let s=6;
   let b=tbl(null,[[[P('PROCEDIMIENTO',{sz:16,c:'6B7280',after:0}),P(titulo,{b:1,sz:30,c:'0B5D4B',after:0})],[P('Código',{sz:16,c:'6B7280',after:0}),P(p.codigo||'—',{b:1,after:0})],[P('Versión',{sz:16,c:'6B7280',after:0}),P(ver,{b:1,after:0})]],
     ['',[P('Elaborado por',{sz:16,c:'6B7280',after:0}),P(p.elaboro||'—',{b:1,after:0})],[P('Responsable',{sz:16,c:'6B7280',after:0}),P(d.dueno||'—',{b:1,after:0})]]],[4800,2300,2300]);
-  b+=H1('1. Objetivo')+pend(p.objetivo)+H1('2. Alcance')+pend(p.alcance)+H1('3. Responsabilidades')+Object.values(resp).map(r=>P([run(r.n+': ',{b:1}),run(r.l.map(a=>a.nombre).join('; ')+'.')],{list:1,after:40})).join('');
+  b+=H1('1. Objetivo')+pend(p.objetivo||d.objetivo)+H1('2. Alcance')+pend(p.alcance)+H1('3. Responsabilidades')+Object.values(resp).map(r=>P([run(r.n+': ',{b:1}),run(r.l.map(a=>a.nombre).join('; ')+'.')],{list:1,after:40})).join('');
   b+=H1('4. Definiciones')+lst(p.definiciones)+H1('5. Documentos y registros')+lst(p.referencias);
   b+=H1('6. Caracterización (SIPOC)')+tbl(['Proveedores','Entradas','Actividad','Salidas','Clientes'],W.map((m,i)=>{const q=m.sipoc||{},c=t=>lines(t).map(x=>P(x,{after:0,sz:20}));return[c(q.p),c(q.e),[P((i+1)+'. '+m.nombre,{b:1,after:0,sz:20})],c(q.s),c(q.c)]}),[1800,1900,1900,1900,1800]);
   b+=H1('7. Descripción de actividades');W.forEach((m,i)=>{b+=H2(`7.${i+1} ${m.nombre}${m.responsable?' · '+m.responsable:''}`)+tbl(['#','Actividad','Responsable','Descripción'],m.acts.map(id=>actOf(d,id)).filter(Boolean).map(fila),[500,3200,1900,3800])});
@@ -855,7 +860,7 @@ function nodeDlg(n,cat){
   openDlg(`<h3>${n?(n.raiz?'Datos del flujo general':isArea(n)?'Datos del proceso':'Datos del flujo'):'Nuevo proceso'}</h3>
   ${n&&n.raiz?'':`<label>Nombre<input name="nombre" required value="${esc(e.nombre||'')}" placeholder="Ej.: Gestión comercial"></label>`}
   <label>Responsable<input name="dueno" value="${esc(e.dueno||'')}" list="dlR3"></label><datalist id="dlR3">${responsables().map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
-  ${isMap?`<label>Objetivo del proceso <span class="mut">(breve, una o dos líneas)</span><textarea name="objetivo" rows="2" maxlength="220" placeholder="Ej.: Convertir oportunidades en contratos rentables, a tiempo.">${esc(e.objetivo||'')}</textarea></label>`:''}
+  ${true?`<label>${n&&n.raiz?'Objetivo de la empresa':isMap?'Objetivo del proceso':'Objetivo del flujo'} <span class="mut">(breve, una o dos líneas)</span><textarea name="objetivo" rows="2" maxlength="220" placeholder="Ej.: Convertir oportunidades en contratos rentables, a tiempo.">${esc(e.objetivo||'')}</textarea></label>`:''}
   ${isMap?`<label>Franja del mapa${sel('categoria',CATS.map(c=>[c[0],c[2]]),e.categoria||cat||'operativo')}</label>`:''}
   <div class="row end" style="margin-top:12px"><button type="button" class="btn" data-a="dlg-close">Cancelar</button><button class="btn pri">${n?'Guardar':'Crear'}</button></div>`,
   fd=>{const base={...(fd.has('nombre')?{nombre:String(fd.get('nombre')).trim()}:{}),dueno:String(fd.get('dueno')||'').trim(),...(fd.has('objetivo')?{objetivo:String(fd.get('objetivo')||'').trim()}:{})};
@@ -864,9 +869,9 @@ function nodeDlg(n,cat){
 function newFlowDlg(pid,act){const p=D(pid);if(!p||!canWrite)return;const first=act?!subsOf(p,act).length:!flowsOf(p).length;
   openDlg(`<h3>${act?(first?'Crear flujo de detalle':'Agregar flujo'):(first?'Crear flujo':'Agregar flujo')}</h3><p class="mut">${act?'De la actividad: '+esc(act.nombre):'Proceso: '+esc(p.nombre)}</p>
   <label>Nombre del flujo<input name="nombre" required value="${first?esc(act?act.nombre:p.nombre):''}" placeholder="Ej.: Cuentas por cobrar"></label>
-  <label>Responsable<input name="dueno" value="${esc(act?act.responsable||'':p.dueno||'')}" list="dlR5"></label><datalist id="dlR5">${responsables().map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
+  <label>Responsable<input name="dueno" value="${esc(act?act.responsable||'':p.dueno||'')}" list="dlR5"></label><label>Objetivo del flujo <span class="mut">(opcional)</span><textarea name="objetivo" rows="2" maxlength="220" placeholder="Para qué existe. Ej.: Cobrar a tiempo todas las facturas emitidas."></textarea></label><datalist id="dlR5">${responsables().map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
   <div class="row end" style="margin-top:12px"><button type="button" class="btn" data-a="dlg-close">Cancelar</button><button class="btn pri">Crear y dibujar</button></div>`,
-  fd=>{const f={id:uid(),nombre:String(fd.get('nombre')).trim(),dueno:String(fd.get('dueno')||'').trim(),parentId:p.id,parentActId:act?act.id:null,actividades:[],creado:new Date().toISOString()};put('diagramas',f);toast('Flujo creado.');setTimeout(()=>goNode(f.id,'flujo'),0)})}
+  fd=>{const f={id:uid(),nombre:String(fd.get('nombre')).trim(),dueno:String(fd.get('dueno')||'').trim(),objetivo:String(fd.get('objetivo')||'').trim(),parentId:p.id,parentActId:act?act.id:null,actividades:[],creado:new Date().toISOString()};put('diagramas',f);toast('Flujo creado.');setTimeout(()=>goNode(f.id,'flujo'),0)})}
 function histDlg(){const d=D(S.cur),hs=Object.values(S.items).filter(i=>i.tipo==='hist'&&i.nodo===d.id).sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
   openDlg(`<h3>Historial · ${esc(d.raiz?'Flujo general':d.nombre)}</h3><p class="mut">Copias automáticas del estado anterior (como máximo una cada 10 minutos; se guardan las 15 más recientes). Restaurar guarda primero una copia del estado actual.</p>
   <div style="max-height:52vh;overflow:auto">${hs.length?hs.map(x=>{let n=0,a='';try{const o=JSON.parse(x.datos);n=(o.actividades||[]).length;a=o.nombre||''}catch(e){}return `<div class="hrow"><span><b>${esc(fmtF(x.editado||x.fecha))}</b> · ${esc(x.por||'—')}<br><span class="mut">${n} actividades${x.nota?' · '+esc(x.nota):''}</span></span><button type="button" class="btn sm" data-a="hist-rest" data-id="${esc(x.id)}">Restaurar</button></div>`}).join(''):'<p class="mut">Aún no hay copias. Se crean automáticamente al hacer cambios.</p>'}</div>
@@ -877,7 +882,7 @@ function whoBtn(){const b=$('#who');b.hidden=!canWrite||S.demo;b.textContent=yo(
 
 /* ================= ejemplo ================= */
 function demoData(){const D2={},I={},now=new Date().toISOString(),mk=(o)=>{D2[o.id]={actividades:[],creado:now,editadoPor:'Equipo de ejemplo',editado:now,...o};return D2[o.id]};
-  mk({id:'raiz',raiz:true,nombre:'Constructora Ejemplo',dueno:'Gerencia general'});
+  mk({id:'raiz',raiz:true,nombre:'Constructora Ejemplo',dueno:'Gerencia general',objetivo:'Construir obras de calidad, en plazo y presupuesto, que generen confianza y clientes recurrentes.'});
   const A=(id,n,c,o,du)=>mk({id,nombre:n,parentId:'raiz',parentActId:null,categoria:c,ordenMapa:o,dueno:du});
   A('pe','Planificación estratégica','estrategico',1,'Gerencia general');A('rd','Revisión por la dirección','estrategico',2,'Gerencia general');
   A('gc','Gestión comercial','operativo',1,'Comercial');D2.gc.objetivo='Convertir oportunidades en contratos rentables, a tiempo.';A('pr','Presupuestos','operativo',2,'Presupuesto');D2.pr.objetivo='Elaborar presupuestos completos, en plazo y con el margen esperado.';A('eo','Ejecución de obra','operativo',3,'Dirección de obras');A('ec','Entrega y cierre','operativo',4,'Dirección de obras');
@@ -885,7 +890,7 @@ function demoData(){const D2={},I={},now=new Date().toISOString(),mk=(o)=>{D2[o.
   const g=['Captar al cliente|Comercial','Elaborar presupuesto|Presupuesto','Firmar contrato|Gerencia','Comprar materiales|Compras','Ejecutar la obra|Dirección de obras','Facturar y cobrar|Finanzas','Entregar la obra|Dirección de obras'];
   D2.raiz.actividades=g.map((x,i)=>{const[n,r]=x.split('|');return{id:'g'+i,orden:i+1,forma:i===0?'Inicio':i===g.length-1?'Fin':'Actividad',nombre:n,responsable:r,descripcion:'',sig:[],ramas:[]}});
   const F=(id,par,ti,du,act)=>{const f=mk({id,nombre:PLANT[ti].n,parentId:par,parentActId:act||null,dueno:du,actividades:tplActs(PLANT[ti])});f.macro=proponer(f,defK(f));return f};
-  F('f1','gc',0,'Comercial');const p=F('f2','pr',1,'Presupuesto');F('f3','co',2,'Compras');F('f4','eo',3,'Dirección de obras');F('f5','gf',4,'Finanzas');F('f6','gf',5,'Finanzas');F('f7','rh',6,'RR. HH.');
+  F('f1','gc',0,'Comercial');const p=F('f2','pr',1,'Presupuesto');F('f3','co',2,'Compras');F('f4','eo',3,'Dirección de obras');F('f5','gf',4,'Finanzas');D2.f5.objetivo='Cobrar a tiempo todas las facturas y cubicaciones emitidas.';F('f6','gf',5,'Finanzas');F('f7','rh',6,'RR. HH.');
   const sp=[['Cliente\nComercial','Planos y alcance','Información verificada','Presupuesto'],['Ingeniería','Información verificada','Cantidades por partida','Compras'],['Suplidores','Lista de materiales','Cotizaciones comparadas','Presupuesto'],['Compras','Cotizaciones','Costos unitarios','Gerencia'],['Presupuesto','Presupuesto preliminar','Presupuesto aprobado','Comercial\nCliente']];
   p.macro.forEach((m,i)=>{const s=sp[i]||sp[sp.length-1];m.sipoc={p:s[0],e:s[1],s:s[2],c:s[3]}});
   p.carx={ind:[{n:'Días para entregar un presupuesto',f:'Fecha de entrega − fecha de recepción de planos',m:'≤ 5 días',q:'Mensual'},{n:'Presupuestos ganados',f:'Ganados ÷ enviados × 100',m:'≥ 30 %',q:'Trimestral'}],rie:[{r:'Precios de suplidores desactualizados',c:'Margen menor al previsto',k:'Actualizar la base de precios cada mes'},{r:'Planos incompletos',c:'Errores de cubicación',k:'Lista de verificación al recibir planos'}]};
@@ -911,6 +916,7 @@ document.addEventListener('click',async e=>{
   case 'close-dr':S.sel=null;S.selMap=null;if(S.step==='mapa')content();else overlay();drawer();break;
   case 'proc-new':nodeDlg(null,b.dataset.cat);break;
   case 'node-edit':nodeDlg(D(id)||d);break;
+  case 'obj-edit':nodeDlg(D(id)||d);setTimeout(()=>{const x=$('#dlgForm textarea[name=objetivo]');if(x)x.focus()},60);break;
   case 'node-del':{const n=D(id)||d;if(n.raiz)break;if(kids(n.id).length){toast('Tiene flujos dentro. Elimínalos primero.');break}if(!armed(b))break;
     Object.values(S.items).filter(i=>i.diagramaId===n.id||i.nodo===n.id).forEach(i=>del('items',i.id));
     const back=par(n),sa=n.parentActId;del('diagramas',n.id);S.selMap=null;const bd=D(back);goNode(back,bd&&bd.raiz?(sa?'flujo':'mapa'):(isArea(bd)?'area':'flujo'),sa);toast('Eliminado.');break}
