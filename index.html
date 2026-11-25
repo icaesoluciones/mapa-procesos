@@ -99,7 +99,7 @@ details.menu{position:relative}details.menu summary{list-style:none}details.menu
 .hs{position:absolute;border:2px solid transparent;background:transparent;border-radius:10px;padding:0}
 .hs:hover{border-color:var(--pri);background:#0b5d4b10}.hs.sel{border-color:var(--pri);background:#0b5d4b1c;box-shadow:0 0 0 3px #0b5d4b33}
 #ov.zonas .hs{border:1.5px dashed var(--pri);background:#0b5d4b0d}
-.bdg{position:absolute;top:-9px;right:-9px;min-width:20px;height:20px;border-radius:10px;background:var(--acc);color:#fff;font-size:11px;line-height:20px;padding:0 6px;font-weight:700;box-shadow:0 0 0 2px #fff}
+.bdg{position:absolute;top:-10px;right:-6px;height:20px;border-radius:10px;background:var(--acc);color:#fff;font-size:11px;line-height:20px;padding:0 8px;font-weight:600;white-space:nowrap;box-shadow:0 0 0 2px #fff}
 .hs.drg{z-index:5;border-color:var(--pri);background:#0b5d4b22;cursor:grabbing;box-shadow:0 8px 20px #11182733}.insl{position:absolute;top:0;bottom:0;width:4px;margin-left:-2px;background:var(--acc);border-radius:2px;pointer-events:none;z-index:4}
 .draw{position:absolute;border:2px solid var(--pri);background:#0b5d4b1a;pointer-events:none;border-radius:6px}
 #tip{position:fixed;z-index:40;max-width:300px;background:var(--ink);color:#fff;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.45;pointer-events:none;box-shadow:0 8px 24px #0005}
@@ -199,7 +199,7 @@ tr.dragging{opacity:.45;background:var(--pri2)}.aed .t{width:120px}.aed .s{width
 <header class="top">
   <div class="brand"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><rect width="30" height="30" rx="8" fill="#0b5d4b"/><rect x="6" y="7" width="18" height="4" rx="2" fill="#fff" opacity=".55"/><path d="M6 13.5h13l3.5 2.5-3.5 2.5H6z" fill="#fff"/><rect x="6" y="21" width="18" height="3" rx="1.5" fill="#fff" opacity=".55"/></svg>
     <div><h1>Mapa de procesos</h1><small id="cliName"></small></div></div>
-  <nav class="views" id="views"><button data-v="app" class="on">Procesos</button><button data-v="port">Portafolio de mejora</button></nav>
+  <nav class="views" id="views"><button data-v="app" class="on" title="Pulsa de nuevo para ir al Mapa de procesos">Procesos</button><button data-v="port">Portafolio de mejora</button></nav>
   <div class="hr"><span class="mode" id="modeTag"></span><button class="btn ghost sm" id="btnRefresh" title="Traer los cambios de otras personas">Actualizar</button></div>
 </header>
 <div id="banner"></div>
@@ -311,7 +311,7 @@ function layoutFlow(d){
   acts.forEach((a,i)=>{const lane=lanes.indexOf(lk(a));const x=lw+24+i*cw+(cw-bw)/2,y=top+lane*LH+(LH-bh)/2;P[a.id]={x,y,lane,i};pos[a.id]={x:x/W,y:y/H,w:bw/W,h:bh/H}});
   let g=`<rect width="${W}" height="${H}" fill="#ffffff"/>`;
   if(!acts.length)g+=`<text x="${W/2}" y="${H/2}" text-anchor="middle" font-size="16" fill="#6b7280">Sin actividades todavía</text>`;
-  lanes.forEach((lkey,i)=>{const l=disp[lkey],y=top+i*LH;g+=`<rect x="10" y="${y}" width="${W-20}" height="${LH}" fill="${i%2?'#f8faf9':'#ffffff'}" stroke="#e5e7eb"/><rect x="10" y="${y}" width="${lw}" height="${LH}" fill="#e7f2ee" stroke="#e5e7eb"/>`;
+  lanes.forEach((lkey,i)=>{const l0=disp[lkey],l=l0.charAt(0).toUpperCase()+l0.slice(1),y=top+i*LH;g+=`<rect x="10" y="${y}" width="${W-20}" height="${LH}" fill="${i%2?'#f8faf9':'#ffffff'}" stroke="#e5e7eb"/><rect x="10" y="${y}" width="${lw}" height="${LH}" fill="#e7f2ee" stroke="#e5e7eb"/>`;
     wrapTxt(l,17).forEach((t,j,a)=>{g+=`<text x="${10+lw/2}" y="${y+LH/2+(j-(a.length-1)/2)*18+5}" text-anchor="middle" font-size="14" font-weight="700" fill="#0b5d4b">${esc(t)}</text>`})});
   acts.forEach((a,i)=>{
     const p=P[a.id],dec=a.forma==='Decisión';let tg;
@@ -321,7 +321,7 @@ function layoutFlow(d){
       if(k===0){const x1=p.x+bw+(dec?4:0),y1=p.y+bh/2;
         if(q.i>p.i){const m=p.x+bw+(cw-bw)/2,y2=q.y+bh/2;path=`M${x1} ${y1} H${m} V${y2} H${q.x-2}`}
         else{const lb=top+(Math.max(p.lane,q.lane)+1)*LH-10;path=`M${x1} ${y1} H${p.x+bw+(cw-bw)/2-6} V${lb} H${q.x+bw/2} V${q.y+bh+2}`}
-        lx=x1+4;ly=y1-7}
+        lx=x1+5;ly=y1-9}
       else{const y1=p.y+bh+(dec?6:0),yb=Math.min(top+(p.lane+1)*LH-6,y1+14+(k-1)*8);
         if(q.i>p.i){const m=q.x-(cw-bw)/2+6+(k-1)*5;path=`M${cx} ${y1} V${yb} H${m} V${q.y+bh/2} H${q.x-2}`}
         else path=`M${cx} ${y1} V${yb} H${q.x+bw/2+(k-1)*8} V${q.y+bh+2}`;
@@ -332,8 +332,7 @@ function layoutFlow(d){
     if(f==='Decisión')g+=`<path d="M${cx} ${p.y-6} L${p.x+bw+4} ${cy} L${cx} ${p.y+bh+6} L${p.x-4} ${cy}Z" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5" filter="url(#s)"/>`;
     else if(f==='Inicio'||f==='Fin')g+=`<rect x="${p.x}" y="${p.y+8}" width="${bw}" height="${bh-16}" rx="${(bh-16)/2}" fill="${f==='Inicio'?'#e7f2ee':'#fdecea'}" stroke="${f==='Inicio'?'#0b5d4b':'#e8553f'}" stroke-width="1.5" filter="url(#s)"/>`;
     else g+=`<rect x="${p.x}" y="${p.y}" width="${bw}" height="${bh}" rx="10" fill="#ffffff" stroke="${sub?'#0b5d4b':'#9ca3af'}" stroke-width="${sub?2.2:1.3}" filter="url(#s)"/>`;
-    if(sub)g+=`<rect x="${p.x+bw-30}" y="${p.y+bh-17}" width="24" height="13" rx="6.5" fill="#0b5d4b"/><text x="${p.x+bw-18}" y="${p.y+bh-7.5}" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">+${sub}</text>`;
-    g+=`<circle cx="${p.x+2}" cy="${p.y+2}" r="10" fill="#111827"/><text x="${p.x+2}" y="${p.y+6}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#fff">${i+1}</text>`;
+    if(sub){const t=sub===1?'1 flujo':sub+' flujos',tw=t.length*5.6+12;g+=`<rect x="${p.x+bw-tw-6}" y="${p.y+bh-17}" width="${tw}" height="13" rx="6.5" fill="#0b5d4b"/><text x="${p.x+bw-tw/2-6}" y="${p.y+bh-7.5}" text-anchor="middle" font-size="9" font-weight="600" fill="#fff">${t}</text>`}
     wrapTxt(a.nombre,f==='Decisión'?14:19).forEach((t,j,L)=>{g+=`<text x="${cx}" y="${cy+(j-(L.length-1)/2)*16+5}" text-anchor="middle" font-size="13" font-weight="500" fill="#111827">${esc(t)}</text>`})});
   const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="Inter, Arial, Helvetica, sans-serif"><defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#9ca3af"/></marker><filter id="s" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="1.5" stdDeviation="1.6" flood-color="#111827" flood-opacity=".12"/></filter></defs>${g}</svg>`;
   const L={svg,ar:H/W,pos,url:URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}))};
@@ -422,7 +421,7 @@ function isoHTML(){
   const cf=cfg(),unc=mapKids().filter(d=>!CATS.some(c=>c[0]===d.categoria)),root=D('raiz');
   const band=c=>{const l=procOrd(c[0]);return `<section class="band ${c[3]}"><h3><span>${c[2]}<small>${c[4]}</small></span>${canWrite?`<button class="lnk noprint" data-a="proc-new" data-cat="${c[0]}">+ Agregar</button>`:''}</h3><div class="boxes">${l.length?l.map(d=>{const ops=openIn(new Set(subtree(d.id)));return `<button class="pbox${S.selMap===d.id?' sel':''}" data-a="mapsel" data-id="${esc(d.id)}"><b>${esc(d.nombre)}</b>${d.dueno?`<small>${esc(d.dueno)}</small>`:'<small>&nbsp;</small>'}<span class="meta2"><span>${flowsOf(d).length?flowsOf(d).length+(flowsOf(d).length===1?' flujo':' flujos'):'Sin flujos'}</span>${ops?`<span class="op">${ops} abiertas</span>`:''}</span></button>`}).join(''):`<span class="emptyb">Aún no hay procesos aquí.</span>`}</div></section>`};
   return `<div class="sh"><div><h2>Mapa de procesos</h2><p>${mapKids().length?'Selecciona un proceso para ver sus flujos o crear uno nuevo. Cada flujo tiene su caracterización, procedimiento y oportunidades.':'Empieza por aquí: agrega los procesos de la empresa en su franja. No hace falta que estén completos; luego se detallan.'}</p></div>
-  <div class="row noprint">${canWrite?'<button class="btn sm" data-a="iso-lbl">Editar textos</button>':''}<button class="btn sm" data-a="print" data-t="isoMap">Imprimir / PDF</button></div></div>
+  <div class="row noprint">${canWrite?'<button class="btn sm" data-a="iso-lbl">Editar textos</button>':''}<button class="btn sm" data-a="pdf" data-t="isoMap">Descargar PDF</button></div></div>
   <div class="card ptarget" id="isoMap"><div class="iso"><div class="iso-side"><span>${esc(cf.izq)}</span></div><div class="iso-b">${CATS.map(band).join('')}</div><div class="iso-side r"><span>${esc(cf.der)}</span></div></div></div>
   ${unc.length?`<div class="card pad noprint" style="margin-top:14px"><h4 style="margin:0 0 4px">Procesos sin clasificar (${unc.length})</h4><p class="hint">Selecciónalos y asígnales una franja para que aparezcan en el mapa.</p><div class="row">${unc.map(d=>`<button class="btn sm" data-a="mapsel" data-id="${esc(d.id)}">${esc(d.nombre)}</button>`).join('')}</div></div>`:''}
   ${footNav(root)}`}
@@ -482,7 +481,7 @@ function overlay(){
   const d=D(S.cur),ov=$('#ov');if(!ov||!d)return;const gen=isGen(d);ov.classList.toggle('zonas',S.zonas&&!gen);
   ov.innerHTML=(d.actividades||[]).filter(a=>gen||(a.pag||1)===S.page).map(a=>{const z=zoneOf(d,a);if(!z)return'';
     const sids=new Set(subsOf(d,a).flatMap(s=>subtree(s.id))),n=Object.values(S.items).filter(i=>isOpenOp(i)&&((i.diagramaId===d.id&&i.actividadId===a.id)||sids.has(i.diagramaId))).length;
-    return `<button class="hs${a.id===S.sel?' sel':''}" data-a="act" data-id="${esc(a.id)}" style="left:${num(z.x)*100}%;top:${num(z.y)*100}%;width:${num(z.w)*100}%;height:${num(z.h)*100}%" aria-label="${esc(a.nombre)}">${n?`<span class="bdg">${n}</span>`:''}</button>`}).join('')}
+    return `<button class="hs${a.id===S.sel?' sel':''}" data-a="act" data-id="${esc(a.id)}" style="left:${num(z.x)*100}%;top:${num(z.y)*100}%;width:${num(z.w)*100}%;height:${num(z.h)*100}%" aria-label="${esc(a.nombre)}">${n?`<span class="bdg" title="Oportunidades de mejora abiertas">${n===1?'1 mejora':n+' mejoras'}</span>`:''}</button>`}).join('')}
 
 /* ================= panel lateral ================= */
 function goBtns(n,pref){const L=n?stepsOf(n).filter(s=>s[0]!=='mapa'):STEPS.filter(s=>s[0]==='flujo'||s[0]==='ops');return `<div class="go">${L.map(([k,l],i)=>`<button class="${n&&hecho(n,k)?'ok':''}" data-a="${n?'node':'sub-make'}" ${n?`data-id="${esc(n.id)}"`:''} data-s="${k}"${pref||''}><b>${n&&hecho(n,k)?'✓':i+1}</b><span>${l}</span>${k==='ops'&&n?`<em>${opsOf(n.id).filter(isOpenOp).length} abiertas</em>`:''}</button>`).join('')}</div>`}
@@ -658,7 +657,7 @@ function procHTMLshell(d){
   if(core(d).length<2)return `<div class="sh"><div><h2>Procedimiento</h2></div></div>${needFlow(d)}`;
   if(!(Array.isArray(d.macro)&&d.macro.length))return `<div class="sh"><div><h2>Procedimiento</h2></div></div><div class="card empty"><h3>Primero la caracterización</h3><p>El procedimiento se organiza por las grandes actividades. Confírmalas en la caracterización.</p><button class="btn pri" data-a="step" data-s="car">Ir a caracterización</button></div>`;
   const p=S.wp;
-  return `<div class="sh"><div><h2>Procedimiento</h2><p>Completa los datos de la izquierda; el documento se arma solo con el flujo y la caracterización.</p></div><div class="row noprint"><button class="btn sm" data-a="print" data-t="procDoc">Imprimir / PDF</button><button class="btn sm" data-a="proc-copy">Copiar para Word o Docs</button></div></div>
+  return `<div class="sh"><div><h2>Procedimiento</h2><p>Completa los datos de la izquierda; el documento se arma solo con el flujo y la caracterización.</p></div><div class="row noprint"><button class="btn sm" data-a="pdf" data-t="procDoc">Descargar PDF</button><button class="btn sm" data-a="docx">Descargar Word (.docx)</button></div></div>
   <div class="pgrid"><div class="card pad">${canWrite?`<div class="two">${PF.map(([k,l,ph])=>`<label>${l}<input data-p="${k}" ${k==='fecha'?'type="date"':''} value="${esc(p[k]||'')}" placeholder="${ph}"></label>`).join('')}</div>
   ${PT.map(([k,l,ph])=>`<label>${l}<textarea data-p="${k}" rows="3" placeholder="${ph}">${esc(p[k]||'')}</textarea></label>`).join('')}`:'<p class="mut">Vista de consulta.</p>'}</div>
   <div class="pprev card"><div id="procDoc" class="doc ptarget"></div></div></div>${footNav(d,true)}`}
@@ -734,6 +733,87 @@ function wzSave(next){const d=D(S.cur);
     S.dirty=false;toast('Guardado.')}
   if(next)goStep(next);else render(true)}
 
+/* ================= exportar: PDF y Word sin imprimir ================= */
+function bajar(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name.replace(/[\\/:*?"<>|]+/g,' ');document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)}
+const loadImg=src=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('img'));i.src=src});
+const u8s=s=>new TextEncoder().encode(s);
+function b64u8(b64){const s=atob(b64),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u}
+/* HTML -> imagen (SVG foreignObject) -> páginas JPEG -> PDF */
+async function htmlToPdf(el,horizontal){
+  const PW=horizontal?842:595.28,PH=horizontal?595.28:841.89,M=34,CW=horizontal?1060:760,scale=2;
+  const box=document.createElement('div');box.style.cssText=`position:fixed;left:-20000px;top:0;width:${CW}px;background:#fff;color:#111827;font:14px/1.5 Arial,Helvetica,sans-serif`;
+  const cl=el.cloneNode(true);cl.removeAttribute('id');cl.style.maxHeight='none';cl.style.overflow='visible';cl.style.boxShadow='none';box.appendChild(cl);document.body.appendChild(box);
+  cl.querySelectorAll('.noprint').forEach(x=>x.remove());cl.querySelectorAll('.sel').forEach(x=>x.classList.remove('sel'));
+  if(horizontal)cl.querySelectorAll('.ope .boxes').forEach(x=>{x.style.flexWrap='wrap';x.style.overflow='visible';x.style.rowGap='8px'});
+  await new Promise(r=>requestAnimationFrame(()=>r()));
+  const top0=box.getBoundingClientRect().top,H=Math.ceil(box.scrollHeight);
+  const brk=new Set([0,H]);cl.querySelectorAll('h3,h4,p,ul,tr,table,.dimg,.band,.iso').forEach(x=>{const r=x.getBoundingClientRect();brk.add(Math.round(r.top-top0));brk.add(Math.round(r.bottom-top0))});
+  const css=[...document.querySelectorAll('style')].map(s=>s.textContent).join('\n').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  const xhtml=new XMLSerializer().serializeToString(box);document.body.removeChild(box);
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${CW*scale}" height="${H*scale}" viewBox="0 0 ${CW} ${H}"><foreignObject x="0" y="0" width="${CW}" height="${H}"><div xmlns="http://www.w3.org/1999/xhtml"><style>${css}</style>${xhtml.replace(/position:\s*fixed;\s*left:\s*-20000px;\s*top:\s*0(px)?;?/,'')}</div></foreignObject></svg>`;
+  const img=await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg));
+  const k=(PW-2*M)/CW,pageH=Math.floor((PH-2*M)/k),cuts=[...brk].sort((a,b)=>a-b),pages=[];let y=0;
+  while(y<H-2){let end=Math.min(H,y+pageH);if(end<H){const c=cuts.filter(v=>v>y+pageH*.35&&v<=y+pageH);if(c.length)end=c[c.length-1]}pages.push([y,end]);y=end}
+  const jpgs=pages.map(([a,b])=>{const cv=document.createElement('canvas');cv.width=CW*scale;cv.height=Math.max(1,(b-a)*scale);const x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,cv.width,cv.height);x.drawImage(img,0,a*scale,CW*scale,(b-a)*scale,0,0,cv.width,cv.height);return{u8:b64u8(cv.toDataURL('image/jpeg',.9).split(',')[1]),w:cv.width,h:cv.height,hpt:(b-a)*k}});
+  return pdfDeJpgs(jpgs,PW,PH,M)}
+function pdfDeJpgs(imgs,PW,PH,M){
+  const parts=[],offs=[];let len=0;const add=x=>{const u=typeof x==='string'?u8s(x):x;parts.push(u);len+=u.length};
+  const obj=(n,body)=>{offs[n]=len;add(`${n} 0 obj\n`);body();add('\nendobj\n')};
+  add('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');const n=imgs.length,kids=imgs.map((_,i)=>`${3+i*3} 0 R`).join(' ');
+  obj(1,()=>add('<</Type/Catalog/Pages 2 0 R>>'));obj(2,()=>add(`<</Type/Pages/Kids[${kids}]/Count ${n}>>`));
+  imgs.forEach((im,i)=>{const pn=3+i*3,cn=pn+1,inn=pn+2,w=PW-2*M,hpt=im.hpt,c=`q ${w.toFixed(2)} 0 0 ${hpt.toFixed(2)} ${M} ${(PH-M-hpt).toFixed(2)} cm /I${i} Do Q`;
+    obj(pn,()=>add(`<</Type/Page/Parent 2 0 R/MediaBox[0 0 ${PW} ${PH}]/Resources<</XObject<</I${i} ${inn} 0 R>>>>/Contents ${cn} 0 R>>`));
+    obj(cn,()=>{add(`<</Length ${c.length}>>stream\n`);add(c);add('\nendstream')});
+    obj(inn,()=>{add(`<</Type/XObject/Subtype/Image/Width ${im.w}/Height ${im.h}/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Length ${im.u8.length}>>stream\n`);add(im.u8);add('\nendstream')})});
+  const xref=len,tot=2+n*3;add(`xref\n0 ${tot+1}\n0000000000 65535 f \n`);for(let i=1;i<=tot;i++)add(String(offs[i]).padStart(10,'0')+' 00000 n \n');
+  add(`trailer\n<</Size ${tot+1}/Root 1 0 R>>\nstartxref\n${xref}\n%%EOF`);return new Blob(parts,{type:'application/pdf'})}
+/* ZIP (sin compresión) para .docx */
+const CRCT=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+const crc32=u=>{let c=0xFFFFFFFF;for(let i=0;i<u.length;i++)c=CRCT[(c^u[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0};
+function zipStore(files){const out=[],cd=[];let off=0;const le=(n,b)=>{const a=new Uint8Array(b);for(let i=0;i<b;i++)a[i]=(n>>>(8*i))&255;return a};
+  files.forEach(f=>{const name=u8s(f.name),data=typeof f.data==='string'?u8s(f.data):f.data,crc=crc32(data);
+    const hd=[le(0x04034b50,4),le(20,2),le(0x0800,2),le(0,2),le(0,2),le(0x21,2),le(crc,4),le(data.length,4),le(data.length,4),le(name.length,2),le(0,2),name];
+    const cdh=[le(0x02014b50,4),le(20,2),le(20,2),le(0x0800,2),le(0,2),le(0,2),le(0x21,2),le(crc,4),le(data.length,4),le(data.length,4),le(name.length,2),le(0,2),le(0,2),le(0,2),le(0,2),le(0,4),le(off,4),name];
+    hd.forEach(x=>{out.push(x);off+=x.length});out.push(data);off+=data.length;cd.push(...cdh)});
+  const cdLen=cd.reduce((s,x)=>s+x.length,0);out.push(...cd,le(0x06054b50,4),le(0,2),le(0,2),le(files.length,2),le(files.length,2),le(cdLen,4),le(off,4),le(0,2));
+  return new Blob(out,{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'})}
+/* Word (.docx) generado desde los datos del procedimiento */
+async function svgPng(svg,w){const im=await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg));const r=im.height/im.width,cv=document.createElement('canvas');cv.width=w;cv.height=Math.round(w*r);const x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,cv.width,cv.height);x.drawImage(im,0,0,cv.width,cv.height);return{u8:b64u8(cv.toDataURL('image/png').split(',')[1]),r}}
+async function procDocx(d,p,W){
+  const X=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const run=(t,o={})=>`<w:r><w:rPr>${o.b?'<w:b/>':''}${o.i?'<w:i/>':''}${o.c?`<w:color w:val="${o.c}"/>`:''}${o.sz?`<w:sz w:val="${o.sz}"/>`:''}</w:rPr><w:t xml:space="preserve">${X(t)}</w:t></w:r>`;
+  const P=(t,o={})=>`<w:p><w:pPr>${o.st?`<w:pStyle w:val="${o.st}"/>`:''}${o.list?'<w:ind w:left="360" w:hanging="220"/>':''}<w:spacing w:after="${o.after??80}"/></w:pPr>${Array.isArray(t)?t.join(''):run(t,o)}</w:p>`;
+  const cell=(c,o={})=>`<w:tc><w:tcPr>${o.w?`<w:tcW w:w="${o.w}" w:type="dxa"/>`:''}${o.fill?`<w:shd w:val="clear" w:color="auto" w:fill="${o.fill}"/>`:''}</w:tcPr>${(Array.isArray(c)?c:[c]).map(x=>x.startsWith('<w:p')?x:P(x,{b:o.b,after:0,sz:20})).join('')||P('',{after:0})}</w:tc>`;
+  const tbl=(head,rows,ws)=>`<w:tbl><w:tblPr><w:tblStyle w:val="Tabla"/><w:tblW w:w="5000" w:type="pct"/></w:tblPr><w:tblGrid>${ws.map(w=>`<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>${head?`<w:tr><w:trPr><w:tblHeader/></w:trPr>${head.map((h,i)=>cell(h,{b:1,fill:'E7F2EE',w:ws[i]})).join('')}</w:tr>`:''}${rows.map(r=>`<w:tr><w:trPr><w:cantSplit/></w:trPr>${r.map((c,i)=>cell(c,{w:ws[i]})).join('')}</w:tr>`).join('')}</w:tbl>${P('',{after:60})}`;
+  const H1=t=>P(t,{st:'Titulo1'}),H2=t=>P(t,{st:'Titulo2'}),pend=t=>t?P(t):P('Pendiente.',{i:1,c:'B42318'});
+  const lst=t=>{const l=lines(t);return l.length?l.map(x=>P('• '+x,{list:1,after:40})).join(''):P('Pendiente.',{i:1,c:'B42318'})};
+  const acts=orderActs(d),nm=Object.fromEntries(acts.map((a,i)=>[a.id,i+1])),inP=new Set(W.flatMap(m=>m.acts)),fuera=acts.filter(a=>!inP.has(a.id));
+  const resp={};acts.forEach(a=>{const r=(a.responsable||'').trim()||'Sin responsable';const k=norm(r);(resp[k]=resp[k]||{n:r,l:[]}).l.push(a)});
+  const fila=a=>{const sb=subsOf(d,a),extra=[];if(a.forma==='Decisión')extra.push(ramasOf(a).map(r=>{const t=actOf(d,r.dest);return r.etiqueta+' → '+(t?nm[t.id]+'. '+t.nombre:'—')}).join('; '));if(sb.length)extra.push('Flujos de detalle: '+sb.map(s=>s.nombre).join(', '));
+    return[String(nm[a.id]),[P(a.nombre,{b:1,after:0,sz:20}),...extra.map(x=>P(x,{after:0,sz:18,c:'6B7280'}))],a.responsable||'',a.descripcion||'']};
+  const titulo=d.raiz?'Flujo general de '+(d.nombre||'la empresa'):d.nombre;
+  let b=tbl(null,[[[P('PROCEDIMIENTO',{sz:16,c:'6B7280',after:0}),P(titulo,{b:1,sz:30,c:'0B5D4B',after:0})],[P('Código',{sz:16,c:'6B7280',after:0}),P(p.codigo||'—',{b:1,after:0})],[P('Versión',{sz:16,c:'6B7280',after:0}),P(p.version||'1',{b:1,after:0})]],
+    ['',[P('Vigencia',{sz:16,c:'6B7280',after:0}),P(p.fecha||'—',{b:1,after:0})],[P('Responsable',{sz:16,c:'6B7280',after:0}),P(d.dueno||'—',{b:1,after:0})]]],[4800,2300,2300]);
+  b+=H1('1. Objetivo')+pend(p.objetivo)+H1('2. Alcance')+pend(p.alcance)+H1('3. Responsabilidades')+Object.values(resp).map(r=>P([run(r.n+': ',{b:1}),run(r.l.map(a=>a.nombre).join('; ')+'.')],{list:1,after:40})).join('');
+  b+=H1('4. Definiciones')+lst(p.definiciones)+H1('5. Documentos y registros')+lst(p.referencias);
+  b+=H1('6. Caracterización (SIPOC)')+tbl(['Proveedores','Entradas','Actividad','Salidas','Clientes'],W.map((m,i)=>{const s=m.sipoc||{},c=t=>lines(t).map(x=>P(x,{after:0,sz:20}));return[c(s.p),c(s.e),[P((i+1)+'. '+m.nombre,{b:1,after:0,sz:20})],c(s.s),c(s.c)]}),[1800,1900,1900,1900,1800]);
+  b+=H1('7. Descripción de actividades');W.forEach((m,i)=>{b+=H2(`7.${i+1} ${m.nombre}${m.responsable?' · '+m.responsable:''}`)+tbl(['#','Actividad','Responsable','Descripción'],m.acts.map(id=>actOf(d,id)).filter(Boolean).map(fila),[500,3200,1900,3800])});
+  if(fuera.length)b+=H2(`7.${W.length+1} Excepciones y variantes`)+tbl(['#','Actividad','Responsable','Descripción'],fuera.map(fila),[500,3200,1900,3800]);
+  const png=await svgPng(layoutFlow(d).svg,1800),cx=6120000,cy=Math.round(cx*png.r);
+  b+=H1('8. Diagrama de flujo')+`<w:p><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="1" name="Diagrama"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="1" name="diagrama.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rImg"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
+  b+=H1('9. Control de cambios')+tbl(['Versión','Fecha','Elaboró','Aprobó'],[[p.version||'1',p.fecha||'',p.elaboro||'',p.aprobo||'']],[1500,2000,3000,3000]);
+  const docXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>${b}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="567" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+  const styles=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/><w:sz w:val="21"/><w:lang w:val="es-DO"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="80" w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>
+<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>
+<w:style w:type="paragraph" w:styleId="Titulo1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:pPr><w:keepNext/><w:pBdr><w:bottom w:val="single" w:sz="8" w:space="2" w:color="0B5D4B"/></w:pBdr><w:spacing w:before="280" w:after="100"/><w:outlineLvl w:val="0"/></w:pPr><w:rPr><w:b/><w:color w:val="0B5D4B"/><w:sz w:val="26"/></w:rPr></w:style>
+<w:style w:type="paragraph" w:styleId="Titulo2"><w:name w:val="heading 2"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:pPr><w:keepNext/><w:spacing w:before="180" w:after="80"/><w:outlineLvl w:val="1"/></w:pPr><w:rPr><w:b/><w:sz w:val="22"/></w:rPr></w:style>
+<w:style w:type="table" w:styleId="Tabla"><w:name w:val="Tabla procedimiento"/><w:tblPr><w:tblBorders><w:top w:val="single" w:sz="4" w:color="CBD5D1"/><w:left w:val="single" w:sz="4" w:color="CBD5D1"/><w:bottom w:val="single" w:sz="4" w:color="CBD5D1"/><w:right w:val="single" w:sz="4" w:color="CBD5D1"/><w:insideH w:val="single" w:sz="4" w:color="CBD5D1"/><w:insideV w:val="single" w:sz="4" w:color="CBD5D1"/></w:tblBorders><w:tblCellMar><w:top w:w="60" w:type="dxa"/><w:left w:w="100" w:type="dxa"/><w:bottom w:w="60" w:type="dxa"/><w:right w:w="100" w:type="dxa"/></w:tblCellMar></w:tblPr></w:style></w:styles>`;
+  return zipStore([
+    {name:'[Content_Types].xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>'},
+    {name:'_rels/.rels',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'},
+    {name:'word/_rels/document.xml.rels',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rSty" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rImg" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/diagrama.png"/></Relationships>'},
+    {name:'word/document.xml',data:docXml},{name:'word/styles.xml',data:styles},{name:'word/media/diagrama.png',data:png.u8}])}
+
 /* ================= portafolio ================= */
 function pathOf(id){const d=D(id);if(!d)return'—';return [...ancestors(id).map(x=>x.d.raiz?'Empresa':x.d.nombre),d.raiz?'Flujo general':d.nombre].join(' › ')}
 function portfolio(){
@@ -796,6 +876,9 @@ document.addEventListener('click',async e=>{
     const back=par(n),sa=n.parentActId;del('diagramas',n.id);S.selMap=null;goNode(back,back==='raiz'&&!sa?'mapa':'flujo',sa);toast('Proceso eliminado.');break}
   case 'mv':{const n=D(S.selMap),l=procOrd(n.categoria),i=l.indexOf(n),j=i+(+b.dataset.d);if(j<0||j>=l.length)break;l.splice(j,0,l.splice(i,1)[0]);l.forEach((x,k)=>{if(num(x.ordenMapa)!==k+1)put('diagramas',{...x,ordenMapa:k+1})});break}
   case 'iso-lbl':{const cf=cfg();openDlg(`<h3>Textos del mapa</h3><label>Entrada (izquierda)<input name="izq" value="${esc(cf.izq)}"></label><label>Salida (derecha)<input name="der" value="${esc(cf.der)}"></label><div class="row end" style="margin-top:12px"><button type="button" class="btn" data-a="dlg-close">Cancelar</button><button class="btn pri">Guardar</button></div>`,fd=>{put('items',{id:'cfg_mapa',tipo:'config',izq:String(fd.get('izq')).trim()||cf.izq,der:String(fd.get('der')).trim()||cf.der})});break}
+  case 'pdf':{const t=document.getElementById(b.dataset.t);if(!t)break;if(b.dataset.t==='procDoc')procPreview();b.disabled=true;const tx=b.textContent;b.textContent='Generando…';
+    try{const iso=b.dataset.t==='isoMap',blob=await htmlToPdf(t,iso);bajar(blob,(iso?'Mapa de procesos':'Procedimiento '+(D(S.cur).raiz?'flujo general':D(S.cur).nombre))+'.pdf');toast('PDF descargado.')}catch(err){console.error(err);toast('No se pudo generar el PDF.')}b.disabled=false;b.textContent=tx;break}
+  case 'docx':{b.disabled=true;const tx=b.textContent;b.textContent='Generando…';try{const d=D(S.cur),blob=await procDocx(d,S.wp,S.wz);bajar(blob,'Procedimiento '+(d.raiz?'flujo general':d.nombre)+'.docx');toast('Documento de Word descargado.')}catch(err){console.error(err);toast('No se pudo generar el documento.')}b.disabled=false;b.textContent=tx;break}
   case 'print':{const t=document.getElementById(b.dataset.t);if(!t)break;if(b.dataset.t==='procDoc')procPreview();document.body.classList.add('pr');setTimeout(()=>{try{window.print()}catch(err){toast('El navegador no permitió imprimir.')}document.body.classList.remove('pr')},60);break}
   case 'act':{const now=Date.now();if(S.zonas)break;if(lastClk.id===id&&now-lastClk.t<450){lastClk={};const a2=actOf(d,id),sb=a2?subsOf(d,a2):[];if(sb.length===1){goNode(sb[0].id,'flujo');break}}lastClk={id,t:now};S.sel=id;overlay();drawer();break}
   case 'acts':actsDlg(!!b.dataset.dictar);break;
@@ -861,7 +944,7 @@ document.addEventListener('change',e=>{const t=e.target;
 document.addEventListener('submit',async e=>{const f=e.target;e.preventDefault();
   if(f.id==='dlgForm'&&dlgOk){const btn=f.querySelector('.btn.pri');if(btn)btn.disabled=true;let r;try{r=await dlgOk(new FormData(f))}finally{if(btn)btn.disabled=false}if(r!==false){dlgCancel=null;closeDlg(false)}}});
 $('#dlg').addEventListener('cancel',()=>{stopDictado();if(dlgCancel)dlgCancel();dlgOk=dlgCancel=null});
-document.querySelectorAll('#views button').forEach(b=>b.addEventListener('click',()=>{S.view=b.dataset.v;render(true)}));
+document.querySelectorAll('#views button').forEach(b=>b.addEventListener('click',()=>{const v=b.dataset.v;if(v==='app'&&S.view==='app'){goNode('raiz','mapa');return}S.view=v;render(true);window.scrollTo(0,0)}));
 $('#btnRefresh').addEventListener('click',()=>{if(!pending)load()});
 $('#fileImp').addEventListener('change',async e=>{const f=e.target.files[0],d=D(S.cur);e.target.value='';if(!f||!d)return;
   try{const up=await uploadFile(f),old=d.assetId;put('diagramas',{...D(d.id),assetId:up.id,kind:up.kind,vista:'archivo',revisado:up.kind!=='pdf'});ck='';render(true);
