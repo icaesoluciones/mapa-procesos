@@ -131,7 +131,10 @@ details.menu{position:relative}details.menu summary{list-style:none}details.menu
 .sip table{width:100%;border-collapse:separate;border-spacing:0;font-size:14px}
 .sip th{font-size:12px;font-weight:600;color:var(--mut);text-align:left;padding:8px;border-bottom:1px solid var(--line2);background:var(--soft)}
 .sip td{padding:6px;border-bottom:1px solid var(--line);vertical-align:top}
-.sip textarea{width:100%;border:1px solid var(--line2);border-radius:8px;padding:7px 8px;font-size:14px;min-height:84px;resize:vertical}
+.sip textarea{width:100%;border:1px solid var(--line2);border-radius:8px;padding:7px 8px;font-size:14px;min-height:46px;resize:none;overflow:hidden;line-height:1.4;background:#fff}.sip textarea:placeholder-shown{background:var(--soft)}
+.ro{font-size:14px;padding:6px 4px;white-space:pre-wrap;color:var(--ink);line-height:1.45}.ro.vac{color:var(--mut)}
+.mh textarea.mnm{flex:1;resize:none;overflow:hidden;font-weight:600;font-size:14.5px;border:1px solid var(--line2);border-radius:8px;padding:7px 9px;min-height:38px;line-height:1.3;background:#fff;font-family:inherit}.mh .mnt{flex:1;font-weight:600;font-size:14.5px;line-height:1.3}
+textarea.ag{resize:none;overflow:hidden}
 .sip .sp{background:var(--pri2);border-radius:8px;min-width:150px;padding:10px}
 .scroll{overflow-x:auto}
 /* procedimiento */
@@ -219,6 +222,17 @@ tr.dragging{opacity:.45;background:var(--pri2)}.aed .t{width:120px}.aed .s{width
 .qnone{padding:12px;color:var(--mut);font-size:14px}.qhead{padding:4px 10px 6px;font-size:12px;color:var(--mut);border-bottom:1px solid var(--line);margin-bottom:4px}
 mark{background:#fde68a;color:inherit;padding:0 1px;border-radius:2px}
 .views{margin-left:0!important}
+
+.ico{flex:none;margin-right:6px;vertical-align:-2px}.btn{display:inline-flex;align-items:center;justify-content:center}
+.icb{width:38px;height:38px;display:inline-grid;place-items:center;border:1px solid var(--line);background:#fff;border-radius:10px;color:var(--mut);cursor:pointer}.icb:hover{color:var(--ink);background:var(--soft)}
+.icb.spin svg{animation:rot 1s linear infinite}@keyframes rot{to{transform:rotate(360deg)}}
+.who .av{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--pri);color:#fff;font-size:12.5px;font-weight:700;letter-spacing:.02em}
+.ld{display:inline-block;width:14px;height:14px;border:2px solid #fde3c3;border-top-color:#9a4b00;border-radius:50%;animation:rot .8s linear infinite;margin-right:8px;vertical-align:-2px}
+.vstat{border-left:4px solid currentColor}
+.top .brand h1{white-space:nowrap}
+@media (max-width:900px){.srch{order:5;flex-basis:100%;max-width:none}.top{gap:8px 10px}}
+@media (max-width:700px){#steps .edit-by{display:none}.objb{flex-wrap:wrap}.objb .tx{flex-basis:100%}.top .brand{order:1}.top .hr{order:2;margin-left:auto}.top .views{order:3}.top .srch{order:4}}
+.pgrid.one{grid-template-columns:1fr!important}
 .demo{background:#eef4ff!important;border-color:#c7d7fe!important;color:#1d3a8a}
 </style>
 </head>
@@ -228,7 +242,7 @@ mark{background:#fde68a;color:inherit;padding:0 1px;border-radius:2px}
     <div><h1>Mapa de procesos</h1><small id="cliName"></small></div></div>
   <div class="srch" role="search"><input id="q" type="search" autocomplete="off" placeholder="Buscar flujo, actividad, responsable…  (Ctrl+K)" aria-label="Buscar en todos los procesos"><div id="qres" hidden></div></div>
   <nav class="views" id="views"><button data-v="app" class="on" title="Pulsa de nuevo para ir al Mapa de procesos">Procesos</button><button data-v="port">Portafolio de mejora</button></nav>
-  <div class="hr"><span class="mode" id="modeTag"></span><button class="who" id="who" hidden></button><button class="btn ghost sm" id="btnRefresh" title="Traer los cambios de otras personas">Actualizar</button></div>
+  <div class="hr"><span class="mode" id="modeTag"></span><button class="who" id="who" hidden></button><button class="icb" id="btnRefresh" title="Actualizar: traer los cambios de otras personas" aria-label="Actualizar"><svg viewBox="0 0 16 16" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3v3.5H9.5M3 13V9.5h3.5"/><path d="M12.6 6.5A5 5 0 0 0 3.8 5M3.4 9.5a5 5 0 0 0 8.8 1.5"/></svg></button></div>
 </header>
 <div id="banner"></div>
 <main id="app" hidden>
@@ -267,6 +281,8 @@ function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clea
 function armed(b){if(b.dataset.armed)return true;b.dataset.armed=1;const t=b.textContent;b.textContent='¿Confirmar?';setTimeout(()=>{if(b.isConnected){delete b.dataset.armed;b.textContent=t}},3000);return false}
 function sel(n,opts,val,attrs){return `<select name="${n}"${attrs||''}>${opts.map(o=>{const [v,l]=Array.isArray(o)?o:[o,o];return `<option value="${esc(v)}"${String(v)===String(val)?' selected':''}>${esc(l)}</option>`}).join('')}</select>`}
 const hasFile=()=>false,isGen=()=>true;
+const IC={dl:'<path d="M8 2v8m0 0 3-3m-3 3L5 7M3 13h10"/>',doc:'<path d="M4 1.5h5l3 3v10H4z M9 1.5v3h3"/>',hist:'<circle cx="8" cy="8" r="6"/><path d="M8 4.5V8l2.5 1.5"/>',edit:'<path d="M10.5 2.5l3 3L6 13H3v-3z"/>',plus:'<path d="M8 3v10M3 8h10"/>',mic:'<rect x="6" y="1.5" width="4" height="8" rx="2"/><path d="M3.5 8a4.5 4.5 0 0 0 9 0M8 12.5V15"/>',ok:'<path d="M3 8.5l3 3 7-7"/>',eye:'<path d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/>',tpl:'<rect x="2" y="2" width="12" height="12" rx="2"/><path d="M2 6h12M6 6v8"/>'};
+const ic=k=>`<svg class="ico" viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg>`;
 
 /* ================= servidor ================= */
 async function run(fn,...args){
@@ -276,7 +292,7 @@ async function run(fn,...args){
   let j;try{j=await r.json()}catch(e){throw new Error('El servidor no respondió correctamente.')}
   if(!j.ok)throw new Error(j.error||'Error del servidor.');return j.data}
 function setSv(t,cls){const e=$('#svst');if(e){e.textContent=t;e.className='svst'+(cls?' '+cls:'')}}
-function busy(on){pending=Math.max(0,pending+(on?1:-1));$('#btnRefresh').textContent=pending?'Guardando…':'Actualizar';setSv(pending?'Guardando…':'Todo guardado',pending?'wk':'ok')}
+function busy(on){pending=Math.max(0,pending+(on?1:-1));$('#btnRefresh').classList.toggle('spin',!!pending);$('#btnRefresh').title=pending?'Guardando…':'Actualizar: traer los cambios de otras personas';setSv(pending?'Guardando…':'Todo guardado',pending?'wk':'ok')}
 function enqueue(key,fn){queue[key]=(queue[key]||Promise.resolve()).then(()=>{busy(true);return fn()}).catch(e=>{toast('No se guardó: '+e.message);setSv('Sin guardar','wk')}).finally(()=>busy(false));return queue[key]}
 const contenido=d=>JSON.stringify([d.nombre,d.dueno,d.actividades,d.macro,d.carx,d.proc]);
 /* historial: copia del estado anterior (como máximo una cada 10 minutos por proceso, salvo que se fuerce) */
@@ -348,40 +364,65 @@ const prioCls=p=>({Alta:'pa',Media:'pm',Baja:'pb'})[p]||'';
 let genCache={key:'',L:null};
 function wrapTxt(s,n){const w=String(s||'').split(/\s+/),L=[''];w.forEach(x=>{if((L[L.length-1]+' '+x).trim().length>n&&L[L.length-1])L.push(x);else L[L.length-1]=(L[L.length-1]+' '+x).trim()});return L.slice(0,4)}
 function ramasOf(a){if(Array.isArray(a.ramas)&&a.ramas.length)return a.ramas;const s=a.sig||[];return [{etiqueta:'Sí',dest:s[0]||''},{etiqueta:'No',dest:s[1]||''}]}
+function rpath(pts,r){const P=[];pts.forEach(p=>{const l=P[P.length-1];if(!l||Math.abs(l[0]-p[0])>.5||Math.abs(l[1]-p[1])>.5)P.push(p)});
+  for(let i=P.length-2;i>0;i--){const a=P[i-1],b=P[i],c=P[i+1];if((Math.abs(a[0]-b[0])<.5&&Math.abs(b[0]-c[0])<.5)||(Math.abs(a[1]-b[1])<.5&&Math.abs(b[1]-c[1])<.5))P.splice(i,1)}
+  let d=`M${P[0][0]} ${P[0][1]}`;for(let i=1;i<P.length-1;i++){const a=P[i-1],b=P[i],c=P[i+1],l1=Math.hypot(b[0]-a[0],b[1]-a[1]),l2=Math.hypot(c[0]-b[0],c[1]-b[1]),k=Math.min(r,l1/2,l2/2);
+    const p1=[b[0]+(a[0]-b[0])/l1*k,b[1]+(a[1]-b[1])/l1*k],p2=[b[0]+(c[0]-b[0])/l2*k,b[1]+(c[1]-b[1])/l2*k];d+=` L${p1[0].toFixed(1)} ${p1[1].toFixed(1)} Q${b[0]} ${b[1]} ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`}
+  const z=P[P.length-1];return d+` L${z[0]} ${z[1]}`}
+const LANEC=['#0b5d4b','#2563eb','#b45309','#7c3aed','#0e7490','#be185d','#4d7c0f','#475569'];
 function layoutFlow(d){
   const acts=orderActs(d),key=JSON.stringify([d.nombre,acts,kids(d.id).map(k=>k.parentActId)]);
   if(genCache.key===key)return genCache.L;
   const lk=a=>norm(a.responsable)||'sin responsable',disp={};acts.forEach(a=>{const k=lk(a);if(!disp[k])disp[k]=String(a.responsable||'').trim()||'Sin responsable'});
   const lanes=[...new Set(acts.map(lk))];
-  const lw=160,cw=200,LH=142,top=20,bw=158,bh=70,W=Math.max(900,lw+30+Math.max(1,acts.length)*cw),H=top+Math.max(1,lanes.length)*LH+20;
+  /* columnas: un traspaso directo a otro carril se dibuja en la misma columna (flecha vertical) */
+  const ln=a=>lanes.indexOf(lk(a)),col={},occ={};let c=-1;
+  const nx=(a,i)=>{const s=(a.sig||[]).filter(Boolean);return s.length?s[0]:(a.forma!=='Fin'&&acts[i+1]?acts[i+1].id:null)};
+  acts.forEach((a,i)=>{const pv=acts[i-1];let cc=c+1;
+    if(pv&&pv.forma!=='Decisión'&&a.forma!=='Decisión'&&ln(pv)!==ln(a)&&nx(pv,i-1)===a.id){const lo=Math.min(ln(pv),ln(a)),hi=Math.max(ln(pv),ln(a));let free=true;for(let k=lo;k<=hi;k++)if(k!==ln(pv)&&occ[c+'|'+k])free=false;if(free)cc=c}
+    col[a.id]=cc;occ[cc+'|'+ln(a)]=1;c=cc});
+  const nc=Math.max(1,c+1);
+  const lw=150,cw=204,LH=150,top=14,bw=170,bh=78,W=Math.max(900,lw+36+nc*cw),H=top+Math.max(1,lanes.length)*LH+14;
   const pos={},P={};
-  acts.forEach((a,i)=>{const lane=lanes.indexOf(lk(a));const x=lw+24+i*cw+(cw-bw)/2,y=top+lane*LH+(LH-bh)/2;P[a.id]={x,y,lane,i};pos[a.id]={x:x/W,y:y/H,w:bw/W,h:bh/H}});
-  let g=`<rect width="${W}" height="${H}" fill="#ffffff"/>`;
+  acts.forEach((a,i)=>{const lane=ln(a),ci=col[a.id];const x=lw+26+ci*cw+(cw-bw)/2,y=top+lane*LH+(LH-bh)/2-6;P[a.id]={x,y,lane,i:ci,o:i};pos[a.id]={x:x/W,y:y/H,w:bw/W,h:bh/H}});
+  let g=`<rect width="${W}" height="${H}" fill="#ffffff"/>`,ed='',lb='';
   if(!acts.length)g+=`<text x="${W/2}" y="${H/2}" text-anchor="middle" font-size="16" fill="#6b7280">Sin actividades todavía</text>`;
-  lanes.forEach((lkey,i)=>{const l0=disp[lkey],l=l0.charAt(0).toUpperCase()+l0.slice(1),y=top+i*LH;g+=`<rect x="10" y="${y}" width="${W-20}" height="${LH}" fill="${i%2?'#f8faf9':'#ffffff'}" stroke="#e5e7eb"/><rect x="10" y="${y}" width="${lw}" height="${LH}" fill="#e7f2ee" stroke="#e5e7eb"/>`;
-    wrapTxt(l,17).forEach((t,j,a)=>{g+=`<text x="${10+lw/2}" y="${y+LH/2+(j-(a.length-1)/2)*18+5}" text-anchor="middle" font-size="14" font-weight="700" fill="#0b5d4b">${esc(t)}</text>`})});
+  lanes.forEach((lkey,i)=>{const l0=disp[lkey],l=l0.charAt(0).toUpperCase()+l0.slice(1),y=top+i*LH,c=LANEC[i%LANEC.length];
+    g+=`<rect x="8" y="${y}" width="${W-16}" height="${LH}" fill="${i%2?'#f7f9f8':'#ffffff'}"/><line x1="8" x2="${W-8}" y1="${y+LH}" y2="${y+LH}" stroke="#e3e8e6"/><rect x="8" y="${y}" width="${lw}" height="${LH}" fill="${c}" fill-opacity=".07"/><rect x="8" y="${y}" width="5" height="${LH}" fill="${c}"/>`;
+    wrapTxt(l,15).forEach((t,j,a)=>{g+=`<text x="${14+lw/2}" y="${y+LH/2+(j-(a.length-1)/2)*18+5}" text-anchor="middle" font-size="14" font-weight="700" fill="${c}">${esc(t)}</text>`})});
+  g+=`<rect x="8" y="${top}" width="${W-16}" height="${lanes.length*LH}" fill="none" stroke="#d5ddda" rx="2"/><line x1="${8+lw}" x2="${8+lw}" y1="${top}" y2="${top+lanes.length*LH}" stroke="#d5ddda"/>`;
+  const back={};let nb=0;
+  const pill=(x,y,txt)=>{const w=txt.length*7+12;lb+=`<rect x="${x-2}" y="${y-12}" width="${w}" height="18" rx="9" fill="#fff" stroke="#cfe3dc"/><text x="${x-2+w/2}" y="${y+1}" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0b5d4b">${esc(txt)}</text>`};
   acts.forEach((a,i)=>{
     const p=P[a.id],dec=a.forma==='Decisión';let tg;
     if(dec&&Array.isArray(a.ramas)&&a.ramas.length)tg=a.ramas.filter(r=>P[r.dest]&&r.dest!==a.id).map(r=>({id:r.dest,lbl:r.etiqueta}));
     else{tg=(Array.isArray(a.sig)?a.sig:[]).filter(id=>P[id]&&id!==a.id).map(id=>({id,lbl:''}));if(!tg.length&&a.forma!=='Fin'&&acts[i+1])tg=[{id:acts[i+1].id,lbl:''}]}
-    tg.forEach((t,k)=>{const q=P[t.id],cx=p.x+bw/2;let path,lx,ly;
-      if(k===0){const x1=p.x+bw+(dec?4:0),y1=p.y+bh/2;
-        if(q.i>p.i){const m=p.x+bw+(cw-bw)/2,y2=q.y+bh/2;path=`M${x1} ${y1} H${m} V${y2} H${q.x-2}`}
-        else{const lb=top+(Math.max(p.lane,q.lane)+1)*LH-10;path=`M${x1} ${y1} H${p.x+bw+(cw-bw)/2-6} V${lb} H${q.x+bw/2} V${q.y+bh+2}`}
-        lx=x1+5;ly=y1-9}
-      else{const y1=p.y+bh+(dec?6:0),yb=Math.min(top+(p.lane+1)*LH-6,y1+14+(k-1)*8);
-        if(q.i>p.i){const m=q.x-(cw-bw)/2+6+(k-1)*5;path=`M${cx} ${y1} V${yb} H${m} V${q.y+bh/2} H${q.x-2}`}
-        else path=`M${cx} ${y1} V${yb} H${q.x+bw/2+(k-1)*8} V${q.y+bh+2}`;
-        lx=cx+6;ly=y1+13}
-      g+=`<path d="${path}" fill="none" stroke="#9ca3af" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#ar)"/>`;
-      if(t.lbl)g+=`<text x="${lx}" y="${ly}" font-size="12" font-weight="700" fill="#0b5d4b">${esc(t.lbl)}</text>`})});
+    tg.forEach((t,k)=>{const q=P[t.id],cx=p.x+bw/2,gap=(cw-bw)/2;let pts,lx,ly;
+      if(q.i===p.i){const dn=q.lane>p.lane,ox=(k?10:0);pts=[[cx+ox,dn?p.y+bh+(dec?8:0):p.y-(dec?8:0)],[cx+ox,dn?q.y-3:q.y+bh+3]];lx=cx+ox+6;ly=dn?p.y+bh+16:p.y-8}
+      else if(q.i<p.i){/* retorno: por el canal inferior del carril más bajo */
+        const L=Math.max(p.lane,q.lane),n=back[L]=(back[L]||0)+1,ch=top+(L+1)*LH-10-(n-1)*7,sx=k===0?p.x+bw+(dec?6:0):cx,sy=k===0?p.y+bh/2:p.y+bh+(dec?8:0);
+        pts=k===0?[[sx,sy],[p.x+bw+gap-4,sy],[p.x+bw+gap-4,ch],[q.x+bw/2+(n-1)*6,ch],[q.x+bw/2+(n-1)*6,q.y+bh+(acts[q.i].forma==='Decisión'?8:0)+3]]:[[sx,sy],[sx,ch],[q.x+bw/2+(n-1)*6,ch],[q.x+bw/2+(n-1)*6,q.y+bh+3]];
+        lx=k===0?sx+6:sx+6;ly=k===0?sy-8:sy+14}
+      else if(k===0){const x1=p.x+bw+(dec?6:0),y1=p.y+bh/2,y2=q.y+bh/2,g1=p.x+bw+gap,m=q.i===p.i+1?g1:q.x-gap;
+        const clear=l=>{for(let c=p.i+1;c<q.i;c++)if(occ[c+'|'+l])return false;return true};
+        if(clear(p.lane))pts=[[x1,y1],[m,y1],[m,y2],[q.x-3,y2]];
+        else if(clear(q.lane))pts=[[x1,y1],[g1,y1],[g1,y2],[q.x-3,y2]];
+        else{const yc=top+p.lane*LH+12;pts=[[x1,y1],[g1,y1],[g1,yc],[q.x-gap,yc],[q.x-gap,y2],[q.x-3,y2]]}
+        lx=x1+6;ly=y1-8}
+      else{const y1=p.y+bh+(dec?8:0),yb=Math.min(top+(p.lane+1)*LH-24,y1+18+(k-1)*8),m=q.x-gap+6+(k-1)*5;
+        pts=q.lane===p.lane&&q.i===p.i+1?[[cx,y1],[cx,yb],[m,yb],[m,q.y+bh/2],[q.x-3,q.y+bh/2]]:[[cx,y1],[cx,yb],[m,yb],[m,q.y+bh/2],[q.x-3,q.y+bh/2]];lx=cx+6;ly=y1+15}
+      ed+=`<path d="${rpath(pts,8)}" fill="none" stroke="#7b8794" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#ar)"/>`;
+      if(t.lbl)pill(lx,ly,t.lbl)})});
+  let bx='';
   acts.forEach((a,i)=>{const p=P[a.id],cx=p.x+bw/2,cy=p.y+bh/2,f=a.forma||'Actividad',sub=kids(d.id,a.id).length;
-    if(f==='Decisión')g+=`<path d="M${cx} ${p.y-6} L${p.x+bw+4} ${cy} L${cx} ${p.y+bh+6} L${p.x-4} ${cy}Z" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5" filter="url(#s)"/>`;
-    else if(f==='Inicio'||f==='Fin')g+=`<rect x="${p.x}" y="${p.y+8}" width="${bw}" height="${bh-16}" rx="${(bh-16)/2}" fill="${f==='Inicio'?'#e7f2ee':'#fdecea'}" stroke="${f==='Inicio'?'#0b5d4b':'#e8553f'}" stroke-width="1.5" filter="url(#s)"/>`;
-    else g+=`<rect x="${p.x}" y="${p.y}" width="${bw}" height="${bh}" rx="10" fill="#ffffff" stroke="${sub?'#0b5d4b':'#9ca3af'}" stroke-width="${sub?2.2:1.3}" filter="url(#s)"/>`;
-    if(sub){const t=sub===1?'1 flujo':sub+' flujos',tw=t.length*5.6+12;g+=`<rect x="${p.x+bw-tw-6}" y="${p.y+bh-17}" width="${tw}" height="13" rx="6.5" fill="#0b5d4b"/><text x="${p.x+bw-tw/2-6}" y="${p.y+bh-7.5}" text-anchor="middle" font-size="9" font-weight="600" fill="#fff">${t}</text>`}
-    wrapTxt(a.nombre,f==='Decisión'?14:19).forEach((t,j,L)=>{g+=`<text x="${cx}" y="${cy+(j-(L.length-1)/2)*16+5}" text-anchor="middle" font-size="13" font-weight="500" fill="#111827">${esc(t)}</text>`})});
-  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="Inter, Arial, Helvetica, sans-serif"><defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#9ca3af"/></marker><filter id="s" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="1.5" stdDeviation="1.6" flood-color="#111827" flood-opacity=".12"/></filter></defs>${g}</svg>`;
+    if(f==='Decisión')bx+=`<path d="M${cx} ${p.y-8} L${p.x+bw+6} ${cy} L${cx} ${p.y+bh+8} L${p.x-6} ${cy}Z" fill="#fff7ed" stroke="#c2410c" stroke-width="1.6" stroke-linejoin="round" filter="url(#s)"/>`;
+    else if(f==='Inicio'||f==='Fin')bx+=`<rect x="${p.x}" y="${p.y+8}" width="${bw}" height="${bh-16}" rx="${(bh-16)/2}" fill="${f==='Inicio'?'#0b5d4b':'#1f2937'}" filter="url(#s)"/>`;
+    else bx+=`<rect x="${p.x}" y="${p.y}" width="${bw}" height="${bh}" rx="10" fill="#ffffff" stroke="${sub?'#0b5d4b':'#c3ccc9'}" stroke-width="${sub?2.2:1.2}" filter="url(#s)"/>`;
+    if(sub){const t=sub===1?'1 flujo de detalle':sub+' flujos de detalle',tw=t.length*5.4+14;bx+=`<rect x="${cx-tw/2}" y="${p.y+bh-9}" width="${tw}" height="17" rx="8.5" fill="#0b5d4b"/><text x="${cx}" y="${p.y+bh+3}" text-anchor="middle" font-size="9.5" font-weight="600" fill="#fff">${t}</text>`}
+    const fill=f==='Inicio'||f==='Fin'?'#ffffff':'#111827';
+    wrapTxt(a.nombre,f==='Decisión'?15:20).slice(0,f==='Decisión'?3:4).forEach((t,j,L)=>{bx+=`<text x="${cx}" y="${cy+(j-(L.length-1)/2)*17+5-(sub&&f!=='Decisión'?4:0)}" text-anchor="middle" font-size="13.5" font-weight="${f==='Inicio'||f==='Fin'?600:500}" fill="${fill}">${esc(t)}</text>`})});
+  g+=ed+bx+lb;
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="Inter, Arial, Helvetica, sans-serif"><defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#7b8794"/></marker><filter id="s" x="-10%" y="-10%" width="120%" height="135%"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#0f172a" flood-opacity=".10"/></filter></defs>${g}</svg>`;
   const L={svg,ar:H/W,pos,url:URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}))};
   if(genCache.L)URL.revokeObjectURL(genCache.L.url);genCache={key,L};return L}
 const zoneOf=(d,a)=>isGen(d)?layoutFlow(d).pos[a.id]:(a.x!=null?a:null);
@@ -404,7 +445,7 @@ function crumbs(){const d=D(S.cur),an=ancestors(d.id);
   $('#crumbs').innerHTML=an.map((x,i)=>{const a0=actOf(x.d,x.act),a=a0&&norm(a0.nombre)!==norm(nm(i))?a0:null;return `<button data-a="node" data-id="${esc(x.d.id)}"${a?` data-sel="${esc(a.id)}"`:''}>${esc(x.d.raiz?'Empresa':x.d.nombre)}</button><span aria-hidden="true">›</span>${a?`<span class="via">${esc(a.nombre)}</span><span aria-hidden="true">›</span>`:''}`}).join('')+`<span class="cur">${esc(d.raiz?(d.nombre||'Empresa'):d.nombre)}</span>${d.raiz?'':`<span class="via">${isArea(d)?'Proceso '+esc((CATS.find(c=>c[0]===d.categoria)||[,'sin clasificar'])[1].toLowerCase()):'Flujo'}</span>`}`}
 function steps(){const d=D(S.cur),L=stepsOf(d),hasHist=!isArea(d);
   $('#steps').innerHTML=L.map(([k,l],i)=>`<button class="st${S.step===k?' on':''}${hecho(d,k)?' ok':''}" role="tab" aria-selected="${S.step===k}" data-a="step" data-s="${k}"><b>${hecho(d,k)&&S.step!==k?'✓':i+1}</b>${l}</button>`).join('')+
-  `<span style="flex:1"></span>${hasHist&&d.editado?`<span class="edit-by" style="align-self:center">Última edición: ${esc(d.editadoPor||'—')} · ${esc(fmtF(d.editado))}</span>`:''}${hasHist&&canWrite?'<button class="btn ghost sm" data-a="hist" style="align-self:center">Historial</button>':''}`}
+  `<span style="flex:1"></span>${hasHist&&d.editado?`<span class="edit-by" style="align-self:center">Última edición: ${esc(d.editadoPor||'—')} · ${esc(fmtF(d.editado))}</span>`:''}${hasHist&&canWrite?`<button class="btn ghost sm" data-a="hist" style="align-self:center">${ic('hist')}Historial</button>`:''}`}
 let ck='';
 function content(){
   const d=D(S.cur),key=d.id+'|'+S.step,el=$('#content');
@@ -413,9 +454,10 @@ function content(){
   if(S.step==='area'){el.innerHTML=areaHTML(d);return}
   if(S.step==='flujo'){if(rebuild||!$('#viewport')){el.innerHTML=flujoShell(d);lastKey=''}flujoBar(d);drawStage();return}
   wzInit(d);
-  if(S.step==='car')el.innerHTML=carHTML(d);
+  if(S.step==='car'){el.innerHTML=carHTML(d);requestAnimationFrame(agAll)}
   else if(S.step==='proc'){el.innerHTML=procShell(d);procPreview()}
   else if(S.step==='ops')el.innerHTML=opsHTML(d)}
+function agAll(){document.querySelectorAll('textarea.ag').forEach(x=>{x.style.height='auto';x.style.height=x.scrollHeight+2+'px'})}
 function flushAuto(){if(S.dirty&&canWrite){clearTimeout(S.asT);wzSave(true)}}
 function goStep(s){flushAuto();S.dirty=false;S.step=s;S.sel=null;S.selMap=null;S.wzFor=null;render(true);window.scrollTo(0,0)}
 function goNode(id,step,selId){if(!D(id))return;flushAuto();S.dirty=false;S.view='app';S.cur=id;const d=D(id);S.step=step||(d.raiz?'mapa':isArea(d)?'area':'flujo');S.sel=selId||null;S.selMap=null;S.zoom=1;S.wzFor=null;render(true);window.scrollTo(0,0)}
@@ -441,7 +483,7 @@ function isoHTML(){
   const cf=cfg(),unc=mapKids().filter(d=>!CATS.some(c=>c[0]===d.categoria)),root=D('raiz');
   const band=c=>{const l=procOrd(c[0]);return `<section class="band ${c[3]}"><h3><span>${c[2]}<small>${c[4]}</small></span>${canWrite?`<button class="lnk noprint" data-a="proc-new" data-cat="${c[0]}">+ Agregar</button>`:''}</h3><div class="boxes">${l.length?l.map(d=>{const ops=openIn(new Set(subtree(d.id))),nf=flowsOf(d).length;return `<button class="pbox${S.selMap===d.id?' sel':''}" data-a="mapsel" data-id="${esc(d.id)}"${d.objetivo?` title="${esc(d.objetivo)}"`:''}><b>${esc(d.nombre)}</b>${d.dueno?`<small>${esc(d.dueno)}</small>`:'<small>&nbsp;</small>'}${d.objetivo?`<span class="obj">${esc(d.objetivo)}</span>`:''}<span class="meta2"><span>${nf?nf+(nf===1?' flujo':' flujos'):'Sin flujos'}</span>${ops?`<span class="op">${ops} abiertas</span>`:''}</span></button>`}).join(''):`<span class="emptyb">Aún no hay procesos aquí.</span>`}</div></section>`};
   return `<div class="sh"><div><h2>Mapa de procesos</h2><p>${mapKids().length?'Selecciona un proceso para ver sus flujos o crear uno nuevo. Cada flujo tiene su caracterización, procedimiento y oportunidades.':'Empieza por aquí: agrega los procesos de la empresa en su franja. No hace falta que estén completos; luego se detallan.'}</p></div>
-  <div class="row noprint">${S.demo?'':'<button class="btn sm" data-a="demo">Ver un ejemplo completo</button>'}<button class="btn sm" data-a="pdf" data-t="isoMap">Descargar PDF</button></div></div>
+  <div class="row noprint">${S.demo?'':`<button class="btn sm" data-a="demo">${ic('eye')}Ver un ejemplo</button>`}<button class="btn sm" data-a="pdf" data-t="isoMap">${ic('dl')}Descargar PDF</button></div></div>
   <div class="card ptarget" id="isoMap">${root.objetivo||canWrite?`<div style="padding:14px 14px 0">${objBox(root,'Objetivo de la empresa','Escribe el objetivo general o propósito de la empresa (su razón de ser).')}</div>`:''}<div class="iso"><div class="iso-side"><span>${esc(cf.izq)}</span></div><div class="iso-b">${CATS.map(band).join('')}</div><div class="iso-side r"><span>${esc(cf.der)}</span></div></div></div>
   ${unc.length?`<div class="card pad noprint" style="margin-top:14px"><h4 style="margin:0 0 4px">Procesos sin clasificar (${unc.length})</h4><p class="hint">Selecciónalos y asígnales una franja para que aparezcan en el mapa.</p><div class="row">${unc.map(d=>`<button class="btn sm" data-a="mapsel" data-id="${esc(d.id)}">${esc(d.nombre)}</button>`).join('')}</div></div>`:''}
   ${footNav(root)}`}
@@ -453,10 +495,10 @@ function flujoShell(d){
   ${d.raiz?objBox(d,'Objetivo de la empresa','Escribe el objetivo general o propósito de la empresa.'):objBox(d,'Objetivo del flujo','Para qué existe este flujo. Ej.: Cobrar a tiempo todas las facturas emitidas.')}
   <div class="card"><div class="fbar noprint" id="fbar"></div>
   ${n?`<div id="viewport"><div id="stage" hidden><canvas id="cv" hidden></canvas><img id="im" alt="Diagrama de ${esc(d.nombre)}" hidden><div id="ov"></div></div><div id="empty"></div></div>`:
-  `<div class="empty"><h3>Este flujo aún no tiene actividades</h3><p>Ejemplo: “Recibir solicitud — Comercial”, “Revisar planos — Ingeniería”, “¿Planos completos? — decisión”.</p>${canWrite?'<div class="row" style="justify-content:center"><button class="btn pri" data-a="acts">Escribir actividades</button><button class="btn" data-a="acts" data-tpl="1">Usar una plantilla</button><button class="btn" data-a="acts" data-dictar="1">Dictar por voz</button></div>':''}</div>`}</div>
+  `<div class="empty"><h3>Este flujo aún no tiene actividades</h3><p>Ejemplo: “Recibir solicitud — Comercial”, “Revisar planos — Ingeniería”, “¿Planos completos? — decisión”.</p>${canWrite?'<div class="row" style="justify-content:center"><button class="btn pri" data-a="acts">Escribir actividades</button><button class="btn" data-a="acts" data-tpl="1">'+ic('tpl')+'Usar una plantilla</button><button class="btn" data-a="acts" data-dictar="1">'+ic('mic')+'Dictar por voz</button></div>':''}</div>`}</div>
   ${footNav(d)}`}
 function flujoBar(d){const b=$('#fbar');if(!b)return;const n=(d.actividades||[]).length;
-  b.innerHTML=`${canWrite?`<button class="btn pri sm" data-a="acts">${n?'Editar actividades':'Escribir actividades'}</button>`:`<button class="btn sm" data-a="acts">Lista de actividades</button>`}
+  b.innerHTML=`${canWrite?`<button class="btn pri sm" data-a="acts">${ic('edit')}${n?'Editar actividades':'Escribir actividades'}</button>`:`<button class="btn sm" data-a="acts">Lista de actividades</button>`}
   <span class="sp"></span>${n?`<button class="ic" data-a="zoom" data-d="-1" aria-label="Alejar">−</button><button class="ic" data-a="zoom" data-d="0" aria-label="Ajustar" style="width:auto;padding:0 10px;font-size:13px">Ajustar</button><button class="ic" data-a="zoom" data-d="1" aria-label="Acercar">+</button>`:''}
   ${canWrite&&!d.raiz?`<details class="menu"><summary class="btn sm" aria-label="Más opciones">Más ▾</summary><div class="mlist"><button data-a="node-edit">Datos del flujo</button><button class="dang" data-a="node-del">Eliminar flujo</button></div></details>`:canWrite?`<button class="btn sm" data-a="node-edit">Datos del flujo general</button>`:''}`}
 let lastKey='',tok=0,lastClk={};
@@ -646,15 +688,15 @@ function carHTML(d){
   if(core(d).length<2)return `<div class="sh"><div><h2>Caracterización</h2></div></div>${needFlow()}`;
   const W=S.wz,k=W.length,nU=unidades(d).length,inP=new Set(W.flatMap(m=>m.acts)),fuera=orderActs(d).filter(a=>!inP.has(a.id)),X=S.wx;
   const chip=(a,mi,first,last)=>`<span class="chip2">${first&&mi>0&&canWrite?`<button data-a="mv-act" data-m="${mi}" data-d="-1" title="Pasar a la anterior" aria-label="Pasar a la anterior">‹</button>`:''}${esc(a.nombre)}${last&&mi<k-1&&canWrite?`<button data-a="mv-act" data-m="${mi}" data-d="1" title="Pasar a la siguiente" aria-label="Pasar a la siguiente">›</button>`:''}</span>`;
-  const ta=(i,f,ph)=>`<textarea data-s="${f}" data-m="${i}" rows="4" placeholder="${ph}"${ro()}>${esc((W[i].sipoc||{})[f]||'')}</textarea>`;
-  const xin=(t,i,f,ph,area)=>area?`<textarea data-x="${t}" data-i="${i}" data-f="${f}" rows="2" placeholder="${ph}"${ro()}>${esc(X[t][i][f]||'')}</textarea>`:`<input data-x="${t}" data-i="${i}" data-f="${f}" value="${esc(X[t][i][f]||'')}" placeholder="${ph}"${ro()}>`;
+  const ta=(i,f,ph)=>{const v=(W[i].sipoc||{})[f]||'';return canWrite?`<textarea class="ag" data-s="${f}" data-m="${i}" rows="1" placeholder="${ph}">${esc(v)}</textarea>`:`<div class="ro${v?'':' vac'}">${v?esc(v):'—'}</div>`};
+  const xin=(t,i,f,ph,area)=>!canWrite?`<div class="ro">${esc(X[t][i][f]||'—')}</div>`:area?`<textarea class="ag" data-x="${t}" data-i="${i}" data-f="${f}" rows="2" placeholder="${ph}"${ro()}>${esc(X[t][i][f]||'')}</textarea>`:`<input data-x="${t}" data-i="${i}" data-f="${f}" value="${esc(X[t][i][f]||'')}" placeholder="${ph}"${ro()}>`;
   return `<div class="sh"><div><h2>Caracterización</h2><p>El proceso resumido en sus grandes actividades; para cada una, quién entrega, qué entra, qué sale y quién lo recibe (SIPOC). Además, cómo se mide y qué riesgos tiene.</p></div>${svBadge()}</div>${d.objetivo?objBox(d,'Objetivo del flujo',''):''}
   <div class="card pad"><h3 style="margin:0 0 4px;font-size:16px">1. Grandes actividades</h3>
   <p class="hint">Se siguió el camino normal del flujo (la primera opción de cada decisión, sin retrocesos); cada decisión queda dentro de la actividad que la precede. Si el flujo es corto, cada actividad es una gran actividad; si es largo, se agrupan en 5 o 6. Renombra cada bloque con <b>verbo + objeto</b> y usa ‹ › para mover actividades entre bloques.</p>
   <div class="chev">${W.map((m,i)=>`<div class="cv"><small>${i+1}</small>${esc(m.nombre||'Sin nombre')}<i>${esc(m.responsable||'')}</i></div>`).join('')}</div>
   ${canWrite?`<div class="row" style="margin-bottom:10px"><label style="display:flex;gap:6px;align-items:center;margin:0;color:var(--ink)">Cantidad <select id="wzK" style="width:auto;min-height:36px;margin:0">${Array.from({length:Math.min(7,nU)},(_,i)=>i+1).map(x=>`<option${x===k?' selected':''}>${x}</option>`).join('')}</select></label><button class="btn sm" data-a="wz-propose">Volver a proponer</button></div>`:''}
-  <div class="mgrid">${W.map((m,i)=>`<div class="mcard"><div class="mh"><span class="mn">${i+1}</span><input data-f="nombre" data-m="${i}" value="${esc(m.nombre)}" aria-label="Nombre"${ro()}></div>
-    <label style="margin:6px 0">Responsable<input data-f="responsable" data-m="${i}" value="${esc(m.responsable||'')}" list="dlRespW"${ro()}></label>
+  <div class="mgrid">${W.map((m,i)=>`<div class="mcard"><div class="mh"><span class="mn">${i+1}</span>${canWrite?`<textarea class="mnm ag" rows="1" data-f="nombre" data-m="${i}" aria-label="Nombre">${esc(m.nombre)}</textarea>`:`<span class="mnt">${esc(m.nombre)}</span>`}</div>
+    ${canWrite?`<label style="margin:6px 0">Responsable<input data-f="responsable" data-m="${i}" value="${esc(m.responsable||'')}" list="dlRespW"></label>`:`<p class="mut" style="margin:6px 0;font-size:13px">${esc(m.responsable||'')}</p>`}
     <div class="chips">${m.acts.map((id,j)=>{const a=actOf(d,id);return a?chip(a,i,j===0,j===m.acts.length-1):''}).join('')}</div></div>`).join('')}</div>
   <datalist id="dlRespW">${responsables().map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
   ${fuera.length?`<p class="hint" style="margin-top:10px">Fuera del camino principal (excepciones): ${fuera.map(a=>esc(a.nombre)).join(' · ')}</p>`:''}</div>
@@ -681,14 +723,14 @@ function procShell(d){
   if(core(d).length<2)return `<div class="sh"><div><h2>Procedimiento</h2></div></div>${needFlow()}`;
   if(!(Array.isArray(d.macro)&&d.macro.length))return `<div class="sh"><div><h2>Procedimiento</h2></div></div><div class="card empty"><h3>Primero la caracterización</h3><p>El procedimiento se organiza por las grandes actividades. Revísalas en la caracterización.</p><button class="btn pri" data-a="step" data-s="car">Ir a caracterización</button></div>`;
   const p=S.wp,E=estadoVer(d);
-  return `<div class="sh"><div><h2>Procedimiento</h2><p>Completa los datos de la izquierda; el documento se arma solo con el flujo y la caracterización. Cuando esté listo, apruébalo para fijar la versión.</p></div><div class="row noprint">${svBadge()}<button class="btn sm" data-a="pdf" data-t="procDoc">Descargar PDF</button><button class="btn sm" data-a="docx">Descargar Word (.docx)</button></div></div>
+  return `<div class="sh"><div><h2>Procedimiento</h2><p>Completa los datos de la izquierda; el documento se arma solo con el flujo y la caracterización. Cuando esté listo, apruébalo para fijar la versión.</p></div><div class="row noprint">${svBadge()}<button class="btn sm" data-a="pdf" data-t="procDoc">${ic('dl')}PDF</button><button class="btn sm" data-a="docx">${ic('doc')}Word</button></div></div>
   <div id="vstat">${vstatHTML(d,E)}</div>
-  <div class="pgrid"><div class="card pad">${canWrite?`<div class="two">${PF.map(([k,l,ph])=>`<label>${l}<input data-p="${k}" value="${esc(p[k]||'')}" placeholder="${ph}"></label>`).join('')}</div>
-  ${PT.map(([k,l,ph])=>`<label>${l}<textarea data-p="${k}" rows="3" placeholder="${esc(k==='objetivo'&&d.objetivo?'Si lo dejas vacío se usa el objetivo del flujo: '+d.objetivo:ph)}">${esc(p[k]||'')}</textarea></label>`).join('')}`:'<p class="mut">Vista de consulta.</p>'}
-  ${E.v.length?`<div class="vlist"><h4 style="margin:0 0 4px">Versiones aprobadas</h4>${E.v.slice().reverse().map(x=>`<div class="vrow"><span><b>Versión ${esc(x.version)}</b> · ${esc(fmtD(x.fecha))} · ${esc(x.aprobo||'')}<br><span class="mut">${esc(x.cambio||'')}</span></span><button class="btn sm" data-a="ver-pdf" data-id="${esc(x.id)}">PDF</button></div>`).join('')}</div>`:''}</div>
+  <div class="pgrid${!canWrite&&!E.v.length?' one':''}">${!canWrite&&!E.v.length?'':`<div class="card pad">`}${!canWrite&&!E.v.length?'':canWrite?`<div class="two">${PF.map(([k,l,ph])=>`<label>${l}<input data-p="${k}" value="${esc(p[k]||'')}" placeholder="${ph}"></label>`).join('')}</div>
+  ${PT.map(([k,l,ph])=>`<label>${l}<textarea data-p="${k}" rows="3" placeholder="${esc(k==='objetivo'&&d.objetivo?'Si lo dejas vacío se usa el objetivo del flujo: '+d.objetivo:ph)}">${esc(p[k]||'')}</textarea></label>`).join('')}`:''}
+  ${E.v.length?`<div class="vlist"><h4 style="margin:0 0 4px">Versiones aprobadas</h4>${E.v.slice().reverse().map(x=>`<div class="vrow"><span><b>Versión ${esc(x.version)}</b> · ${esc(fmtD(x.fecha))} · ${esc(x.aprobo||'')}<br><span class="mut">${esc(x.cambio||'')}</span></span><button class="btn sm" data-a="ver-pdf" data-id="${esc(x.id)}">PDF</button></div>`).join('')}</div>`:''}${!canWrite&&!E.v.length?'':'</div>'}
   <div class="pprev card"><div id="procDoc" class="doc ptarget"></div></div></div>${footNav(d)}`}
 function vstatHTML(d,E){return E.last&&!E.borr?`<div class="vstat ok"><b>Versión ${E.n} vigente</b> · aprobada el ${esc(fmtD(E.last.fecha))} por ${esc(E.last.aprobo||'—')}.</div>`:
-  `<div class="vstat dr"><b>${E.last?`Borrador de la versión ${E.n}`:'Borrador · versión 1'}</b>${E.last?` · hay cambios desde la versión ${esc(E.last.version)} aprobada el ${esc(fmtD(E.last.fecha))}.`:' · aún no se ha aprobado.'}${canWrite?'<span style="flex:1"></span><button class="btn pri sm" data-a="aprobar">Aprobar versión '+E.n+'</button>':''}</div>`}
+  `<div class="vstat dr"><b>${E.last?`Borrador de la versión ${E.n}`:'Borrador · versión 1'}</b>${E.last?` · hay cambios desde la versión ${esc(E.last.version)} aprobada el ${esc(fmtD(E.last.fecha))}.`:' · aún no se ha aprobado.'}${canWrite?'<span style="flex:1"></span><button class="btn pri sm" data-a="aprobar">'+ic('ok')+'Aprobar versión '+E.n+'</button>':''}</div>`}
 const lines=t=>String(t||'').split(/\n+/).map(x=>x.trim()).filter(Boolean);
 const ulOf=t=>{const l=lines(t);return l.length?'<ul>'+l.map(x=>`<li>${esc(x)}</li>`).join('')+'</ul>':'<p class="pend">Pendiente.</p>'};
 function procDoc(d,p,W,X,ver,vers){
@@ -804,6 +846,92 @@ function zipStore(files){const out=[],cd=[];let off=0;const le=(n,b)=>{const a=n
 /* Word (.docx) generado desde los datos del procedimiento */
 async function svgPng(svg,w){const im=await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg));const r=im.height/im.width,cv=document.createElement('canvas');cv.width=w;cv.height=Math.round(w*r);const x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,cv.width,cv.height);x.drawImage(im,0,0,cv.width,cv.height);return{u8:b64u8(cv.toDataURL('image/png').split(',')[1]),r}}
 
+/* ================= PDF con texto real (vectorial) ================= */
+const WINX={'€':128,'‚':130,'„':132,'…':133,'•':149,'–':150,'—':151,'™':153,'‹':139,'›':155,'‘':145,'’':146,'“':147,'”':148};
+const pdfTxt=s=>String(s??'').replace(/→/g,'->').replace(/≤/g,'<=').replace(/≥/g,'>=').replace(/[ \t]/g,' ').replace(/[ ​]/g,'');
+function pdfStr(s){let o='';for(const ch of pdfTxt(s)){let c=WINX[ch]||ch.charCodeAt(0);if(c>255)c=63;o+=(c===40||c===41||c===92?'\\':'')+String.fromCharCode(c)}return o}
+const l1=s=>{const u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i)&255;return u};
+async function svgJpg(svg,w){const im=await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg));const cv=document.createElement('canvas');cv.width=w;cv.height=Math.round(w*im.height/im.width);const x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,cv.width,cv.height);x.drawImage(im,0,0,cv.width,cv.height);return{u8:b64u8(cv.toDataURL('image/jpeg',.92).split(',')[1]),w:cv.width,h:cv.height}}
+function PDFDoc(meta){
+  const M=48,TOP=62,BOT=50,pages=[],imgs=[];let cur=null,y=0;
+  const cx=document.createElement('canvas').getContext('2d');
+  const F={r:'F1',b:'F2',i:'F3'};
+  const tw=(s,sz,st)=>{cx.font=(st==='b'?'bold ':st==='i'?'italic ':'')+sz+'px Arial';return cx.measureText(pdfTxt(s)).width};
+  const C=h=>{h=String(h).replace('#','');return[0,2,4].map(i=>(parseInt(h.substr(i,2),16)/255).toFixed(3)).join(' ')};
+  const f2=n=>(+n).toFixed(2);
+  const api={};
+  const PWf=()=>cur.w,PHf=()=>cur.h,CW=()=>cur.w-2*M;
+  api.page=(land)=>{cur={w:land?841.89:595.28,h:land?595.28:841.89,ops:[]};pages.push(cur);y=TOP};
+  const op=s=>cur.ops.push(s);
+  api.text=(x,yy,s,sz,st,c)=>op(`BT /${F[st||'r']} ${sz} Tf ${C(c||'#111827')} rg ${f2(x)} ${f2(PHf()-yy)} Td (${pdfStr(s)}) Tj ET`);
+  api.rect=(x,yy,w,h,fill,stroke,lw)=>op(`${fill?C(fill)+' rg ':''}${stroke?C(stroke)+' RG '+(lw||.6)+' w ':''}${f2(x)} ${f2(PHf()-yy-h)} ${f2(w)} ${f2(h)} re ${fill&&stroke?'B':fill?'f':'S'}`);
+  api.line=(x1,y1,x2,y2,c,w)=>op(`${C(c)} RG ${w||.6} w ${f2(x1)} ${f2(PHf()-y1)} m ${f2(x2)} ${f2(PHf()-y2)} l S`);
+  const wrap=(s,sz,st,maxw)=>{const out=[];String(s??'').split('\n').forEach(par=>{const ws=par.split(/\s+/).filter(Boolean);if(!ws.length)return;let ln='';
+    ws.forEach(w=>{while(tw(w,sz,st)>maxw&&w.length>1){let k=w.length-1;while(k>1&&tw(w.slice(0,k),sz,st)>maxw)k--;if(ln){out.push(ln);ln=''}out.push(w.slice(0,k));w=w.slice(k)}
+      const t=ln?ln+' '+w:w;if(tw(t,sz,st)<=maxw||!ln)ln=t;else{out.push(ln);ln=w}});out.push(ln)});return out};
+  const need=h=>{if(y+h>PHf()-BOT)api.page(cur.w>cur.h)};
+  api.space=h=>{y+=h};
+  api.h1=t=>{need(110);y+=12;api.text(M,y+11,t,12.5,'b','#0b5d4b');y+=17;api.line(M,y,PWf()-M,y,'#0b5d4b',1);y+=9};
+  api.h2=t=>{need(50);y+=5;api.text(M,y+10,t,10.5,'b','#111827');y+=16};
+  api.para=(t,o={})=>{const sz=o.sz||10,lh=sz*1.42,ls=wrap(t,sz,o.st,CW()-(o.ind||0));ls.forEach(l=>{need(lh);api.text(M+(o.ind||0),y+sz,l,sz,o.st,o.c);y+=lh});y+=o.after??5};
+  api.bullets=(items,o={})=>{items.forEach(it=>{const rich=Array.isArray(it),txt=rich?it.map(r=>r.t).join(''):it,ls=wrap(txt,10,'r',CW()-14);
+    ls.forEach((l,j)=>{need(14.2);if(j===0)api.text(M+3,y+10,'•',10,'r','#0b5d4b');
+      if(rich&&j===0&&it[0].st==='b'&&l.startsWith(it[0].t)){api.text(M+14,y+10,it[0].t,10,'b');api.text(M+14+tw(it[0].t,10,'b'),y+10,l.slice(it[0].t.length),10,'r')}else api.text(M+14,y+10,l,10,'r');y+=14.2})});y+=5};
+  /* tabla: celdas = texto o lista de {t,st,c,sz} */
+  api.table=(head,rows,fr,o={})=>{const tot=fr.reduce((a,b)=>a+b,0),ws=fr.map(f=>f/tot*CW()),pad=5,lh=11.6;
+    const lay=cell=>{const parts=Array.isArray(cell)?cell:[{t:cell}];let L=[];parts.forEach(p=>{const sz=p.sz||9,ls=wrap(p.t,sz,p.st,0);L=L.concat(ls.length?ls.map(x=>({...p,x,sz})):[])});return L};
+    const layW=(cell,w)=>{const parts=Array.isArray(cell)?cell:[{t:cell}];let L=[];parts.forEach(p=>{const sz=p.sz||9;wrap(p.t,sz,p.st,w-2*pad).forEach(x=>L.push({...p,x,sz}))});return L};
+    const rowH=Ls=>Math.max(...Ls.map(L=>L.reduce((a,l)=>a+l.sz*1.3,0)))+2*pad;
+    const drawRow=(cells,isHead)=>{const Ls=cells.map((c,i)=>layW(isHead?[{t:c,st:'b',sz:8.5}]:c,ws[i])),h=Math.max(rowH(Ls),18);
+      let x=M;Ls.forEach((L,i)=>{api.rect(x,y,ws[i],h,isHead?'#e7f2ee':(o.fill&&o.fill[i])||null,'#cbd5d1');let yy=y+pad;L.forEach(l=>{yy+=l.sz*1.3;api.text(x+pad,yy-l.sz*.3,l.x,l.sz,l.st,l.c||(isHead?'#0b5d4b':'#111827'))});x+=ws[i]});y+=h};
+    if(head){need(60);drawRow(head,true)}
+    rows.forEach(r=>{const Ls=r.map((c,i)=>layW(c,ws[i]));const h=Math.max(rowH(Ls),18);if(y+h>PHf()-BOT){api.page(cur.w>cur.h);if(head)drawRow(head,true)}drawRow(r,false)});y+=8};
+  api.image=(im,o={})=>{imgs.push(im);const n=imgs.length;let w=CW(),h=w*im.h/im.w;const maxH=PHf()-BOT-TOP-24;if(h>maxH){h=maxH;w=h*im.w/im.h}need(h+4);
+    op(`q ${f2(w)} 0 0 ${f2(h)} ${f2(M+(CW()-w)/2)} ${f2(PHf()-y-h)} cm /Im${n} Do Q`);y+=h+10};
+  api.y=()=>y;api.M=M;api.tw=tw;api.cw=CW;
+  api.out=()=>{const n=pages.length;
+    pages.forEach((pg,i)=>{cur=pg;const W=pg.w,H=pg.h;
+      api.text(M,34,meta.left||'',8,'b','#0b5d4b');const r=meta.right||'';api.text(W-M-tw(r,8,'r'),34,r,8,'r','#6b7280');api.line(M,42,W-M,42,'#d5ddda',.6);
+      api.line(M,H-34,W-M,H-34,'#e5e7eb',.5);api.text(M,H-22,meta.foot||'',7.5,'r','#6b7280');const pn=`Página ${i+1} de ${n}`;api.text(W-M-tw(pn,7.5,'r'),H-22,pn,7.5,'r','#6b7280')});
+    const parts=[],offs=[];let len=0;const add=x=>{const u=typeof x==='string'?l1(x):x;parts.push(u);len+=u.length};
+    const ob=(k,body)=>{offs[k]=len;add(`${k} 0 obj\n`);body();add('\nendobj\n')};
+    add('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');
+    const nf=3,firstImg=6,firstPage=firstImg+imgs.length;
+    ob(1,()=>add('<</Type/Catalog/Pages 2 0 R>>'));
+    ob(2,()=>add(`<</Type/Pages/Kids[${pages.map((_,i)=>`${firstPage+i*2} 0 R`).join(' ')}]/Count ${n}>>`));
+    ['Helvetica','Helvetica-Bold','Helvetica-Oblique'].forEach((f,i)=>ob(3+i,()=>add(`<</Type/Font/Subtype/Type1/BaseFont/${f}/Encoding/WinAnsiEncoding>>`)));
+    imgs.forEach((im,i)=>ob(firstImg+i,()=>{add(`<</Type/XObject/Subtype/Image/Width ${im.w}/Height ${im.h}/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Length ${im.u8.length}>>stream\n`);add(im.u8);add('\nendstream')}));
+    const xo=imgs.map((_,i)=>`/Im${i+1} ${firstImg+i} 0 R`).join('');
+    pages.forEach((pg,i)=>{const pn=firstPage+i*2,cs=pg.ops.join('\n');
+      ob(pn,()=>add(`<</Type/Page/Parent 2 0 R/MediaBox[0 0 ${pg.w} ${pg.h}]/Resources<</Font<</F1 3 0 R/F2 4 0 R/F3 5 0 R>>${xo?`/XObject<<${xo}>>`:''}>>/Contents ${pn+1} 0 R>>`));
+      ob(pn+1,()=>{add(`<</Length ${l1(cs).length}>>stream\n`);add(cs);add('\nendstream')})});
+    const total=firstPage+n*2,xref=len;add(`xref\n0 ${total}\n0000000000 65535 f \n`);for(let k=1;k<total;k++)add(String(offs[k]).padStart(10,'0')+' 00000 n \n');
+    add(`trailer\n<</Size ${total}/Root 1 0 R/Info<</Producer(Mapa de procesos)/Title(${pdfStr(meta.title||'')})>>>>\nstartxref\n${xref}\n%%EOF`);
+    return new Blob(parts,{type:'application/pdf'})};
+  api.page(false);return api}
+async function procPdf(d,p,W,X,ver,vers){
+  X=X||{ind:[],rie:[]};const titulo=d.raiz?'Flujo general de '+(d.nombre||'la empresa'):d.nombre;
+  const acts=orderActs(d),nm=Object.fromEntries(acts.map((a,i)=>[a.id,i+1])),inP=new Set(W.flatMap(m=>m.acts)),fuera=acts.filter(a=>!inP.has(a.id));
+  const resp={};acts.forEach(a=>{const r=(a.responsable||'').trim()||'Sin responsable';const k=norm(r);(resp[k]=resp[k]||{n:r,l:[]}).l.push(a)});
+  const P=PDFDoc({title:'Procedimiento '+titulo,left:titulo,right:[p.codigo,'Versión '+ver].filter(Boolean).join('  ·  '),foot:(BOOT.cliente?BOOT.cliente.nombre+'  ·  ':'')+'Generado el '+fmtD(new Date().toISOString())});
+  const g=(t,c)=>({t,sz:7.5,c:c||'#6b7280'}),v=t=>({t:t||'—',st:'b',sz:9.5});
+  P.table(null,[[[g('PROCEDIMIENTO'),{t:titulo,st:'b',sz:14,c:'#0b5d4b'}],[g('Código'),v(p.codigo)],[g('Versión'),v(ver)]],[[g('Objetivo del flujo'),{t:d.objetivo||'—',sz:9}],[g('Elaborado por'),v(p.elaboro)],[g('Responsable'),v(d.dueno)]]],[52,24,24]);
+  const pend=t=>t?P.para(t):P.para('Pendiente.',{st:'i',c:'#b42318'}),lst=t=>{const l=lines(t);l.length?P.bullets(l):P.para('Pendiente.',{st:'i',c:'#b42318'})};
+  P.h1('1. Objetivo');pend(p.objetivo||d.objetivo);P.h1('2. Alcance');pend(p.alcance);
+  P.h1('3. Responsabilidades');P.bullets(Object.values(resp).map(r=>[{t:r.n+': ',st:'b'},{t:r.l.map(a=>a.nombre).join('; ')+'.'}]));
+  P.h1('4. Definiciones');lst(p.definiciones);P.h1('5. Documentos y registros');lst(p.referencias);
+  P.h1('6. Caracterización (SIPOC)');P.table(['Proveedores','Entradas','Actividad','Salidas','Clientes'],W.map((m,i)=>{const q=m.sipoc||{},c=t=>lines(t).join('\n')||'—';return[c(q.p),c(q.e),[{t:(i+1)+'. '+m.nombre,st:'b'},{t:m.responsable||'',sz:8,c:'#6b7280'}],c(q.s),c(q.c)]}),[19,20,22,20,19],{fill:[null,null,'#f1f7f5']});
+  const fila=a=>{const sb=subsOf(d,a),cel=[{t:a.nombre,st:'b'}];if(a.forma==='Decisión')cel.push({t:ramasOf(a).map(r=>{const t=actOf(d,r.dest);return r.etiqueta+' → '+(t?nm[t.id]+'. '+t.nombre:'—')}).join('; '),sz:8,c:'#6b7280'});if(sb.length)cel.push({t:'Flujos de detalle: '+sb.map(s=>s.nombre).join(', '),sz:8,c:'#0b5d4b'});return[String(nm[a.id]),cel,a.responsable||'',a.descripcion||'']};
+  P.h1('7. Descripción de actividades');W.forEach((m,i)=>{P.h2(`7.${i+1} ${m.nombre}${m.responsable?'  ·  '+m.responsable:''}`);P.table(['#','Actividad','Responsable','Descripción'],m.acts.map(id=>actOf(d,id)).filter(Boolean).map(fila),[5,33,20,42])});
+  if(fuera.length){P.h2(`7.${W.length+1} Excepciones y variantes`);P.table(['#','Actividad','Responsable','Descripción'],fuera.map(fila),[5,33,20,42])}
+  let s=7;
+  if(X.ind.length){P.h1(`${++s}. Indicadores`);P.table(['Indicador','Cómo se calcula','Meta','Frecuencia'],X.ind.map(r=>[[{t:r.n||'',st:'b'}],r.f||'',r.m||'',r.q||'']),[28,40,16,16])}
+  if(X.rie.length){P.h1(`${++s}. Riesgos y controles`);P.table(['Riesgo','Consecuencia','Control'],X.rie.map(r=>[[{t:r.r||'',st:'b'}],r.c||'',r.k||'']),[33,33,34])}
+  P.h1(`${++s}. Control de cambios`);P.table(['Versión','Fecha','Descripción del cambio','Aprobó'],vers.length?vers.map(x=>[String(x.version),fmtD(x.fecha),x.cambio||'',x.aprobo||'']):[['—','','Sin versiones aprobadas','']],[12,18,45,25]);
+  const L=layoutFlow(d),im=await svgJpg(L.svg,Math.min(3200,Math.round(parseFloat(L.svg.match(/width="(\d+)/)[1])*1.6)));
+  P.page(L.ar<.62);P.h1(`${++s}. Diagrama de flujo`);P.image(im);
+  return P.out()}
+function snapData(d,v){const sn=JSON.parse(v.datos),dd={...d,nombre:sn.n,dueno:sn.o,actividades:sn.a};return[dd,sn.p,sn.m,sn.x,String(v.version),versOf(d.id).filter(x=>num(x.version)<=num(v.version))]}
 async function procDocx(d,p,W,X,ver,vers){
   X=X||{ind:[],rie:[]};
   const XE=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -924,7 +1052,7 @@ function histDlg(){const d=D(S.cur),hs=Object.values(S.items).filter(i=>i.tipo==
   <div class="row end" style="margin-top:12px"><button type="button" class="btn" data-a="dlg-close">Cerrar</button></div>`,()=>{})}
 function nombreDlg(first){openDlg(`<h3>${first?'¿Cómo te llamas?':'Cambiar nombre'}</h3><p class="mut">Se usa para registrar quién hizo cada cambio. Se guarda solo en este navegador.</p><label>Nombre y apellido<input name="n" required value="${esc(yo())}" placeholder="Ej.: María Pérez"></label><div class="row end" style="margin-top:12px">${first?'':'<button type="button" class="btn" data-a="dlg-close">Cancelar</button>'}<button class="btn pri">Guardar</button></div>`,
   fd=>{const v=String(fd.get('n')).trim();if(!v)return false;try{localStorage.setItem('mp_nombre',v)}catch(e){}whoBtn()})}
-function whoBtn(){const b=$('#who');b.hidden=!canWrite||S.demo;b.textContent=yo()?'Editando como '+yo():'Indicar mi nombre'}
+function whoBtn(){const b=$('#who');b.hidden=!canWrite||S.demo;const n=yo();b.innerHTML=n?`<span class="av">${esc(n.split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase())}</span>`:'Indicar mi nombre';b.title=n?'Editando como '+n+' · clic para cambiar':'Indicar mi nombre'}
 
 /* ================= ejemplo ================= */
 function demoData(){const D2={},I={},now=new Date().toISOString(),mk=(o)=>{D2[o.id]={actividades:[],creado:now,editadoPor:'Equipo de ejemplo',editado:now,...o};return D2[o.id]};
@@ -997,10 +1125,9 @@ document.addEventListener('click',async e=>{
     <div class="two"><label>Aprobado por<input name="ap" required value="${esc(yo())}"></label><label>Fecha<input type="date" name="f" value="${hoy()}"></label></div><label>Descripción del cambio<input name="c" required value="${E.n===1?'Versión inicial':''}" placeholder="Qué cambió respecto a la versión anterior"></label>
     <div class="row end" style="margin-top:12px"><button type="button" class="btn" data-a="dlg-close">Cancelar</button><button class="btn pri">Aprobar</button></div>`,
     fd=>{const dd=D(S.cur);put('items',{id:'v'+uid(),tipo:'procver',diagramaId:dd.id,version:E.n,fecha:new Date(fd.get('f')+'T12:00:00').toISOString(),aprobo:String(fd.get('ap')).trim(),cambio:String(fd.get('c')).trim(),datos:firma(dd,S.wp,S.wz,S.wx)});toast('Versión '+E.n+' aprobada.');render(true)});break}
-  case 'ver-pdf':{const v=S.items[id];if(!v)break;const box=document.createElement('div');box.className='doc';box.innerHTML=snapDoc(d,v);
-    try{bajar(await htmlToPdf(box,false),'Procedimiento '+(d.raiz?'flujo general':d.nombre)+' v'+v.version+'.pdf');toast('PDF de la versión '+v.version+' descargado.')}catch(err){toast('No se pudo generar el PDF.')}break}
+  case 'ver-pdf':{const v=S.items[id];if(!v)break;try{bajar(await procPdf(...snapData(d,v)),'Procedimiento '+(d.raiz?'flujo general':d.nombre)+' v'+v.version+'.pdf');toast('PDF de la versión '+v.version+' descargado.')}catch(err){console.error(err);toast('No se pudo generar el PDF.')}break}
   case 'pdf':{const t=document.getElementById(b.dataset.t);if(!t)break;if(b.dataset.t==='procDoc')procPreview();b.disabled=true;const tx=b.textContent;b.textContent='Generando…';
-    try{const iso=b.dataset.t==='isoMap';bajar(await htmlToPdf(t,iso),(iso?'Mapa de procesos':'Procedimiento '+(d.raiz?'flujo general':d.nombre))+'.pdf');toast('PDF descargado.')}catch(err){console.error(err);toast('No se pudo generar el PDF.')}b.disabled=false;b.textContent=tx;break}
+    try{const iso=b.dataset.t==='isoMap';if(!iso){const E=estadoVer(d);bajar(await procPdf(d,S.wp,S.wz,S.wx,verLabel(E),E.v),'Procedimiento '+(d.raiz?'flujo general':d.nombre)+'.pdf');toast('PDF descargado.');b.disabled=false;b.textContent=tx;break}bajar(await htmlToPdf(t,iso),(iso?'Mapa de procesos':'Procedimiento '+(d.raiz?'flujo general':d.nombre))+'.pdf');toast('PDF descargado.')}catch(err){console.error(err);toast('No se pudo generar el PDF.')}b.disabled=false;b.textContent=tx;break}
   case 'docx':{b.disabled=true;const tx=b.textContent;b.textContent='Generando…';try{const E=estadoVer(d);bajar(await procDocx(d,S.wp,S.wz,S.wx,verLabel(E),E.v),'Procedimiento '+(d.raiz?'flujo general':d.nombre)+'.docx');toast('Documento de Word descargado.')}catch(err){console.error(err);toast('No se pudo generar el documento.')}b.disabled=false;b.textContent=tx;break}
   case 'op-new':opDlg(null,b.dataset.act);break;
   case 'op-edit':opDlg(S.items[id]);break;
@@ -1018,7 +1145,7 @@ document.addEventListener('click',async e=>{
     const csv=[['Oportunidad','Flujo','Prioridad','Impacto','Esfuerzo','Estado','Responsable','Descripción'].map(q).join(','),...rows.map(i=>{const[im,ef]=ie(i);return[i.titulo,pathOf(i.diagramaId),prio(i),nivTxt(im),nivTxt(ef),i.estado||'Identificada',i.responsable,i.descripcion].map(q).join(',')})].join('\n');
     try{await navigator.clipboard.writeText(csv);toast('CSV copiado. Pégalo en Google Sheets.')}catch(err){toast('El navegador no permitió copiar.')}break}
   }});
-let rsT;document.addEventListener('input',e=>{const t=e.target;
+let rsT;document.addEventListener('input',e=>{const t=e.target;if(t.classList&&t.classList.contains('ag')){t.style.height='auto';t.style.height=t.scrollHeight+2+'px'}
   if(t.name==='nombre'&&t.closest('#aedBody')){clearTimeout(rsT);rsT=setTimeout(refreshSig,300);return}
   if(t.id==='pfQ'){S.pf.q=t.value;const pos=t.selectionStart;portfolio();const n=$('#pfQ');n.focus();n.setSelectionRange(pos,pos);return}
   if(!t.closest('#content'))return;
@@ -1080,7 +1207,7 @@ let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{if(S.view==='
 
 /* ================= arranque ================= */
 (async()=>{
-  const q=new URLSearchParams(location.search);$('#banner').textContent='Cargando…';
+  const q=new URLSearchParams(location.search);$('#banner').innerHTML='<span class="ld"></span>Cargando…';
   try{BOOT=await run('api_boot',{cliente:q.get('cliente')||'',clave:q.get('clave')||''})}
   catch(e){document.body.innerHTML=`<div class="card msgbox"><h2 style="margin-top:0">Mapa de procesos</h2><p>${esc(e.message)}</p></div>`;return}
   $('#banner').textContent='';
