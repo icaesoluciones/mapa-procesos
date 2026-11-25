@@ -100,6 +100,7 @@ details.menu{position:relative}details.menu summary{list-style:none}details.menu
 .hs:hover{border-color:var(--pri);background:#0b5d4b10}.hs.sel{border-color:var(--pri);background:#0b5d4b1c;box-shadow:0 0 0 3px #0b5d4b33}
 #ov.zonas .hs{border:1.5px dashed var(--pri);background:#0b5d4b0d}
 .bdg{position:absolute;top:-9px;right:-9px;min-width:20px;height:20px;border-radius:10px;background:var(--acc);color:#fff;font-size:11px;line-height:20px;padding:0 6px;font-weight:700;box-shadow:0 0 0 2px #fff}
+.hs.drg{z-index:5;border-color:var(--pri);background:#0b5d4b22;cursor:grabbing;box-shadow:0 8px 20px #11182733}.insl{position:absolute;top:0;bottom:0;width:4px;margin-left:-2px;background:var(--acc);border-radius:2px;pointer-events:none;z-index:4}
 .draw{position:absolute;border:2px solid var(--pri);background:#0b5d4b1a;pointer-events:none;border-radius:6px}
 #tip{position:fixed;z-index:40;max-width:300px;background:var(--ink);color:#fff;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.45;pointer-events:none;box-shadow:0 8px 24px #0005}
 #tip b{display:block;font-size:14px}#tip i{display:block;font-style:normal;color:#d1d5db;margin-bottom:3px}
@@ -174,9 +175,10 @@ dialog.wide{width:min(1180px,97vw)}dialog::backdrop{background:#11182766}dialog 
 .aed table{min-width:960px;width:100%;border-collapse:collapse}
 .aed td{padding:5px;vertical-align:top;border-bottom:1px solid var(--line)}.aed th{position:sticky;top:0;background:var(--soft);z-index:1;padding:8px 6px;font-size:12px;font-weight:600;color:var(--mut);text-align:left}
 .aed input,.aed select,.aed textarea{width:100%;border:1px solid var(--line2);border-radius:7px;padding:6px 7px;font-size:14px;background:var(--panel);min-height:36px}.aed textarea{resize:vertical}
-.aed .n{width:60px}.aed .t{width:120px}.aed .s{width:210px}.aed .d{width:44px}
+.aed .n{width:96px}.ordc{display:flex;align-items:center;gap:4px}.hdl{cursor:grab;color:var(--mut);font-size:18px;line-height:1;padding:4px 2px;user-select:none}.rnum{min-width:18px;text-align:center;font-size:14px}.ud{display:flex;flex-direction:column;gap:2px}.ud button{border:1px solid var(--line2);background:#fff;border-radius:5px;width:24px;height:17px;font-size:9px;line-height:1;padding:0;color:var(--mut)}.ud button:hover{color:var(--ink);border-color:var(--ink)}
+tr.dragging{opacity:.45;background:var(--pri2)}.aed .t{width:120px}.aed .s{width:310px}.aed .d{width:44px}
 .x{border:1px solid var(--line2);background:none;border-radius:7px;width:34px;min-height:34px}
-.rama{display:flex;gap:4px;margin-bottom:4px}.rama input[name=rl]{width:76px;flex:none}.rama input[name=rn]{width:60px;flex:none}.rama .x{width:30px;min-height:32px}
+.rama{display:flex;gap:4px;margin-bottom:4px}.rama input[name=rl]{width:66px;flex:none}.rama select{flex:1}.rama .x{width:30px;min-height:32px}
 .dic{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 12px;background:var(--soft)}
 .dic textarea{width:100%;min-height:60px;border:1px solid var(--line2);border-radius:8px;padding:7px 9px;font-size:15px;background:#fff;margin-top:8px}
 #dicBtn.on{background:var(--acc);border-color:var(--acc);color:#fff}
@@ -227,7 +229,7 @@ const clone=o=>JSON.parse(JSON.stringify(o));
 const norm=s=>String(s||'').toLowerCase().replace(/\s+/g,' ').trim();
 const num=v=>{const n=+v;return isFinite(n)?n:0};
 const hoy=()=>new Date().toISOString().slice(0,10);
-const FORMAS=['Actividad','Decisión','Inicio','Fin','Documento'];
+const FORMAS=['Inicio','Actividad','Decisión','Fin'];
 const CATS=[['estrategico','Estratégico','Procesos estratégicos','est','Dirección: planificación, revisión, mejora.'],['operativo','Operativo','Procesos operativos','ope','Los que generan el producto o servicio, de punta a punta.'],['apoyo','De apoyo','Procesos de apoyo','apo','Soporte: compras, personal, finanzas, mantenimiento.']];
 const EST_OP=['Identificada','En análisis','En implementación','Cerrada'],EST_IN=['No iniciada','En curso','Completada','Detenida'];
 const S={diag:{},items:{},cur:'raiz',step:'mapa',sel:null,selMap:null,page:1,pages:1,zoom:1,zonas:false,view:'app',dirty:false,scope:null};
@@ -323,7 +325,6 @@ function layoutFlow(d){
   acts.forEach((a,i)=>{const p=P[a.id],cx=p.x+bw/2,cy=p.y+bh/2,f=a.forma||'Actividad',sub=kids(d.id,a.id).length;
     if(f==='Decisión')g+=`<path d="M${cx} ${p.y-6} L${p.x+bw+4} ${cy} L${cx} ${p.y+bh+6} L${p.x-4} ${cy}Z" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5" filter="url(#s)"/>`;
     else if(f==='Inicio'||f==='Fin')g+=`<rect x="${p.x}" y="${p.y+8}" width="${bw}" height="${bh-16}" rx="${(bh-16)/2}" fill="${f==='Inicio'?'#e7f2ee':'#fdecea'}" stroke="${f==='Inicio'?'#0b5d4b':'#e8553f'}" stroke-width="1.5" filter="url(#s)"/>`;
-    else if(f==='Documento')g+=`<path d="M${p.x} ${p.y} H${p.x+bw} V${p.y+bh-8} Q${p.x+bw*.75} ${p.y+bh-20} ${cx} ${p.y+bh-6} T${p.x} ${p.y+bh-6}Z" fill="#f3f6fb" stroke="#475569" stroke-width="1.4" filter="url(#s)"/>`;
     else g+=`<rect x="${p.x}" y="${p.y}" width="${bw}" height="${bh}" rx="10" fill="#ffffff" stroke="${sub?'#0b5d4b':'#9ca3af'}" stroke-width="${sub?2.2:1.3}" filter="url(#s)"/>`;
     if(sub)g+=`<rect x="${p.x+bw-30}" y="${p.y+bh-17}" width="24" height="13" rx="6.5" fill="#0b5d4b"/><text x="${p.x+bw-18}" y="${p.y+bh-7.5}" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">+${sub}</text>`;
     g+=`<circle cx="${p.x+2}" cy="${p.y+2}" r="10" fill="#111827"/><text x="${p.x+2}" y="${p.y+6}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#fff">${i+1}</text>`;
@@ -415,7 +416,7 @@ function isoHTML(){
 /* ================= paso: flujo ================= */
 function flujoShell(d){
   const n=(d.actividades||[]).length;
-  return `<div class="sh"><div><h2>${d.raiz?'Flujo general de la empresa':'Flujo del proceso'}</h2><p>${n?'Haz clic en una actividad para ver su detalle y crear o abrir sus subprocesos. Cada responsable es un carril.':'Escribe o dicta las actividades en orden: quién las hace y qué se hace. La herramienta dibuja el diagrama de carriles.'}</p></div></div>
+  return `<div class="sh"><div><h2>${d.raiz?'Flujo general de la empresa':'Flujo del proceso'}</h2><p>${n?'Haz clic en una actividad para ver su detalle y sus subprocesos. Para cambiar el orden, arrástrala a la izquierda o a la derecha. Cada responsable es un carril.':'Escribe o dicta las actividades en orden: quién las hace y qué se hace. La herramienta dibuja el diagrama de carriles.'}</p></div></div>
   <div class="card"><div class="fbar noprint" id="fbar"></div>
   ${n||hasFile(d)?`<div id="viewport"><div id="stage" hidden><canvas id="cv"></canvas><img id="im" alt="Diagrama de ${esc(d.nombre)}" hidden><div id="ov"></div></div><div id="empty"></div></div>`:
   `<div class="empty"><h3>Este flujo aún no tiene actividades</h3><p>Ejemplo: “Recibir solicitud — Comercial”, “Revisar planos — Ingeniería”, “¿Planos completos? — decisión”.</p>${canWrite?'<div class="row" style="justify-content:center"><button class="btn pri" data-a="acts">Escribir actividades</button><button class="btn" data-a="acts" data-dictar="1">Dictar por voz</button></div>':''}</div>`}</div>
@@ -485,7 +486,7 @@ function drawer(){
     h=`<button class="xclose" data-a="close-dr" aria-label="Cerrar">×</button><p class="eye">Actividad ${ord.indexOf(a)+1}${a.forma&&a.forma!=='Actividad'?' · '+esc(a.forma):''}</p><h3>${esc(a.nombre)}</h3>
     <dl><dt>Responsable</dt><dd>${esc(a.responsable||'—')}</dd>${a.forma==='Decisión'?`<dt>Opciones</dt><dd>${ramasOf(a).map(r=>{const t=actOf(d,r.dest);return esc(r.etiqueta)+' → '+(t?esc(t.nombre):'<i>sin destino</i>')}).join('<br>')}</dd>`:''}</dl>
     ${a.descripcion?`<div class="desc">${esc(a.descripcion)}</div>`:'<p class="mut">Sin descripción.</p>'}
-    ${canWrite?'<button class="btn sm" data-a="act-edit">Editar actividad</button>':''}
+    ${canWrite?`<div class="row"><button class="btn sm" data-a="act-edit">Editar actividad</button><button class="btn sm" data-a="act-mv" data-d="-1"${ord.indexOf(a)===0?' disabled':''} aria-label="Mover antes">‹ Antes</button><button class="btn sm" data-a="act-mv" data-d="1"${ord.indexOf(a)===ord.length-1?' disabled':''} aria-label="Mover después">Después ›</button></div>`:''}
     <div class="dsec"><h4>Subprocesos de esta actividad${subs.length?` (${subs.length})`:''}</h4>
     ${subs.length?subs.map(s=>`<div class="subc"><div class="subh"><b>${esc(s.nombre)}</b>${progSeg(s)}</div>${goBtns(s)}</div>`).join(''):`<p class="hint">${canWrite?'Detalla cómo se hace esta actividad. Puede tener uno o varios subprocesos (p. ej. “Cuentas por cobrar” y “Cuentas por pagar”), cada uno con su flujo y sus oportunidades.':'Sin subprocesos.'}</p>`}
     ${canWrite?`<button class="btn sm${subs.length?'':' pri'}" data-a="sub-new">+ ${subs.length?'Agregar otro subproceso':'Crear subproceso'}</button>`:''}</div>
@@ -495,46 +496,59 @@ function drawer(){
   if(S.step==='flujo'){const L=$('#viewport');if(L&&L.dataset.w!==String(!!h)){L.dataset.w=String(!!h);lastKey='';drawStage()}}}
 
 /* ================= editor de actividades (formulario + dictado) ================= */
-function ramaRow(r,ord){const n=r.dest?ord.indexOf(r.dest)+1:(r.n||'');return `<div class="rama"><input name="rl" value="${esc(r.etiqueta||'')}" placeholder="Opción" aria-label="Opción"><input name="rn" type="number" min="1" value="${n>0?n:''}" placeholder="#" aria-label="Va a la actividad número"><button type="button" class="x" data-a="rama-del" aria-label="Quitar opción">×</button></div>`}
-function sigCell(a,ord){
-  if((a.forma||'Actividad')==='Decisión')return `<div class="ramas">${ramasOf(a).map(r=>ramaRow(r,ord)).join('')}<button type="button" class="lnk" data-a="rama-add">+ opción</button></div>`;
-  const nx=(a.sig||[]).map(id=>ord.indexOf(id)+1).filter(n=>n>0).join(', ');return `<input name="sig" value="${esc(nx)}" placeholder="siguiente" aria-label="Va a">`}
-function actRow(a,i,ord){return `<tr data-id="${esc(a.id||'')}"><td class="n"><input type="number" min="1" name="orden" value="${i+1}" aria-label="Orden"></td>
+function ramaRow(r){return `<div class="rama"><input name="rl" value="${esc(r.etiqueta||'')}" placeholder="Opción" aria-label="Opción"><select name="rn" data-v="${esc(r.dest||'')}"${r.n?` data-pend="${esc(r.n)}"`:''} aria-label="Lleva a"></select><button type="button" class="x" data-a="rama-del" aria-label="Quitar opción">×</button></div>`}
+function sigCell(a){
+  const f=a.forma||'Actividad';
+  if(f==='Decisión')return `<div class="ramas">${ramasOf(a).map(ramaRow).join('')}<button type="button" class="lnk" data-a="rama-add">+ opción</button></div>`;
+  if(f==='Fin')return `<span class="mut" style="font-size:13px">Termina el flujo</span>`;
+  const s=(a.sig||[])[0]||'';return `<select name="sig" data-v="${esc(s)}"${a.n?` data-pend="${esc(a.n)}"`:''} aria-label="Siguiente paso"></select>`}
+function actRow(a,i){const id=a.id||uid();return `<tr data-id="${esc(id)}"><td class="n"><div class="ordc"><span class="hdl" title="Arrastra para cambiar el orden" aria-hidden="true">⠿</span><b class="rnum">${i+1}</b><span class="ud"><button type="button" data-a="row-up" aria-label="Subir">▲</button><button type="button" data-a="row-dn" aria-label="Bajar">▼</button></span></div></td>
   <td><input name="nombre" value="${esc(a.nombre||'')}" placeholder="Qué se hace (verbo + objeto)" aria-label="Actividad"></td>
   <td><input name="responsable" list="dlResp" value="${esc(a.responsable||'')}" placeholder="Área o puesto" aria-label="Responsable"></td>
-  <td class="t">${sel('forma',FORMAS,a.forma||'Actividad')}</td>
+  <td class="t">${sel('forma',FORMAS,FORMAS.includes(a.forma)?a.forma:'Actividad')}</td>
   <td><textarea name="descripcion" rows="1" placeholder="Breve descripción" aria-label="Descripción">${esc(a.descripcion||'')}</textarea></td>
-  <td class="s">${sigCell(a,ord)}</td><td class="d"><button type="button" class="x" data-a="row-del" aria-label="Quitar fila">×</button></td></tr>`}
+  <td class="s">${sigCell(a)}</td><td class="d"><button type="button" class="x" data-a="row-del" aria-label="Quitar fila">×</button></td></tr>`}
+/* Llena las listas "Siguiente paso" con las actividades actuales de la tabla */
+function refreshSig(){const tb=$('#aedBody');if(!tb)return;
+  [...tb.rows].forEach((tr,i)=>{const n=tr.querySelector('.rnum');if(n)n.textContent=i+1});
+  const rows=[...tb.rows].map((tr,i)=>({id:tr.dataset.id,o:i+1,i,n:tr.querySelector('[name=nombre]').value.trim()}));
+  const byO={};rows.forEach(r=>{if(!(r.o in byO))byO[r.o]=r.id});
+  tb.querySelectorAll('select[name=sig],select[name=rn]').forEach(s=>{
+    const own=s.closest('tr').dataset.id,dec=s.name==='rn';
+    if(s.dataset.pend){const t=byO[num(s.dataset.pend)];if(t&&t!==own){s.dataset.v=t;delete s.dataset.pend}}
+    const cur=s.dataset.v||'';
+    s.innerHTML=(dec?'<option value="">— elegir actividad —</option>':'<option value="">La siguiente en la lista</option>')+rows.filter(r=>r.id!==own).map(r=>`<option value="${esc(r.id)}"${r.id===cur?' selected':''}>→ ${r.o}. ${esc(r.n||'(sin nombre)')}</option>`).join('')})}
 function actsDlg(dictar){
   const d=D(S.cur);if(!d)return;const ord=orderActs(d),ids=ord.map(a=>a.id);
   if(!canWrite){openDlg(`<h3>Actividades · ${esc(d.nombre)}</h3><div class="aed"><table><thead><tr><th>#</th><th>Actividad</th><th>Responsable</th><th>Descripción</th></tr></thead><tbody>${ord.map((a,i)=>`<tr><td>${i+1}</td><td>${esc(a.nombre)}</td><td>${esc(a.responsable||'')}</td><td>${esc(a.descripcion||'')}</td></tr>`).join('')}</tbody></table></div><div class="row end" style="margin-top:12px"><button type="button" class="btn" data-a="dlg-close">Cerrar</button></div>`,()=>{},null,true);return}
   openDlg(`<h3>Actividades · ${esc(d.raiz?'Flujo general':d.nombre)}</h3>
-  <p class="hint">Una fila por actividad, en orden. El responsable define el carril. En “Va a” deja vacío para seguir a la siguiente; en una <b>Decisión</b> define cada opción (p. ej. Sí → 4, No → 2).${hasFile(d)?' Las filas nuevas no tienen zona en el PDF: se ven en la vista “Diagrama”.':''}</p>
+  <p class="hint">Una fila por actividad, en orden. Arrastra <b>⠿</b> o usa ▲▼ para cambiar el orden. El responsable define el carril. En <b>Siguiente paso</b> elige a qué actividad pasa el flujo (normalmente “La siguiente en la lista”). En una <b>Decisión</b> elige a dónde lleva cada opción (p. ej. Sí → Cuantificar, No → Solicitar información).${hasFile(d)?' Las filas nuevas no tienen zona en el PDF: se ven en la vista “Diagrama”.':''}</p>
   <div class="dic"><div class="row"><strong style="margin-right:auto">Dictado por voz</strong><button type="button" class="btn sm" id="dicBtn" data-a="dic-start">Dictar con micrófono</button><button type="button" class="btn sm" data-a="dic-apply">Pasar texto a la tabla</button></div>
-  <p class="hint" style="margin:6px 0 0">Di: “<b>actividad</b> recibir planos <b>responsable</b> presupuesto <b>descripción</b> se reciben del cliente <b>siguiente</b>”. Tipos: actividad, decisión, inicio, fin, documento. Decisión: “<b>conecta con sí</b> cuatro <b>no</b> dos”. “<b>Borrar</b>” quita la última fila.</p>
+  <p class="hint" style="margin:6px 0 0">Di: “<b>actividad</b> recibir planos <b>responsable</b> presupuesto <b>descripción</b> se reciben del cliente <b>siguiente</b>”. Tipos: inicio, actividad, decisión, fin. Decisión: “<b>conecta con sí</b> cuatro <b>no</b> dos”. “<b>Borrar</b>” quita la última fila.</p>
   <textarea id="dicTxt" aria-label="Texto dictado" placeholder="Aquí aparece lo dictado. Si el micrófono no funciona, dicta aquí con el teclado del celular o con Win + H y pulsa “Pasar texto a la tabla”."></textarea><p class="hint" id="dicInterim" style="min-height:1.2em;margin:4px 0 0"></p></div>
   <datalist id="dlResp">${responsables().map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
-  <div class="aed"><table><thead><tr><th>#</th><th>Actividad</th><th>Responsable</th><th>Tipo</th><th>Descripción</th><th>Va a / opciones</th><th></th></tr></thead><tbody id="aedBody">${ord.map((a,i)=>actRow(a,i,ids)).join('')}</tbody></table></div>
+  <div class="aed"><table><thead><tr><th>#</th><th>Actividad</th><th>Responsable</th><th>Tipo</th><th>Descripción</th><th>Siguiente paso</th><th></th></tr></thead><tbody id="aedBody">${ord.map((a,i)=>actRow(a,i)).join('')}</tbody></table></div>
   <div class="row" style="margin-top:8px"><button type="button" class="btn sm" data-a="row-add">+ Agregar actividad</button></div>
   <div class="row end" style="margin-top:12px"><button type="button" class="btn" data-a="dlg-close">Cancelar</button><button class="btn pri">Guardar y dibujar</button></div>`,
   ()=>{stopDictado();if($('#dicTxt')&&$('#dicTxt').value.trim())flushDictado(true);
     const rows=[...document.querySelectorAll('#aedBody tr')].map((tr,i)=>{const g=n=>tr.querySelector(`[name=${n}]`).value;const sg=tr.querySelector('[name=sig]');
-      return{id:tr.dataset.id||uid(),o:num(g('orden'))||i+1,i,nombre:g('nombre').trim(),responsable:g('responsable').trim(),forma:g('forma'),descripcion:g('descripcion').trim(),sigTxt:sg?sg.value:'',
-      ramasTxt:[...tr.querySelectorAll('.rama')].map(x=>({etiqueta:x.querySelector('[name=rl]').value.trim(),n:num(x.querySelector('[name=rn]').value)})).filter(x=>x.etiqueta||x.n)}}).filter(r=>r.nombre);
+      return{id:tr.dataset.id||uid(),o:i+1,i,nombre:g('nombre').trim(),responsable:g('responsable').trim(),forma:g('forma'),descripcion:g('descripcion').trim(),sigId:sg?sg.value:'',
+      ramasTxt:[...tr.querySelectorAll('.rama')].map(x=>({etiqueta:x.querySelector('[name=rl]').value.trim(),dest:x.querySelector('[name=rn]').value})).filter(x=>x.etiqueta||x.dest)}}).filter(r=>r.nombre);
+    const okIds=new Set(rows.map(r=>r.id));
     const byO={};rows.forEach(r=>{if(!(r.o in byO))byO[r.o]=r.id});rows.sort((a,b)=>a.o-b.o||a.i-b.i);
     const gone=(d.actividades||[]).filter(a=>!rows.some(r=>r.id===a.id)),blocked=gone.filter(a=>kids(d.id,a.id).length);
     if(blocked.length){toast('No se puede quitar “'+blocked[0].nombre+'”: tiene un subproceso.');return false}
     const old=Object.fromEntries((d.actividades||[]).map(a=>[a.id,a]));
     const acts=rows.map((r,k)=>{const dec=r.forma==='Decisión';return{...(old[r.id]||{}),id:r.id,orden:k+1,nombre:r.nombre,responsable:r.responsable,forma:r.forma,descripcion:r.descripcion,
-      sig:dec?[]:r.sigTxt.split(/[,;\s]+/).map(Number).filter(n=>byO[n]&&byO[n]!==r.id).map(n=>byO[n]),
-      ramas:dec?r.ramasTxt.map((x,j)=>({etiqueta:x.etiqueta||('Opción '+(j+1)),dest:byO[x.n]&&byO[x.n]!==r.id?byO[x.n]:''})):[]}});
+      sig:dec||r.forma==='Fin'||!okIds.has(r.sigId)||r.sigId===r.id?[]:[r.sigId],
+      ramas:dec?r.ramasTxt.map((x,j)=>({etiqueta:x.etiqueta||('Opción '+(j+1)),dest:okIds.has(x.dest)&&x.dest!==r.id?x.dest:''})):[]}});
     const inc=acts.filter(a=>a.forma==='Decisión'&&(a.ramas.length<2||a.ramas.some(x=>!x.dest)));
     gone.forEach(a=>opsOf(d.id).filter(i=>i.actividadId===a.id).forEach(it=>put('items',{...it,actividadId:null})));
     ck='';put('diagramas',{...D(d.id),actividades:acts,revisado:true});toast(inc.length?'Guardado. Revisa la decisión “'+inc[0].nombre+'”: necesita al menos 2 opciones con destino.':'Actividades guardadas.')},null,true);
-  if(dictar)setTimeout(startDictado,200)}
+  refreshSig();if(dictar)setTimeout(startDictado,200)}
 function actDlg(a){const d=D(S.cur);
   openDlg(`<h3>Editar actividad</h3><label>Actividad<input name="nombre" required value="${esc(a.nombre)}"></label>
-  <div class="two"><label>Responsable<input name="responsable" list="dlResp1" value="${esc(a.responsable||'')}"></label><label>Tipo${sel('forma',FORMAS,a.forma||'Actividad')}</label></div>
+  <div class="two"><label>Responsable<input name="responsable" list="dlResp1" value="${esc(a.responsable||'')}"></label><label>Tipo${sel('forma',FORMAS,FORMAS.includes(a.forma)?a.forma:'Actividad')}</label></div>
   <datalist id="dlResp1">${responsables().map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
   <label>Descripción breve<textarea name="descripcion" rows="4">${esc(a.descripcion||'')}</textarea></label>
   ${a.forma==='Decisión'?'<p class="hint">Las opciones de la decisión se editan en “Editar actividades”.</p>':''}
@@ -544,8 +558,8 @@ function actDlg(a){const d=D(S.cur);
 /* ================= dictado (palabras clave, sin IA) ================= */
 const deacc=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
 const NUMW={un:1,uno:1,una:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9,diez:10,once:11,doce:12,trece:13,catorce:14,quince:15,dieciseis:16,diecisiete:17,dieciocho:18,diecinueve:19,veinte:20};
-const FORMA_KW={actividad:'Actividad',decision:'Decisión',inicio:'Inicio',fin:'Fin',documento:'Documento'};
-const KW=/(^|[\s,.;:])(actividad|decisi[oó]n|inicio|fin|documento|responsable|descripci[oó]n|conecta con|flecha a)(?=[\s,.;:]|$)/gi;
+const FORMA_KW={actividad:'Actividad',decision:'Decisión',inicio:'Inicio',fin:'Fin'};
+const KW=/(^|[\s,.;:])(actividad|decisi[oó]n|inicio|fin|responsable|descripci[oó]n|conecta con|flecha a)(?=[\s,.;:]|$)/gi;
 const SEP=/(?<!\b(?:el|la|lo|los|las|al|del|dia|día|paso|semana|mes|año|turno)\s)\bsiguiente\b[.,;:]?/i;
 const cleanV=s=>{s=String(s||'').replace(/^[\s,.;:]+|[\s,.;:]+$/g,'').replace(/\s+/g,' ');return s?s[0].toUpperCase()+s.slice(1):''};
 const toNums=s=>(deacc(s).match(/\d+|[a-z]+/g)||[]).map(w=>/^\d+$/.test(w)?+w:NUMW[w]).filter(Boolean).join(', ');
@@ -564,8 +578,9 @@ function parseBlock(b){
     r.ramas=rs.length?rs:[{etiqueta:'Sí',n:''},{etiqueta:'No',n:''}]}
   return r.nombre?r:null}
 function addParsedRow(r){const tb=$('#aedBody');if(!tb)return;const n=tb.rows.length;
-  tb.insertAdjacentHTML('beforeend',actRow({nombre:r.nombre,responsable:r.responsable,forma:r.forma,descripcion:r.descripcion},n,[]));
-  const tr=tb.rows[n];if(r.forma==='Decisión')tr.querySelector('td.s').innerHTML=sigCell({forma:'Decisión',ramas:r.ramas},[]);else tr.querySelector('[name=sig]').value=r.sigTxt;tr.scrollIntoView({block:'nearest'})}
+  const first=String(r.sigTxt||'').split(/[,\s]+/).filter(Boolean)[0]||'';
+  tb.insertAdjacentHTML('beforeend',actRow({nombre:r.nombre,responsable:r.responsable,forma:r.forma,descripcion:r.descripcion,n:first,ramas:r.forma==='Decisión'?r.ramas.map(x=>({etiqueta:x.etiqueta,n:x.n,dest:''})):undefined},n));
+  refreshSig();tb.rows[n].scrollIntoView({block:'nearest'})}
 function flushDictado(final){const ta=$('#dicTxt');if(!ta)return;
   const parts=ta.value.split(SEP),keep=final?'':parts.pop();let n=0;
   parts.forEach(p=>{const r=parseBlock(p);if(!r)return;if(r.cmd){const tb=$('#aedBody');if(tb&&tb.rows.length){tb.rows[tb.rows.length-1].remove();n--;toast('Última fila eliminada.')}}else{addParsedRow(r);n++}});
@@ -772,9 +787,11 @@ document.addEventListener('click',async e=>{
   case 'imp':$('#fileImp').click();break;
   case 'detect':if(d&&d.kind==='pdf')detect(d);break;
   case 'unimp':{if(!armed(b))break;const old=d.assetId;const n={...d};delete n.assetId;delete n.kind;delete n.vista;put('diagramas',n);if(old)run('api_trash',C,K,old).catch(()=>{});ck='';render(true);break}
-  case 'row-add':{const tb=$('#aedBody'),n=tb.rows.length;tb.insertAdjacentHTML('beforeend',actRow({},n,[]));tb.rows[n].querySelector('[name=nombre]').focus();break}
-  case 'row-del':b.closest('tr').remove();break;
-  case 'rama-add':b.insertAdjacentHTML('beforebegin',ramaRow({etiqueta:'',n:''},[]));b.previousElementSibling.querySelector('[name=rl]').focus();break;
+  case 'row-add':{const tb=$('#aedBody'),n=tb.rows.length;tb.insertAdjacentHTML('beforeend',actRow({},n));refreshSig();tb.rows[n].querySelector('[name=nombre]').focus();break}
+  case 'row-del':{const gid=b.closest('tr').dataset.id;b.closest('tr').remove();document.querySelectorAll('#aedBody select').forEach(s=>{if(s.dataset.v===gid)s.dataset.v=''});refreshSig();break}
+  case 'rama-add':b.insertAdjacentHTML('beforebegin',ramaRow({etiqueta:''}));refreshSig();b.previousElementSibling.querySelector('[name=rl]').focus();break;
+  case 'row-up':case 'row-dn':{const tr=b.closest('tr');if(a==='row-up'&&tr.previousElementSibling)tr.parentNode.insertBefore(tr,tr.previousElementSibling);else if(a==='row-dn'&&tr.nextElementSibling)tr.parentNode.insertBefore(tr.nextElementSibling,tr);refreshSig();b.focus();break}
+  case 'act-mv':{moveAct(d,S.sel,+b.dataset.d);break}
   case 'rama-del':b.closest('.rama').remove();break;
   case 'dic-start':if(listening){stopDictado();flushDictado(false)}else startDictado();break;
   case 'dic-apply':flushDictado(true);break;
@@ -799,7 +816,8 @@ document.addEventListener('click',async e=>{
     const csv=[['Tipo','Título','Proceso','Prioridad','Estado','Responsable','Fecha','Avance'].map(q).join(','),...rows.map(i=>[i.tipo,i.titulo,pathOf(i.diagramaId),i.prioridad,i.estado,i.responsable,i.fecha,i.avance].map(q).join(','))].join('\n');
     try{await navigator.clipboard.writeText(csv);toast('CSV copiado. Pégalo en Google Sheets.')}catch(err){toast('El navegador no permitió copiar.')}break}
   }});
-document.addEventListener('input',e=>{const t=e.target;
+let rsT;document.addEventListener('input',e=>{const t=e.target;
+  if(t.name==='nombre'&&t.closest('#aedBody')){clearTimeout(rsT);rsT=setTimeout(refreshSig,300);return}
   if(t.id==='pfQ'){S.pf.q=t.value;const pos=t.selectionStart;portfolio();const n=$('#pfQ');n.focus();n.setSelectionRange(pos,pos);return}
   if(!t.closest('#content'))return;
   if(t.dataset.f!==undefined&&t.dataset.m!==undefined){S.wz[+t.dataset.m][t.dataset.f]=t.value;S.dirty=true;const cv=document.querySelectorAll('.chev .cv')[+t.dataset.m];if(cv)cv.innerHTML=`<small>${+t.dataset.m+1}</small>${esc(S.wz[+t.dataset.m].nombre||'Sin nombre')}<i>${esc(S.wz[+t.dataset.m].responsable||'')}</i>`}
@@ -810,7 +828,8 @@ document.addEventListener('input',e=>{const t=e.target;
 document.addEventListener('change',e=>{const t=e.target;
   if(t.id==='pfT'||t.id==='pfE'){S.pf[t.id==='pfT'?'t':'e']=t.value;portfolio();return}
   if(t.dataset.a==='cat'){const n=D(S.selMap);if(!n)return;const c=t.value;setTimeout(()=>put('diagramas',{...n,categoria:c,ordenMapa:c?Math.max(0,...procOrd(c).filter(x=>x.id!==n.id).map(x=>num(x.ordenMapa)))+1:0}),0);return}
-  if(t.name==='forma'&&t.closest('#aedBody')){const tr=t.closest('tr'),ord=orderActs(D(S.cur)).map(a=>a.id),cell=tr.querySelector('td.s');cell.innerHTML=sigCell(t.value==='Decisión'?{forma:'Decisión',ramas:[{etiqueta:'Sí',n:''},{etiqueta:'No',n:''}]}:{forma:t.value,sig:[]},ord)}});
+  if(t.name==='forma'&&t.closest('#aedBody')){const tr=t.closest('tr'),cell=tr.querySelector('td.s');cell.innerHTML=sigCell(t.value==='Decisión'?{forma:'Decisión',ramas:[{etiqueta:'Sí'},{etiqueta:'No'}]}:{forma:t.value,sig:[]});refreshSig();return}
+  if((t.name==='sig'||t.name==='rn')&&t.closest('#aedBody')){t.dataset.v=t.value;delete t.dataset.pend}});
 document.addEventListener('submit',async e=>{const f=e.target;e.preventDefault();
   if(f.id==='dlgForm'&&dlgOk){const btn=f.querySelector('.btn.pri');if(btn)btn.disabled=true;let r;try{r=await dlgOk(new FormData(f))}finally{if(btn)btn.disabled=false}if(r!==false){dlgCancel=null;closeDlg(false)}}});
 $('#dlg').addEventListener('cancel',()=>{stopDictado();if(dlgCancel)dlgCancel();dlgOk=dlgCancel=null});
@@ -820,13 +839,39 @@ $('#fileImp').addEventListener('change',async e=>{const f=e.target.files[0],d=D(
   try{const up=await uploadFile(f),old=d.assetId;put('diagramas',{...D(d.id),assetId:up.id,kind:up.kind,vista:'archivo',revisado:up.kind!=='pdf'});ck='';render(true);
     if(old)run('api_trash',C,K,old).catch(()=>{});toast(up.kind==='pdf'?'PDF importado. Se leerán sus actividades.':'Imagen importada. Usa “Marcar zonas” para marcar actividades.')}catch(err){toast(err.message)}});
 
+/* arrastrar filas en la tabla de actividades */
+let dragRow=null;
+document.addEventListener('mousedown',e=>{const hd=e.target.closest('#aedBody .hdl');if(hd)hd.closest('tr').draggable=true});
+document.addEventListener('dragstart',e=>{const tr=e.target.closest&&e.target.closest('#aedBody tr');if(!tr||!tr.draggable)return;dragRow=tr;tr.classList.add('dragging');e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain','fila')}catch(x){}});
+document.addEventListener('dragover',e=>{if(!dragRow)return;const tr=e.target.closest&&e.target.closest('#aedBody tr');if(!tr||tr===dragRow)return;e.preventDefault();const r=tr.getBoundingClientRect();tr.parentNode.insertBefore(dragRow,e.clientY<r.top+r.height/2?tr:tr.nextSibling)});
+document.addEventListener('dragend',()=>{if(!dragRow)return;dragRow.classList.remove('dragging');dragRow.draggable=false;dragRow=null;refreshSig()});
+document.addEventListener('drop',e=>{if(dragRow)e.preventDefault()});
+
+/* cambiar el orden en el diagrama */
+function moveAct(d,id,to){const ids=orderActs(d).map(a=>a.id),i=ids.indexOf(id);if(i<0)return;
+  const j=typeof to==='object'?to.idx:Math.max(0,Math.min(ids.length-1,i+to));if(j===i)return;
+  ids.splice(i,1);ids.splice(j>i&&typeof to==='object'?j-1:j,0,id);
+  const pos=Object.fromEntries(ids.map((x,k)=>[x,k+1]));put('diagramas',{...d,actividades:(d.actividades||[]).map(a=>({...a,orden:pos[a.id]}))});toast('Orden actualizado.')}
+let mv=null,noClick=0;
+document.addEventListener('pointerdown',e=>{const hs=e.target.closest('#ov .hs');if(!hs||!canWrite||S.zonas||e.button)return;const d=D(S.cur);if(!isGen(d))return;
+  mv={id:hs.dataset.id,x0:e.clientX,y0:e.clientY,hs,on:false,ov:$('#ov')}});
+document.addEventListener('pointermove',e=>{if(!mv)return;
+  if(!mv.on){if(Math.abs(e.clientX-mv.x0)<8)return;mv.on=true;tip.hidden=true;mv.hs.classList.add('drg');mv.line=document.createElement('div');mv.line.className='insl';mv.ov.appendChild(mv.line)}
+  const d=D(S.cur),L=layoutFlow(d),r=mv.ov.getBoundingClientRect(),fx=(e.clientX-r.left)/r.width,acts=orderActs(d);
+  mv.hs.style.transform=`translateX(${e.clientX-mv.x0}px)`;
+  let idx=acts.length;for(let k=0;k<acts.length;k++){const z=L.pos[acts[k].id];if(fx<z.x+z.w/2){idx=k;break}}mv.idx=idx;
+  const ref=acts[Math.min(idx,acts.length-1)],z=L.pos[ref.id],lx=idx<acts.length?z.x-.012:z.x+z.w+.012;mv.line.style.left=(lx*100)+'%'});
+document.addEventListener('pointerup',()=>{if(!mv)return;const m=mv;mv=null;if(!m.on)return;noClick=Date.now();m.hs.classList.remove('drg');m.hs.style.transform='';if(m.line)m.line.remove();
+  const d=D(S.cur);if(d&&m.idx!=null)moveAct(d,m.id,{idx:m.idx})});
+document.addEventListener('click',e=>{if(Date.now()-noClick<250&&e.target.closest('#ov')){e.stopPropagation();e.preventDefault()}},true);
+
 /* descripción al pasar el cursor */
 const tip=$('#tip');let drag=null;
 function showTip(e,b){const d=D(S.cur),a=actOf(d,b.dataset.id);if(!a){tip.hidden=true;return}const sb=subsOf(d,a);
   tip.innerHTML=`<b>${esc(a.nombre)}</b>${a.responsable?`<i>${esc(a.responsable)}</i>`:''}${a.descripcion?esc(a.descripcion.length>320?a.descripcion.slice(0,320)+'…':a.descripcion):'<i>Sin descripción</i>'}${a.forma==='Decisión'?'<i style="margin-top:4px">'+ramasOf(a).map(r=>{const t=actOf(d,r.dest);return esc(r.etiqueta)+' → '+(t?esc(t.nombre):'sin destino')}).join(' · ')+'</i>':''}${sb.length?`<i style="margin-top:4px">${sb.length>1?'Subprocesos':'Subproceso'}: ${sb.map(s=>esc(s.nombre)).join(', ')}${sb.length===1?' (doble clic para abrir)':''}</i>`:''}`;tip.hidden=false;moveTip(e)}
 function moveTip(e){const r=tip.getBoundingClientRect();let x=e.clientX+14,y=e.clientY+16;if(x+r.width>innerWidth-8)x=e.clientX-r.width-14;if(y+r.height>innerHeight-8)y=e.clientY-r.height-12;tip.style.left=Math.max(8,x)+'px';tip.style.top=Math.max(8,y)+'px'}
-document.addEventListener('mouseover',e=>{const b=e.target.closest('.hs');if(b&&!drag)showTip(e,b)});
-document.addEventListener('mousemove',e=>{if(!tip.hidden){if(!e.target.closest('.hs'))tip.hidden=true;else moveTip(e)}});
+document.addEventListener('mouseover',e=>{const b=e.target.closest('.hs');if(b&&!drag&&!(mv&&mv.on))showTip(e,b)});
+document.addEventListener('mousemove',e=>{if(!tip.hidden){if(!e.target.closest('.hs')||(mv&&mv.on))tip.hidden=true;else moveTip(e)}});
 document.addEventListener('scroll',()=>{tip.hidden=true},true);
 /* zonas manuales sobre PDF o imagen */
 document.addEventListener('pointerdown',e=>{const ov=e.target.closest('#ov');if(!ov||!S.zonas||e.target!==ov||!canWrite)return;const r=ov.getBoundingClientRect();drag={ov,r,x:e.clientX-r.left,y:e.clientY-r.top,el:document.createElement('div')};drag.el.className='draw';ov.appendChild(drag.el);ov.setPointerCapture(e.pointerId);tip.hidden=true;e.preventDefault()});
