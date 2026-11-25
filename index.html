@@ -194,13 +194,28 @@ tr.dragging{opacity:.45;background:var(--pri2)}.aed .t{width:120px}.aed .s{width
 @media(prefers-reduced-motion:reduce){#toast,.pbox{transition:none}}
 @media print{body.pr *{visibility:hidden!important}body.pr .ptarget,body.pr .ptarget *{visibility:visible!important}body.pr .ptarget{position:absolute;left:0;top:0;width:100%;box-shadow:none;border:0}body.pr .pprev{max-height:none;overflow:visible;border:0}body.pr .noprint{display:none!important}body.pr .ope .boxes{flex-wrap:wrap}body.pr{background:#fff}@page{margin:14mm}}
 </style>
+<style>
+.who{border:0;background:none;color:var(--mut);font-size:13px;padding:4px 6px;border-radius:7px}.who:hover{background:var(--soft);color:var(--ink)}
+.svst{font-size:12.5px;color:var(--mut);white-space:nowrap}.svst.ok{color:var(--ok)}.svst.wk{color:#9a4b00}
+.edit-by{font-size:12.5px;color:var(--mut);margin:2px 0 0}
+.xt table{width:100%;border-collapse:collapse;font-size:14px}.xt th{font-size:12px;font-weight:600;color:var(--mut);text-align:left;padding:8px;border-bottom:1px solid var(--line2);background:var(--soft)}
+.xt td{padding:5px;border-bottom:1px solid var(--line);vertical-align:top}.xt input,.xt textarea{width:100%;border:1px solid var(--line2);border-radius:8px;padding:7px 8px;font-size:14px;min-height:38px;background:#fff}.xt textarea{resize:vertical}
+.vstat{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;border-radius:10px;font-size:14px;margin-bottom:12px}
+.vstat.ok{background:var(--pri2);color:var(--pri)}.vstat.dr{background:#fff7ed;color:#9a4b00}
+.vlist{margin-top:14px}.vrow{display:flex;justify-content:space-between;gap:10px;align-items:center;border-top:1px solid var(--line);padding:8px 0;font-size:13.5px}
+.chip.qw{background:#ecfdf3;border-color:#abefc6;color:#067647}
+.hrow{display:flex;justify-content:space-between;gap:10px;align-items:center;border-bottom:1px solid var(--line);padding:9px 0;font-size:14px}
+.tplbox{display:flex;flex-wrap:wrap;gap:8px;align-items:center;border:1px dashed var(--line2);border-radius:10px;padding:8px 10px;margin:0 0 12px}
+.tplbox select{min-height:36px;border:1px solid var(--line2);border-radius:8px;padding:4px 8px;font-size:14px;max-width:100%}
+.demo{background:#eef4ff!important;border-color:#c7d7fe!important;color:#1d3a8a}
+</style>
 </head>
 <body>
 <header class="top">
   <div class="brand"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><rect width="30" height="30" rx="8" fill="#0b5d4b"/><rect x="6" y="7" width="18" height="4" rx="2" fill="#fff" opacity=".55"/><path d="M6 13.5h13l3.5 2.5-3.5 2.5H6z" fill="#fff"/><rect x="6" y="21" width="18" height="3" rx="1.5" fill="#fff" opacity=".55"/></svg>
     <div><h1>Mapa de procesos</h1><small id="cliName"></small></div></div>
   <nav class="views" id="views"><button data-v="app" class="on" title="Pulsa de nuevo para ir al Mapa de procesos">Procesos</button><button data-v="port">Portafolio de mejora</button></nav>
-  <div class="hr"><span class="mode" id="modeTag"></span><button class="btn ghost sm" id="btnRefresh" title="Traer los cambios de otras personas">Actualizar</button></div>
+  <div class="hr"><span class="mode" id="modeTag"></span><button class="who" id="who" hidden></button><button class="btn ghost sm" id="btnRefresh" title="Traer los cambios de otras personas">Actualizar</button></div>
 </header>
 <div id="banner"></div>
 <main id="app" hidden>
@@ -208,13 +223,9 @@ tr.dragging{opacity:.45;background:var(--pri2)}.aed .t{width:120px}.aed .s{width
   <div class="wrap" id="wrap"><section id="content"></section><aside id="drawer" class="card pad dr" hidden></aside></div>
 </main>
 <main id="port" class="wrap" hidden></main>
-<main id="admin" class="wrap" hidden></main>
 <dialog id="dlg"><form id="dlgForm"></form></dialog>
 <div id="tip" hidden></div>
 <div id="toast" role="status"></div>
-<input type="file" id="fileImp" hidden accept="application/pdf,image/png,image/jpeg,image/svg+xml,image/webp">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
 <script>
 /* ===== CONFIGURACIÓN: URL del servidor (Apps Script › Implementar › Gestionar implementaciones › URL que termina en /exec) ===== */
 const API_URL='https://script.google.com/macros/s/AKfycbwdsMuhqMk2BCuMwMAqx8Ih2GX0O_QBVmbEwIGqx7eb82JdCAEhoWjwhVuRGfnKHgjPNQ/exec';
@@ -229,15 +240,20 @@ const clone=o=>JSON.parse(JSON.stringify(o));
 const norm=s=>String(s||'').toLowerCase().replace(/\s+/g,' ').trim();
 const num=v=>{const n=+v;return isFinite(n)?n:0};
 const hoy=()=>new Date().toISOString().slice(0,10);
+const fmtD=iso=>{if(!iso)return'';const d=new Date(iso);return isNaN(d)?String(iso):d.toLocaleDateString('es-DO',{day:'numeric',month:'short',year:'numeric'})};
+const fmtF=iso=>{if(!iso)return'';const d=new Date(iso);return isNaN(d)?String(iso):d.toLocaleDateString('es-DO',{day:'numeric',month:'short',year:'numeric'})+(String(iso).length>10?' '+d.toLocaleTimeString('es-DO',{hour:'2-digit',minute:'2-digit'}):'')};
 const FORMAS=['Inicio','Actividad','Decisión','Fin'];
 const CATS=[['estrategico','Estratégico','Procesos estratégicos','est','Dirección: planificación, revisión, mejora.'],['operativo','Operativo','Procesos operativos','ope','Los que generan el producto o servicio, de punta a punta.'],['apoyo','De apoyo','Procesos de apoyo','apo','Soporte: compras, personal, finanzas, mantenimiento.']];
-const EST_OP=['Identificada','En análisis','En implementación','Cerrada'],EST_IN=['No iniciada','En curso','Completada','Detenida'];
-const S={diag:{},items:{},cur:'raiz',step:'mapa',sel:null,selMap:null,page:1,pages:1,zoom:1,zonas:false,view:'app',dirty:false,scope:null};
+const EST_OP=['Identificada','En análisis','En implementación','Cerrada'];
+const NIV=[[3,'Alto'],[2,'Medio'],[1,'Bajo']];
+const S={diag:{},items:{},revs:{},cur:'raiz',step:'mapa',sel:null,selMap:null,zoom:1,view:'app',dirty:false,demo:false};
 let BOOT={mode:'cargando'},C='',K='',canWrite=false,dlgOk=null,dlgCancel=null,pending=0;
-const mem={},urls={},pdfCache={},fileReq={},queue={};
+const queue={};
+const yo=()=>{try{return localStorage.getItem('mp_nombre')||''}catch(e){return ''}};
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),4200)}
 function armed(b){if(b.dataset.armed)return true;b.dataset.armed=1;const t=b.textContent;b.textContent='¿Confirmar?';setTimeout(()=>{if(b.isConnected){delete b.dataset.armed;b.textContent=t}},3000);return false}
-function sel(n,opts,val,attrs){return `<select name="${n}"${attrs||''}>${opts.map(o=>{const [v,l]=Array.isArray(o)?o:[o,o];return `<option value="${esc(v)}"${v===val?' selected':''}>${esc(l)}</option>`}).join('')}</select>`}
+function sel(n,opts,val,attrs){return `<select name="${n}"${attrs||''}>${opts.map(o=>{const [v,l]=Array.isArray(o)?o:[o,o];return `<option value="${esc(v)}"${String(v)===String(val)?' selected':''}>${esc(l)}</option>`}).join('')}</select>`}
+const hasFile=()=>false,isGen=()=>true;
 
 /* ================= servidor ================= */
 async function run(fn,...args){
@@ -246,21 +262,34 @@ async function run(fn,...args){
   catch(e){throw new Error('Sin conexión con el servidor. Revisa internet.')}
   let j;try{j=await r.json()}catch(e){throw new Error('El servidor no respondió correctamente.')}
   if(!j.ok)throw new Error(j.error||'Error del servidor.');return j.data}
-function busy(on){pending=Math.max(0,pending+(on?1:-1));$('#btnRefresh').textContent=pending?'Guardando…':'Actualizar'}
-function enqueue(key,fn){queue[key]=(queue[key]||Promise.resolve()).then(()=>{busy(true);return fn()}).catch(e=>{toast('No se guardó: '+e.message);load()}).finally(()=>busy(false));return queue[key]}
-function put(col,obj){const k=col==='diagramas'?'diag':'items',o=clone(obj);S[k][o.id]=o;render();if(!canWrite)return Promise.resolve();return enqueue(o.id,()=>run('api_save',C,K,col,o))}
+function setSv(t,cls){const e=$('#svst');if(e){e.textContent=t;e.className='svst'+(cls?' '+cls:'')}}
+function busy(on){pending=Math.max(0,pending+(on?1:-1));$('#btnRefresh').textContent=pending?'Guardando…':'Actualizar';setSv(pending?'Guardando…':'Todo guardado',pending?'wk':'ok')}
+function enqueue(key,fn){queue[key]=(queue[key]||Promise.resolve()).then(()=>{busy(true);return fn()}).catch(e=>{toast('No se guardó: '+e.message);setSv('Sin guardar','wk')}).finally(()=>busy(false));return queue[key]}
+const contenido=d=>JSON.stringify([d.nombre,d.dueno,d.actividades,d.macro,d.carx,d.proc]);
+/* historial: copia del estado anterior (como máximo una cada 10 minutos por proceso, salvo que se fuerce) */
+function snapshot(prev,nota,force){if(!prev||prev.raiz&&!(prev.actividades||[]).length)return;
+  const hs=Object.values(S.items).filter(i=>i.tipo==='hist'&&i.nodo===prev.id).sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
+  if(!force&&hs[0]&&Date.now()-new Date(hs[0].fecha).getTime()<10*60*1000)return;
+  const h={id:'h'+uid(),tipo:'hist',nodo:prev.id,fecha:new Date().toISOString(),por:prev.editadoPor||'',editado:prev.editado||'',nota:nota||'',datos:JSON.stringify(prev)};
+  S.items[h.id]=h;if(canWrite)enqueue(h.id,()=>run('api_save',C,K,'items',h));
+  hs.slice(14).forEach(x=>{delete S.items[x.id];if(canWrite)enqueue(x.id,()=>run('api_delete',C,K,'items',x.id))})}
+function put(col,obj,o={}){
+  const k=col==='diagramas'?'diag':'items',n=clone(obj);
+  if(canWrite&&!o.raw){n.editadoPor=yo();n.editado=new Date().toISOString();if(k==='items'&&!n.creadoPor){n.creadoPor=yo();n.creado=n.creado||n.editado}}
+  const prev=S[k][n.id];
+  if(k==='diag'&&prev&&canWrite&&!o.raw&&contenido(prev)!==contenido(n))snapshot(prev,o.nota,o.force);
+  S[k][n.id]=n;render();if(!canWrite)return Promise.resolve();
+  if(k==='items')return enqueue(n.id,()=>run('api_save',C,K,'items',n));
+  return enqueue(n.id,async()=>{const exp=S.revs[n.id]||0,body={...S.diag[n.id]||n,rev:exp+1};
+    const r=await run('api_save',C,K,'diagramas',body,exp);
+    if(r&&r.conflict){const act=r.actual;S.revs[n.id]=num(act.rev);snapshot(body,'Tus cambios no guardados (otra persona editó al mismo tiempo)',true);S.diag[n.id]=act;
+      $('#banner').innerHTML=`<b>${esc(act.editadoPor||'Otra persona')}</b> modificó “${esc(act.raiz?'Flujo general':act.nombre)}” ${act.editado?'el '+esc(fmtF(act.editado)):''} mientras tú también editabas. Se cargó su versión; la tuya quedó guardada en el <b>Historial</b> por si necesitas recuperarla.`;
+      S.wzFor=null;ck='';render(true)}
+    else{S.revs[n.id]=body.rev;if(S.diag[n.id])S.diag[n.id].rev=body.rev}})}
 function del(col,id){const k=col==='diagramas'?'diag':'items';delete S[k][id];render();if(!canWrite)return Promise.resolve();return enqueue(id,()=>run('api_delete',C,K,col,id))}
-async function load(){try{const r=await run('api_load',C);S.diag=Object.fromEntries((r.diag||[]).map(d=>[d.id,d]));S.items=Object.fromEntries((r.items||[]).map(i=>[i.id,i]));ensureRoot();$('#banner').textContent='';render(true)}catch(e){$('#banner').textContent='No se pudieron cargar los datos: '+e.message}}
+async function load(){if(S.demo)return;try{const r=await run('api_load',C);S.diag=Object.fromEntries((r.diag||[]).map(d=>[d.id,d]));S.items=Object.fromEntries((r.items||[]).map(i=>[i.id,i]));
+  S.revs=Object.fromEntries(Object.values(S.diag).map(d=>[d.id,num(d.rev)]));ensureRoot();if(!/modificó/.test($('#banner').textContent))$('#banner').textContent='';S.wzFor=null;render(true)}catch(e){$('#banner').textContent='No se pudieron cargar los datos: '+e.message}}
 function ensureRoot(){if(S.diag.raiz)return;const r={id:'raiz',raiz:true,nombre:BOOT.cliente?BOOT.cliente.nombre:'Empresa',actividades:[],creado:new Date().toISOString()};if(canWrite)put('diagramas',r);else S.diag.raiz=r}
-const b64ToBlob=(b64,mime)=>{const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new Blob([u],{type:mime})};
-const fileToB64=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]||'');r.onerror=rej;r.readAsDataURL(f)});
-function blobOf(id){if(!id)return Promise.resolve(null);if(mem[id])return Promise.resolve(mem[id]);if(!fileReq[id])fileReq[id]=run('api_file',C,id).then(r=>(mem[id]=b64ToBlob(r.b64,r.mime))).catch(e=>{delete fileReq[id];throw e});return fileReq[id]}
-async function uploadFile(f){
-  const ok=['application/pdf','image/png','image/jpeg','image/svg+xml','image/webp'];
-  if(!ok.includes(f.type))throw new Error('Formato no admitido. Usa PDF, PNG, JPG, SVG o WEBP.');
-  if(f.size>20*1024*1024)throw new Error('El archivo supera 20 MB.');
-  toast('Subiendo archivo…');busy(true);
-  try{const id=await run('api_upload',C,K,f.name,f.type,await fileToB64(f));mem[id]=f;return{id,kind:f.type==='application/pdf'?'pdf':'img'}}finally{busy(false)}}
 
 /* ================= modelo ================= */
 const D=id=>id?S.diag[id]:null;
@@ -276,26 +305,31 @@ const actOf=(d,aId)=>(d&&d.actividades||[]).find(a=>a.id===aId)||null;
 const orderActs=d=>(d&&d.actividades||[]).map((a,i)=>({a,i})).sort((x,y)=>(num(x.a.orden)||1e6+x.i)-(num(y.a.orden)||1e6+y.i)||x.i-y.i).map(x=>x.a);
 const isOpenOp=i=>i.tipo==='oportunidad'&&i.estado!=='Cerrada';
 const opsOf=id=>Object.values(S.items).filter(i=>i.tipo==='oportunidad'&&i.diagramaId===id);
-const inisOf=opId=>Object.values(S.items).filter(i=>i.tipo==='iniciativa'&&i.oportunidadId===opId);
 const openIn=ids=>Object.values(S.items).filter(i=>ids.has(i.diagramaId)&&isOpenOp(i)).length;
-const hasFile=d=>!!(d&&d.assetId);
-const isGen=d=>!hasFile(d)||d.vista==='generado';
 function responsables(){const m={};Object.values(S.diag).flatMap(d=>[(d.dueno||'').trim(),...(d.actividades||[]).map(a=>String(a.responsable||'').trim())]).filter(Boolean).forEach(r=>{const k=norm(r);if(!m[k])m[k]=r});return Object.values(m).sort((a,b)=>a.localeCompare(b,'es'))}
 const STEPS=[['mapa','Mapa de procesos'],['flujo','Flujo'],['car','Caracterización'],['proc','Procedimiento'],['ops','Oportunidades'],['area','Flujos del proceso']];
 const isArea=d=>!!d&&!d.raiz&&par(d)==='raiz'&&!d.parentActId;
 const nivel2=d=>{const p=D(par(d));return !!p&&(p.raiz||isArea(p))};
-const docsOn=d=>d.docs!==undefined?!!d.docs:nivel2(d);
+const docsOn=d=>nivel2(d)||d.docs===true;
 const FL=['flujo','car','proc','ops'];
 const stepsOf=d=>d.raiz?STEPS.filter(s=>s[0]==='mapa'||s[0]==='flujo'):isArea(d)?STEPS.filter(s=>s[0]==='area'):STEPS.filter(s=>FL.includes(s[0])&&(docsOn(d)||s[0]==='flujo'||s[0]==='ops'));
+const stepKeys=d=>stepsOf(d).map(s=>s[0]).filter(s=>FL.includes(s));
 const flowsOf=d=>kids(d.id,null);
-const stepKeys=d=>stepsOf(d).map(s=>s[0]).filter(s=>s!=='mapa');
+const versOf=id=>Object.values(S.items).filter(i=>i.tipo==='procver'&&i.diagramaId===id).sort((a,b)=>num(a.version)-num(b.version));
 function hecho(d,s){if(!d)return false;
   if(s==='mapa')return mapKids().length>0;
   if(s==='area')return flowsOf(d).length>0;
   if(s==='flujo')return(d.actividades||[]).length>=2;
   if(s==='car')return Array.isArray(d.macro)&&d.macro.length>0&&d.macro.some(m=>m.sipoc&&(m.sipoc.e||m.sipoc.s));
-  if(s==='proc')return!!(d.proc&&d.proc.objetivo);
+  if(s==='proc')return versOf(d.id).length>0;
   if(s==='ops')return opsOf(d.id).length>0;return false}
+/* prioridad automática: impacto (1-3) x facilidad (4-esfuerzo) */
+const LEG={Alta:[3,2],Media:[2,2],Baja:[1,2]};
+const ie=o=>{const l=LEG[o.prioridad]||[2,2];return[num(o.impacto)||l[0],num(o.esfuerzo)||l[1]]};
+const score=o=>{const[i,e]=ie(o);return i*(4-e)};
+const prio=o=>{const s=score(o);return s>=6?'Alta':s>=3?'Media':'Baja'};
+const nivTxt=v=>({3:'alto',2:'medio',1:'bajo'})[v]||'—';
+const prioCls=p=>({Alta:'pa',Media:'pm',Baja:'pb'})[p]||'';
 
 /* ================= diagrama generado ================= */
 let genCache={key:'',L:null};
@@ -339,39 +373,7 @@ function layoutFlow(d){
   if(genCache.L)URL.revokeObjectURL(genCache.L.url);genCache={key,L};return L}
 const zoneOf=(d,a)=>isGen(d)?layoutFlow(d).pos[a.id]:(a.x!=null?a:null);
 
-/* ================= PDF (opción secundaria) ================= */
-if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-function getPdf(aid){if(!pdfCache[aid]){pdfCache[aid]=(async()=>{const b=await blobOf(aid);return pdfjsLib.getDocument({data:new Uint8Array(await b.arrayBuffer()),isEvalSupported:false}).promise})();pdfCache[aid].catch(()=>{delete pdfCache[aid]})}return pdfCache[aid]}
-async function extract(pdf){
-  const out=[];
-  for(let p=1;p<=pdf.numPages;p++){
-    const pg=await pdf.getPage(p),vp=pg.getViewport({scale:1}),tc=await pg.getTextContent(),bx=[];
-    for(const it of tc.items){const s=(it.str||'').trim();if(!s)continue;const t=pdfjsLib.Util.transform(vp.transform,it.transform);const h=Math.hypot(t[2],t[3]);if(!h)continue;let w=it.width*vp.scale;if(!w)w=s.length*h*.5;bx.push({x:t[4],y:t[5]-h,w,h,s})}
-    bx.sort((a,b)=>a.y-b.y||a.x-b.x);const bl=[];
-    for(const b of bx){let m=null,same=false;
-      for(const k of bl){const r=b.h/k.fh;if(r<.7||r>1.45)continue;const tol=b.h*1.1;if(!(b.x<k.x2+tol&&b.x+b.w>k.x-tol))continue;
-        const sl=Math.abs(b.y-k.ly)<b.h*.5&&b.x<k.lx2+b.h*1.2,nl=b.y>k.ly+b.h*.3&&b.y-k.y2<b.h*.8;if(sl||nl){m=k;same=sl;break}}
-      if(m){if(same)m.t+=b.x>m.lx2+b.h*.12?' ':'';else if(m.t.endsWith('-'))m.t=m.t.slice(0,-1);else m.t+=' ';m.t+=b.s;
-        m.x=Math.min(m.x,b.x);m.y=Math.min(m.y,b.y);m.x2=Math.max(m.x2,b.x+b.w);m.y2=Math.max(m.y2,b.y+b.h);m.ly=b.y;m.lx2=b.x+b.w}
-      else bl.push({x:b.x,y:b.y,x2:b.x+b.w,y2:b.y+b.h,fh:b.h,t:b.s,ly:b.y,lx2:b.x+b.w})}
-    for(const k of bl){const t=k.t.replace(/\s+/g,' ').trim();if(t.length<3||!/[a-záéíóúñü]/i.test(t))continue;const pd=k.fh*.45;
-      out.push({nombre:t.slice(0,140),pag:p,x:Math.max(0,(k.x-pd)/vp.width),y:Math.max(0,(k.y-pd)/vp.height),w:Math.min(1,(k.x2-k.x+2*pd)/vp.width),h:Math.min(1,(k.y2-k.y+2*pd)/vp.height)})}}
-  return out.slice(0,400).sort((a,b)=>a.pag-b.pag||a.x-b.x||a.y-b.y)}
-async function detect(d){
-  let pdf;try{pdf=await getPdf(d.assetId)}catch(e){toast('No se pudo leer el PDF.');return}
-  toast('Leyendo actividades del PDF…');
-  const c=await extract(pdf),cur=()=>D(d.id)||d;
-  const seen=new Set((cur().actividades||[]).map(a=>norm(a.nombre)));
-  const list=c.filter(x=>!seen.has(norm(x.nombre)));
-  const markDone=()=>{if(!cur().revisado)put('diagramas',{...cur(),revisado:true})};
-  if(!c.length){markDone();toast('El PDF no trae texto legible. Marca las actividades a mano con “Marcar zonas”.');return}
-  if(!list.length){markDone();toast('No se encontraron actividades nuevas.');return}
-  openDlg(`<h3>Actividades encontradas en el PDF</h3><p class="mut">Desmarca títulos de carriles, encabezados y notas. Luego completa responsable y descripción en “Editar actividades”.</p>
-  <div class="row" style="margin:6px 0"><button type="button" class="lnk" data-a="chk" data-v="1">Marcar todas</button><button type="button" class="lnk" data-a="chk" data-v="">Ninguna</button></div>
-  <div class="rev">${list.map((x,i)=>`<div class="ri"><input type="checkbox" name="c${i}" checked aria-label="Incluir"><input name="n${i}" value="${esc(x.nombre)}" aria-label="Nombre">${pdf.numPages>1?`<small>p.${x.pag}</small>`:''}</div>`).join('')}</div>
-  <div class="row end" style="margin-top:12px"><button type="button" class="btn" data-a="dlg-close">Omitir</button><button class="btn pri">Guardar actividades</button></div>`,
-  fd=>{const base=(cur().actividades||[]).length;const add=list.map((x,i)=>fd.get('c'+i)?{...x,id:uid(),nombre:String(fd.get('n'+i)||x.nombre).trim()||x.nombre,responsable:'',descripcion:'',forma:'Actividad'}:null).filter(Boolean).map((a,i)=>({...a,orden:base+i+1}));
-    put('diagramas',{...cur(),actividades:[...(cur().actividades||[]),...add],revisado:true});toast(add.length+' actividades guardadas.')},markDone)}
+
 
 /* ================= render general ================= */
 function render(force){
@@ -387,8 +389,9 @@ function render(force){
 function crumbs(){const d=D(S.cur),an=ancestors(d.id);
   const nm=(i)=>i+1<an.length?an[i+1].d.nombre:d.nombre;
   $('#crumbs').innerHTML=an.map((x,i)=>{const a0=actOf(x.d,x.act),a=a0&&norm(a0.nombre)!==norm(nm(i))?a0:null;return `<button data-a="node" data-id="${esc(x.d.id)}"${a?` data-sel="${esc(a.id)}"`:''}>${esc(x.d.raiz?'Empresa':x.d.nombre)}</button><span aria-hidden="true">›</span>${a?`<span class="via">${esc(a.nombre)}</span><span aria-hidden="true">›</span>`:''}`}).join('')+`<span class="cur">${esc(d.raiz?(d.nombre||'Empresa'):d.nombre)}</span>${d.raiz?'':`<span class="via">${isArea(d)?'Proceso '+esc((CATS.find(c=>c[0]===d.categoria)||[,'sin clasificar'])[1].toLowerCase()):'Flujo'}</span>`}`}
-function steps(){const d=D(S.cur),L=stepsOf(d);
-  $('#steps').innerHTML=L.map(([k,l],i)=>`<button class="st${S.step===k?' on':''}${hecho(d,k)?' ok':''}" role="tab" aria-selected="${S.step===k}" data-a="step" data-s="${k}"><b>${hecho(d,k)&&S.step!==k?'✓':i+1}</b>${l}</button>`).join('')+(!d.raiz&&!isArea(d)&&!docsOn(d)&&canWrite?'<button class="st" data-a="docs" data-v="1" style="border-style:dashed;color:var(--mut)"><b>+</b>Agregar caracterización y procedimiento</button>':'')}
+function steps(){const d=D(S.cur),L=stepsOf(d),hasHist=!isArea(d);
+  $('#steps').innerHTML=L.map(([k,l],i)=>`<button class="st${S.step===k?' on':''}${hecho(d,k)?' ok':''}" role="tab" aria-selected="${S.step===k}" data-a="step" data-s="${k}"><b>${hecho(d,k)&&S.step!==k?'✓':i+1}</b>${l}</button>`).join('')+
+  `<span style="flex:1"></span>${hasHist&&d.editado?`<span class="edit-by" style="align-self:center">Última edición: ${esc(d.editadoPor||'—')} · ${esc(fmtF(d.editado))}</span>`:''}${hasHist&&canWrite?'<button class="btn ghost sm" data-a="hist" style="align-self:center">Historial</button>':''}`}
 let ck='';
 function content(){
   const d=D(S.cur),key=d.id+'|'+S.step,el=$('#content');
@@ -398,19 +401,21 @@ function content(){
   if(S.step==='flujo'){if(rebuild||!$('#viewport')){el.innerHTML=flujoShell(d);lastKey=''}flujoBar(d);drawStage();return}
   wzInit(d);
   if(S.step==='car')el.innerHTML=carHTML(d);
-  else if(S.step==='proc'){el.innerHTML=procHTMLshell(d);procPreview()}
+  else if(S.step==='proc'){el.innerHTML=procShell(d);procPreview()}
   else if(S.step==='ops')el.innerHTML=opsHTML(d)}
-function goStep(s){if(S.dirty&&canWrite){if(!S.warned){S.warned=true;toast('Tienes cambios sin guardar. Pulsa Guardar, o vuelve a hacer clic para descartarlos.');return}}S.warned=false;S.dirty=false;S.step=s;S.sel=null;S.selMap=null;S.zonas=false;S.page=1;S.wzFor=null;render(true);window.scrollTo(0,0)}
-function goNode(id,step,selId){if(!D(id))return;if(S.dirty&&canWrite&&!S.warned&&id!==S.cur){S.warned=true;toast('Tienes cambios sin guardar. Pulsa Guardar, o vuelve a hacer clic para descartarlos.');return}
-  S.warned=false;S.dirty=false;S.view='app';S.cur=id;const d=D(id);S.step=step||(d.raiz?'mapa':isArea(d)?'area':'flujo');S.sel=selId||null;S.selMap=null;S.zonas=false;S.page=1;S.zoom=1;S.wzFor=null;render(true);window.scrollTo(0,0)}
-const footNav=(d,saveBtn)=>{const L=stepsOf(d).map(x=>x[0]),i=L.indexOf(S.step),prev=L[i-1],next=L[i+1],lbl=s=>STEPS.find(x=>x[0]===s)[1];
-  return `<div class="foot noprint"><div>${prev?`<button class="btn ghost" data-a="step" data-s="${prev}">‹ ${lbl(prev)}</button>`:''}</div><div class="row">${saveBtn&&canWrite?`<button class="btn" data-a="wz-save">Guardar</button>`:''}${next?`<button class="btn pri" data-a="${saveBtn&&canWrite?'wz-save':'step'}" data-s="${next}" data-next="${next}">${saveBtn&&canWrite?'Guardar y continuar':'Continuar'}: ${lbl(next)} ›</button>`:''}</div></div>`};
+function flushAuto(){if(S.dirty&&canWrite){clearTimeout(S.asT);wzSave(true)}}
+function goStep(s){flushAuto();S.dirty=false;S.step=s;S.sel=null;S.selMap=null;S.wzFor=null;render(true);window.scrollTo(0,0)}
+function goNode(id,step,selId){if(!D(id))return;flushAuto();S.dirty=false;S.view='app';S.cur=id;const d=D(id);S.step=step||(d.raiz?'mapa':isArea(d)?'area':'flujo');S.sel=selId||null;S.selMap=null;S.zoom=1;S.wzFor=null;render(true);window.scrollTo(0,0)}
+const footNav=d=>{const L=stepsOf(d).map(x=>x[0]),i=L.indexOf(S.step),prev=L[i-1],next=L[i+1],lbl=s=>STEPS.find(x=>x[0]===s)[1];
+  return `<div class="foot noprint"><div>${prev?`<button class="btn ghost" data-a="step" data-s="${prev}">‹ ${lbl(prev)}</button>`:''}</div><div class="row">${next?`<button class="btn pri" data-a="step" data-s="${next}">Continuar: ${lbl(next)} ›</button>`:''}</div></div>`};
+const svBadge=()=>canWrite?`<span class="svst ok" id="svst">Todo guardado</span>`:'';
 
-/* ================= paso: mapa ISO ================= */
+/* ================= mapa de procesos ================= */
 const cfg=()=>S.items.cfg_mapa||{izq:'Necesidades del cliente',der:'Satisfacción del cliente'};
 const procOrd=c=>mapKids().filter(d=>d.categoria===c).sort((a,b)=>num(a.ordenMapa)-num(b.ordenMapa)||byName(a,b));
 function progSeg(d){const k=stepKeys(d);return `<span class="seg" title="${k.filter(s=>hecho(d,s)).length} de ${k.length} pasos completos">${k.map(s=>`<i class="${hecho(d,s)?'on':''}"></i>`).join('')}</span>`}
-function flowCard(f){const ops=openIn(new Set(subtree(f.id)));return `<div class="subc"><div class="subh"><b>${esc(f.nombre)}</b>${progSeg(f)}</div>${f.dueno?`<p class="mut" style="margin:-4px 2px 6px;font-size:12.5px">${esc(f.dueno)}${ops?` · <span style="color:#b42318">${ops} oportunidades abiertas</span>`:''}</p>`:''}${goBtns(f)}</div>`}
+function flowCard(f){const ops=openIn(new Set(subtree(f.id)));return `<div class="subc"><div class="subh"><b>${esc(f.nombre)}</b>${progSeg(f)}</div>${f.dueno||ops?`<p class="mut" style="margin:-4px 2px 6px;font-size:12.5px">${esc(f.dueno||'')}${ops?`${f.dueno?' · ':''}<span style="color:#b42318">${ops} ${ops===1?'oportunidad abierta':'oportunidades abiertas'}</span>`:''}</p>`:''}${goBtns(f)}</div>`}
+function goBtns(n){const L=stepsOf(n).filter(s=>FL.includes(s[0]));return `<div class="go">${L.map(([k,l],i)=>`<button class="${hecho(n,k)?'ok':''}" data-a="node" data-id="${esc(n.id)}" data-s="${k}"><b>${hecho(n,k)?'✓':i+1}</b><span>${l}</span>${k==='ops'?`<em>${opsOf(n.id).filter(isOpenOp).length} abiertas</em>`:''}</button>`).join('')}</div>`}
 function areaHTML(d){const fl=flowsOf(d),c=CATS.find(x=>x[0]===d.categoria);
   return `<div class="sh"><div><h2>${esc(d.nombre)}</h2><p>${c?esc(c[2]):'Proceso sin clasificar'}${d.dueno?' · Responsable: '+esc(d.dueno):''}. ${fl.length?'Estos son sus flujos. Cada uno se caracteriza, se documenta y se analiza por separado.':'Crea el primer flujo de este proceso. Puede tener uno o varios (p. ej. “Cuentas por cobrar” y “Cuentas por pagar”).'}</p></div>
   ${canWrite?`<div class="row"><button class="btn pri" data-a="flow-new" data-p="${esc(d.id)}">+ ${fl.length?'Agregar flujo':'Crear flujo'}</button><button class="btn sm" data-a="node-edit" data-id="${esc(d.id)}">Editar proceso</button></div>`:''}</div>
@@ -419,77 +424,46 @@ function areaHTML(d){const fl=flowsOf(d),c=CATS.find(x=>x[0]===d.categoria);
   <div class="foot noprint"><button class="btn ghost" data-a="node" data-id="raiz" data-s="mapa">‹ Mapa de procesos</button><span></span></div>`}
 function isoHTML(){
   const cf=cfg(),unc=mapKids().filter(d=>!CATS.some(c=>c[0]===d.categoria)),root=D('raiz');
-  const band=c=>{const l=procOrd(c[0]);return `<section class="band ${c[3]}"><h3><span>${c[2]}<small>${c[4]}</small></span>${canWrite?`<button class="lnk noprint" data-a="proc-new" data-cat="${c[0]}">+ Agregar</button>`:''}</h3><div class="boxes">${l.length?l.map(d=>{const ops=openIn(new Set(subtree(d.id)));return `<button class="pbox${S.selMap===d.id?' sel':''}" data-a="mapsel" data-id="${esc(d.id)}"><b>${esc(d.nombre)}</b>${d.dueno?`<small>${esc(d.dueno)}</small>`:'<small>&nbsp;</small>'}<span class="meta2"><span>${flowsOf(d).length?flowsOf(d).length+(flowsOf(d).length===1?' flujo':' flujos'):'Sin flujos'}</span>${ops?`<span class="op">${ops} abiertas</span>`:''}</span></button>`}).join(''):`<span class="emptyb">Aún no hay procesos aquí.</span>`}</div></section>`};
+  const band=c=>{const l=procOrd(c[0]);return `<section class="band ${c[3]}"><h3><span>${c[2]}<small>${c[4]}</small></span>${canWrite?`<button class="lnk noprint" data-a="proc-new" data-cat="${c[0]}">+ Agregar</button>`:''}</h3><div class="boxes">${l.length?l.map(d=>{const ops=openIn(new Set(subtree(d.id))),nf=flowsOf(d).length;return `<button class="pbox${S.selMap===d.id?' sel':''}" data-a="mapsel" data-id="${esc(d.id)}"><b>${esc(d.nombre)}</b>${d.dueno?`<small>${esc(d.dueno)}</small>`:'<small>&nbsp;</small>'}<span class="meta2"><span>${nf?nf+(nf===1?' flujo':' flujos'):'Sin flujos'}</span>${ops?`<span class="op">${ops} abiertas</span>`:''}</span></button>`}).join(''):`<span class="emptyb">Aún no hay procesos aquí.</span>`}</div></section>`};
   return `<div class="sh"><div><h2>Mapa de procesos</h2><p>${mapKids().length?'Selecciona un proceso para ver sus flujos o crear uno nuevo. Cada flujo tiene su caracterización, procedimiento y oportunidades.':'Empieza por aquí: agrega los procesos de la empresa en su franja. No hace falta que estén completos; luego se detallan.'}</p></div>
-  <div class="row noprint">${canWrite?'<button class="btn sm" data-a="iso-lbl">Editar textos</button>':''}<button class="btn sm" data-a="pdf" data-t="isoMap">Descargar PDF</button></div></div>
+  <div class="row noprint">${S.demo?'':'<button class="btn sm" data-a="demo">Ver un ejemplo completo</button>'}<button class="btn sm" data-a="pdf" data-t="isoMap">Descargar PDF</button></div></div>
   <div class="card ptarget" id="isoMap"><div class="iso"><div class="iso-side"><span>${esc(cf.izq)}</span></div><div class="iso-b">${CATS.map(band).join('')}</div><div class="iso-side r"><span>${esc(cf.der)}</span></div></div></div>
   ${unc.length?`<div class="card pad noprint" style="margin-top:14px"><h4 style="margin:0 0 4px">Procesos sin clasificar (${unc.length})</h4><p class="hint">Selecciónalos y asígnales una franja para que aparezcan en el mapa.</p><div class="row">${unc.map(d=>`<button class="btn sm" data-a="mapsel" data-id="${esc(d.id)}">${esc(d.nombre)}</button>`).join('')}</div></div>`:''}
   ${footNav(root)}`}
 
-/* ================= paso: flujo ================= */
+/* ================= flujo ================= */
 function flujoShell(d){
   const n=(d.actividades||[]).length;
-  return `<div class="sh"><div><h2>${d.raiz?'Flujo general de la empresa':'Flujo del proceso'}</h2><p>${n?'Haz clic en una actividad para ver su detalle y bajar a sus flujos de detalle. Para cambiar el orden, arrástrala a la izquierda o a la derecha. Cada responsable es un carril.':'Escribe o dicta las actividades en orden: quién las hace y qué se hace. La herramienta dibuja el diagrama de carriles.'}</p></div></div>
+  return `<div class="sh"><div><h2>${d.raiz?'Flujo general de la empresa':'Flujo del proceso'}</h2><p>${n?'Haz clic en una actividad para ver su detalle y bajar a sus flujos de detalle. Para cambiar el orden, arrástrala a la izquierda o a la derecha. Cada responsable es un carril.':'Escribe o dicta las actividades en orden: quién las hace y qué se hace. La herramienta dibuja el diagrama de carriles. También puedes partir de una plantilla.'}</p></div></div>
   <div class="card"><div class="fbar noprint" id="fbar"></div>
-  ${n||hasFile(d)?`<div id="viewport"><div id="stage" hidden><canvas id="cv"></canvas><img id="im" alt="Diagrama de ${esc(d.nombre)}" hidden><div id="ov"></div></div><div id="empty"></div></div>`:
-  `<div class="empty"><h3>Este flujo aún no tiene actividades</h3><p>Ejemplo: “Recibir solicitud — Comercial”, “Revisar planos — Ingeniería”, “¿Planos completos? — decisión”.</p>${canWrite?'<div class="row" style="justify-content:center"><button class="btn pri" data-a="acts">Escribir actividades</button><button class="btn" data-a="acts" data-dictar="1">Dictar por voz</button></div>':''}</div>`}</div>
+  ${n?`<div id="viewport"><div id="stage" hidden><canvas id="cv" hidden></canvas><img id="im" alt="Diagrama de ${esc(d.nombre)}" hidden><div id="ov"></div></div><div id="empty"></div></div>`:
+  `<div class="empty"><h3>Este flujo aún no tiene actividades</h3><p>Ejemplo: “Recibir solicitud — Comercial”, “Revisar planos — Ingeniería”, “¿Planos completos? — decisión”.</p>${canWrite?'<div class="row" style="justify-content:center"><button class="btn pri" data-a="acts">Escribir actividades</button><button class="btn" data-a="acts" data-tpl="1">Usar una plantilla</button><button class="btn" data-a="acts" data-dictar="1">Dictar por voz</button></div>':''}</div>`}</div>
   ${footNav(d)}`}
-function flujoBar(d){const b=$('#fbar');if(!b)return;const n=(d.actividades||[]).length,gen=isGen(d);
+function flujoBar(d){const b=$('#fbar');if(!b)return;const n=(d.actividades||[]).length;
   b.innerHTML=`${canWrite?`<button class="btn pri sm" data-a="acts">${n?'Editar actividades':'Escribir actividades'}</button>`:`<button class="btn sm" data-a="acts">Lista de actividades</button>`}
-  ${hasFile(d)?`<div class="seg2" role="group" aria-label="Vista"><button class="${gen?'on':''}" data-a="vista" data-v="generado">Diagrama</button><button class="${gen?'':'on'}" data-a="vista" data-v="archivo">PDF original</button></div>`:''}
-  ${!gen&&S.pages>1?`<button class="ic" data-a="pg" data-d="-1" aria-label="Página anterior">‹</button><span class="mut">${S.page}/${S.pages}</span><button class="ic" data-a="pg" data-d="1" aria-label="Página siguiente">›</button>`:''}
-  ${!gen&&canWrite?`<button class="btn sm${S.zonas?' pri':''}" data-a="zonas">${S.zonas?'Terminar zonas':'Marcar zonas'}</button>`:''}
-  <span class="sp"></span><button class="ic" data-a="zoom" data-d="-1" aria-label="Alejar">−</button><button class="ic" data-a="zoom" data-d="0" aria-label="Ajustar" style="width:auto;padding:0 10px;font-size:13px">Ajustar</button><button class="ic" data-a="zoom" data-d="1" aria-label="Acercar">+</button>
-  ${canWrite?`<details class="menu"><summary class="btn sm" aria-label="Más opciones">Más ▾</summary><div class="mlist">
-    <button data-a="node-edit">Datos del ${d.raiz?'flujo general':'proceso'}</button>
-    <button data-a="imp">${hasFile(d)?'Reemplazar PDF o imagen':'Importar PDF o imagen (Visio, Lucidchart)'}</button>
-    ${hasFile(d)&&d.kind==='pdf'?'<button data-a="detect">Leer actividades del PDF</button>':''}
-    ${hasFile(d)?'<button data-a="unimp">Quitar el PDF (quedarse con el diagrama)</button>':''}
-    ${d.raiz?'':`<button data-a="docs" data-v="${docsOn(d)?'':'1'}">${docsOn(d)?'Quitar caracterización y procedimiento':'Agregar caracterización y procedimiento'}</button>`}
-    ${d.raiz?'':'<button class="dang" data-a="node-del">Eliminar proceso</button>'}</div></details>`:''}`}
-let lastKey='',tok=0,task=null,lastClk={};
+  <span class="sp"></span>${n?`<button class="ic" data-a="zoom" data-d="-1" aria-label="Alejar">−</button><button class="ic" data-a="zoom" data-d="0" aria-label="Ajustar" style="width:auto;padding:0 10px;font-size:13px">Ajustar</button><button class="ic" data-a="zoom" data-d="1" aria-label="Acercar">+</button>`:''}
+  ${canWrite&&!d.raiz?`<details class="menu"><summary class="btn sm" aria-label="Más opciones">Más ▾</summary><div class="mlist"><button data-a="node-edit">Datos del flujo</button><button class="dang" data-a="node-del">Eliminar flujo</button></div></details>`:canWrite?`<button class="btn sm" data-a="node-edit">Datos del flujo general</button>`:''}`}
+let lastKey='',tok=0,lastClk={};
 async function drawStage(){
-  const d=D(S.cur),cv=$('#cv'),im=$('#im'),st=$('#stage'),em=$('#empty'),vp=$('#viewport');if(!vp||!d)return;
-  const W=Math.max(280,vp.clientWidth-38),gen=isGen(d),L=gen?layoutFlow(d):null;
-  const key=[d.id,gen?L.url:d.assetId,S.page,S.zoom,W].join('|');
-  if(key===lastKey){overlay();return}
-  lastKey=key;const my=++tok;st.hidden=false;em.hidden=true;
-  try{
-    if(!gen&&d.kind==='pdf'){
-      if(!window.pdfjsLib)throw new Error('lib');im.hidden=true;cv.hidden=false;
-      const pdf=await getPdf(d.assetId);if(my!==tok)return;
-      S.pages=pdf.numPages;if(S.page>S.pages)S.page=1;
-      const pg=await pdf.getPage(S.page);if(my!==tok)return;
-      const v1=pg.getViewport({scale:1}),vpp=pg.getViewport({scale:W/v1.width*S.zoom}),dpr=Math.min(window.devicePixelRatio||1,2);
-      if(task){try{task.cancel()}catch(e){}}
-      cv.width=Math.floor(vpp.width*dpr);cv.height=Math.floor(vpp.height*dpr);cv.style.width=vpp.width+'px';cv.style.height=vpp.height+'px';st.style.width=vpp.width+'px';st.style.height=vpp.height+'px';
-      task=pg.render({canvasContext:cv.getContext('2d'),viewport:vpp,transform:dpr!==1?[dpr,0,0,dpr,0,0]:undefined});
-      await task.promise.catch(e=>{if(!e||e.name!=='RenderingCancelledException')throw e});flujoBar(d);
-    }else{
-      cv.hidden=true;im.hidden=false;S.pages=1;S.page=1;let src,ar;
-      if(gen){src=L.url;ar=L.ar}else{const b=await blobOf(d.assetId);if(my!==tok)return;src=urls[d.assetId]||(urls[d.assetId]=URL.createObjectURL(b))}
-      if(im.getAttribute('src')!==src)im.src=src;
-      if(!(im.complete&&im.naturalWidth))await new Promise(r=>{im.onload=im.onerror=r;setTimeout(r,5000)});
-      if(my!==tok)return;
-      const sw=gen?parseFloat(L.svg.match(/width="(\d+)/)[1]):0,w=gen?(S.zoom===1?Math.min(sw,Math.max(W,sw*.72)):Math.max(W,sw*.72)*S.zoom):W*S.zoom,h=ar?w*ar:im.naturalWidth?w*im.naturalHeight/im.naturalWidth:w*.6;
-      im.style.width=w+'px';im.style.height=h+'px';st.style.width=w+'px';st.style.height=h+'px';
-    }
-  }catch(e){if(my===tok){st.hidden=true;em.hidden=false;em.innerHTML=`<p class="mut" style="padding:20px">No se pudo abrir el archivo${window.pdfjsLib?'':' (el lector de PDF no cargó)'}. Usa la vista “Diagrama”.</p>`;lastKey=''}return}
-  overlay();
-  if(!gen&&d.kind==='pdf'&&!d.revisado&&canWrite&&!S.reviewing){S.reviewing=true;detect(d).finally(()=>{S.reviewing=false})}}
+  const d=D(S.cur),im=$('#im'),st=$('#stage'),vp=$('#viewport');if(!vp||!d)return;
+  const W=Math.max(280,vp.clientWidth-38),L=layoutFlow(d),key=[d.id,L.url,S.zoom,W].join('|');
+  if(key===lastKey){overlay();return}lastKey=key;const my=++tok;st.hidden=false;im.hidden=false;
+  if(im.getAttribute('src')!==L.url)im.src=L.url;
+  if(!(im.complete&&im.naturalWidth))await new Promise(r=>{im.onload=im.onerror=r;setTimeout(r,5000)});
+  if(my!==tok)return;
+  const sw=parseFloat(L.svg.match(/width="(\d+)/)[1]),w=S.zoom===1?Math.min(sw,Math.max(W,sw*.72)):Math.max(W,sw*.72)*S.zoom,h=w*L.ar;
+  im.style.width=w+'px';im.style.height=h+'px';st.style.width=w+'px';st.style.height=h+'px';overlay()}
 function overlay(){
-  const d=D(S.cur),ov=$('#ov');if(!ov||!d)return;const gen=isGen(d);ov.classList.toggle('zonas',S.zonas&&!gen);
-  ov.innerHTML=(d.actividades||[]).filter(a=>gen||(a.pag||1)===S.page).map(a=>{const z=zoneOf(d,a);if(!z)return'';
+  const d=D(S.cur),ov=$('#ov');if(!ov||!d)return;
+  ov.innerHTML=(d.actividades||[]).map(a=>{const z=zoneOf(d,a);if(!z)return'';
     const sids=new Set(subsOf(d,a).flatMap(s=>subtree(s.id))),n=Object.values(S.items).filter(i=>isOpenOp(i)&&((i.diagramaId===d.id&&i.actividadId===a.id)||sids.has(i.diagramaId))).length;
     return `<button class="hs${a.id===S.sel?' sel':''}" data-a="act" data-id="${esc(a.id)}" style="left:${num(z.x)*100}%;top:${num(z.y)*100}%;width:${num(z.w)*100}%;height:${num(z.h)*100}%" aria-label="${esc(a.nombre)}">${n?`<span class="bdg" title="Oportunidades de mejora abiertas">${n===1?'1 mejora':n+' mejoras'}</span>`:''}</button>`}).join('')}
 
 /* ================= panel lateral ================= */
-function goBtns(n,pref){const L=n?stepsOf(n).filter(s=>s[0]!=='mapa'):STEPS.filter(s=>s[0]==='flujo'||s[0]==='ops');return `<div class="go">${L.map(([k,l],i)=>`<button class="${n&&hecho(n,k)?'ok':''}" data-a="${n?'node':'sub-make'}" ${n?`data-id="${esc(n.id)}"`:''} data-s="${k}"${pref||''}><b>${n&&hecho(n,k)?'✓':i+1}</b><span>${l}</span>${k==='ops'&&n?`<em>${opsOf(n.id).filter(isOpenOp).length} abiertas</em>`:''}</button>`).join('')}</div>`}
 function drawer(){
   const dr=$('#drawer'),wrap=$('#wrap'),d=D(S.cur);let h='';
   if(S.step==='mapa'&&S.selMap&&D(S.selMap)){
-    const n=D(S.selMap),c=CATS.find(x=>x[0]===n.categoria),l=c?procOrd(c[0]):[],i=l.indexOf(n);
-    const fl=flowsOf(n);
+    const n=D(S.selMap),c=CATS.find(x=>x[0]===n.categoria),l=c?procOrd(c[0]):[],i=l.indexOf(n),fl=flowsOf(n);
     h=`<button class="xclose" data-a="close-dr" aria-label="Cerrar">×</button><p class="eye">${esc(c?c[2]:'Sin clasificar')}</p><h3>${esc(n.nombre)}</h3><dl><dt>Responsable</dt><dd>${esc(n.dueno||'—')}</dd></dl>
     <div class="dsec"><h4>Flujos de este proceso${fl.length?` (${fl.length})`:''}</h4>${fl.length?fl.map(flowCard).join(''):'<p class="hint">Aún no tiene flujos. Crea uno o varios (p. ej. “Cuentas por cobrar” y “Cuentas por pagar”).</p>'}
     <div class="row">${canWrite?`<button class="btn sm${fl.length?'':' pri'}" data-a="flow-new" data-p="${esc(n.id)}">+ ${fl.length?'Agregar flujo':'Crear flujo'}</button>`:''}<button class="btn sm" data-a="node" data-id="${esc(n.id)}" data-s="area">Abrir proceso ›</button></div></div>
@@ -498,15 +472,15 @@ function drawer(){
       <div class="row" style="margin-top:10px"><button class="btn sm" data-a="node-edit" data-id="${esc(n.id)}">Editar nombre y responsable</button><button class="btn sm dang" data-a="node-del" data-id="${esc(n.id)}">Eliminar</button></div></div>`:''}`}
   else if(S.step==='flujo'&&S.sel&&actOf(d,S.sel)){
     const a=actOf(d,S.sel),ord=orderActs(d),subs=subsOf(d,a),opsA=opsOf(d.id).filter(i=>i.actividadId===a.id);
-    h=`<button class="xclose" data-a="close-dr" aria-label="Cerrar">×</button><p class="eye">Actividad ${ord.indexOf(a)+1}${a.forma&&a.forma!=='Actividad'?' · '+esc(a.forma):''}</p><h3>${esc(a.nombre)}</h3>
+    h=`<button class="xclose" data-a="close-dr" aria-label="Cerrar">×</button><p class="eye">${esc(a.forma&&a.forma!=='Actividad'?a.forma:'Actividad')}</p><h3>${esc(a.nombre)}</h3>
     <dl><dt>Responsable</dt><dd>${esc(a.responsable||'—')}</dd>${a.forma==='Decisión'?`<dt>Opciones</dt><dd>${ramasOf(a).map(r=>{const t=actOf(d,r.dest);return esc(r.etiqueta)+' → '+(t?esc(t.nombre):'<i>sin destino</i>')}).join('<br>')}</dd>`:''}</dl>
     ${a.descripcion?`<div class="desc">${esc(a.descripcion)}</div>`:'<p class="mut">Sin descripción.</p>'}
     ${canWrite?`<div class="row"><button class="btn sm" data-a="act-edit">Editar actividad</button><button class="btn sm" data-a="act-mv" data-d="-1"${ord.indexOf(a)===0?' disabled':''} aria-label="Mover antes">‹ Antes</button><button class="btn sm" data-a="act-mv" data-d="1"${ord.indexOf(a)===ord.length-1?' disabled':''} aria-label="Mover después">Después ›</button></div>`:''}
     <div class="dsec"><h4>Flujos de detalle de esta actividad${subs.length?` (${subs.length})`:''}</h4>
     ${subs.length?subs.map(flowCard).join(''):`<p class="hint">${canWrite?'Baja al siguiente nivel: uno o varios flujos que detallan cómo se hace esta actividad.':'Sin flujos de detalle.'}</p>`}
     ${canWrite?`<button class="btn sm${subs.length?'':' pri'}" data-a="sub-new">+ ${subs.length?'Agregar flujo':'Crear flujo de detalle'}</button>`:''}</div>
-    <div class="dsec"><h4>Oportunidades en esta actividad</h4>${opsA.length?opsA.map(o=>`<p class="mut" style="margin:2px 0">• ${esc(o.titulo)} <span class="chip${o.estado==='Cerrada'?' cl':''}">${esc(o.estado||'')}</span></p>`).join(''):'<p class="mut">Ninguna registrada.</p>'}
-    ${canWrite?`<button class="btn sm" data-a="op-new" data-act="${esc(a.id)}" style="margin-top:6px">+ Registrar oportunidad</button>`:''}</div>`}
+    <div class="dsec"><h4>Oportunidades en esta actividad</h4>${opsA.length?opsA.map(o=>`<p class="mut" style="margin:2px 0">• ${esc(o.titulo)} <span class="chip ${prioCls(prio(o))}">${prio(o)}</span></p>`).join(''):'<p class="mut">Ninguna registrada.</p>'}
+    ${canWrite&&!d.raiz?`<button class="btn sm" data-a="op-new" data-act="${esc(a.id)}" style="margin-top:6px">+ Registrar oportunidad</button>`:''}</div>`}
   dr.hidden=!h;wrap.classList.toggle('withd',!!h);if(h)dr.innerHTML=h;
   if(S.step==='flujo'){const L=$('#viewport');if(L&&L.dataset.w!==String(!!h)){L.dataset.w=String(!!h);lastKey='';drawStage()}}}
 
@@ -537,7 +511,8 @@ function actsDlg(dictar){
   const d=D(S.cur);if(!d)return;const ord=orderActs(d),ids=ord.map(a=>a.id);
   if(!canWrite){openDlg(`<h3>Actividades · ${esc(d.nombre)}</h3><div class="aed"><table><thead><tr><th>#</th><th>Actividad</th><th>Responsable</th><th>Descripción</th></tr></thead><tbody>${ord.map((a,i)=>`<tr><td>${i+1}</td><td>${esc(a.nombre)}</td><td>${esc(a.responsable||'')}</td><td>${esc(a.descripcion||'')}</td></tr>`).join('')}</tbody></table></div><div class="row end" style="margin-top:12px"><button type="button" class="btn" data-a="dlg-close">Cerrar</button></div>`,()=>{},null,true);return}
   openDlg(`<h3>Actividades · ${esc(d.raiz?'Flujo general':d.nombre)}</h3>
-  <p class="hint">Una fila por actividad, en orden. Arrastra <b>⠿</b> o usa ▲▼ para cambiar el orden. El responsable define el carril. En <b>Siguiente paso</b> elige a qué actividad pasa el flujo (normalmente “La siguiente en la lista”). En una <b>Decisión</b> elige a dónde lleva cada opción (p. ej. Sí → Cuantificar, No → Solicitar información).${hasFile(d)?' Las filas nuevas no tienen zona en el PDF: se ven en la vista “Diagrama”.':''}</p>
+  <p class="hint">Una fila por actividad, en orden. Arrastra <b>⠿</b> o usa ▲▼ para cambiar el orden. El responsable define el carril. En <b>Siguiente paso</b> elige a qué actividad pasa el flujo (normalmente “La siguiente en la lista”). En una <b>Decisión</b> elige a dónde lleva cada opción (p. ej. Sí → Cuantificar, No → Solicitar información).</p>
+  <div class="tplbox"><b>Partir de una plantilla:</b><select id="tplSel" aria-label="Plantilla"><option value="">— elegir proceso común —</option>${PLANT.map((p,i)=>`<option value="${i}">${esc(p.n)}</option>`).join('')}</select><button type="button" class="btn sm" data-a="tpl-apply">Cargar</button><span class="hint" style="margin:0">Reemplaza las filas de la tabla.</span></div>
   <div class="dic"><div class="row"><strong style="margin-right:auto">Dictado por voz</strong><button type="button" class="btn sm" id="dicBtn" data-a="dic-start">Dictar con micrófono</button><button type="button" class="btn sm" data-a="dic-apply">Pasar texto a la tabla</button></div>
   <p class="hint" style="margin:6px 0 0">Di: “<b>actividad</b> recibir planos <b>responsable</b> presupuesto <b>descripción</b> se reciben del cliente <b>siguiente</b>”. Tipos: inicio, actividad, decisión, fin. Decisión: “<b>conecta con sí</b> cuatro <b>no</b> dos”. “<b>Borrar</b>” quita la última fila.</p>
   <textarea id="dicTxt" aria-label="Texto dictado" placeholder="Aquí aparece lo dictado. Si el micrófono no funciona, dicta aquí con el teclado del celular o con Win + H y pulsa “Pasar texto a la tabla”."></textarea><p class="hint" id="dicInterim" style="min-height:1.2em;margin:4px 0 0"></p></div>
@@ -569,6 +544,7 @@ function actDlg(a){const d=D(S.cur);
   ${a.forma==='Decisión'?'<p class="hint">Las opciones de la decisión se editan en “Editar actividades”.</p>':''}
   <div class="row end" style="margin-top:12px">${subsOf(d,a).length?'':'<button type="button" class="btn dang" data-a="act-del" style="margin-right:auto">Eliminar actividad</button>'}<button type="button" class="btn" data-a="dlg-close">Cancelar</button><button class="btn pri">Guardar</button></div>`,
   fd=>{const cur=D(d.id);put('diagramas',{...cur,actividades:(cur.actividades||[]).map(x=>x.id===a.id?{...x,nombre:String(fd.get('nombre')).trim(),responsable:String(fd.get('responsable')||'').trim(),forma:fd.get('forma'),descripcion:String(fd.get('descripcion')||'').trim()}:x)})})}
+
 
 /* ================= dictado (palabras clave, sin IA) ================= */
 const deacc=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
@@ -612,7 +588,26 @@ function startDictado(){
   try{rec.start()}catch(e){toast('No se pudo iniciar el dictado.');stopDictado();return}
   const b=$('#dicBtn');if(b){b.classList.add('on');b.textContent='Detener dictado'}$('#dicInterim').textContent='Escuchando…'}
 
-/* ================= paso: caracterización (camino principal + SIPOC) ================= */
+
+/* ================= plantillas de flujos ================= */
+/* filas: [tipo, actividad, responsable, descripción, siguiente(nº) | [[opción,nº],...] ] */
+const PLANT=[
+ {n:'Venta y cotización',f:[['Inicio','Recibir solicitud del cliente','Comercial','Llega por llamada, correo, visita o referido.'],['Actividad','Registrar el prospecto','Comercial','Se registra en la lista o sistema de clientes.'],['Actividad','Levantar necesidades','Comercial','Visita o reunión para entender alcance, plazo y presupuesto.'],['Actividad','Elaborar propuesta','Presupuesto','Se prepara la propuesta técnica y económica.'],['Decisión','¿Propuesta aprobada internamente?','Gerencia','Revisión de márgenes y riesgos.',[['Sí',6],['No',4]]],['Actividad','Enviar propuesta al cliente','Comercial','Se envía y se confirma la recepción.'],['Actividad','Dar seguimiento','Comercial','Llamadas y reuniones hasta obtener respuesta.'],['Decisión','¿El cliente acepta?','Comercial','',[['Sí',9],['No',10]]],['Actividad','Firmar contrato','Gerencia','Se formaliza alcance, precio y forma de pago.'],['Fin','Registrar resultado','Comercial','Se registra si se ganó o perdió y el motivo.']]},
+ {n:'Elaboración de presupuestos',f:[['Inicio','Recibir planos y alcance','Presupuesto',''],['Actividad','Revisar planos','Ingeniería','Se verifica que la información esté completa.'],['Decisión','¿Información completa?','Ingeniería','',[['Sí',5],['No',4]]],['Actividad','Solicitar información faltante','Ingeniería','Se pide al cliente lo que falta.',2],['Actividad','Cuantificar partidas','Presupuesto','Cubicación de cantidades por partida.'],['Actividad','Cotizar materiales y servicios','Compras','Al menos tres cotizaciones para lo más relevante.'],['Actividad','Calcular costos unitarios','Presupuesto',''],['Actividad','Revisar márgenes y riesgos','Gerencia',''],['Fin','Entregar presupuesto','Presupuesto','Se entrega a Comercial para enviarlo.']]},
+ {n:'Compras',f:[['Inicio','Recibir solicitud de compra','Compras','La envía el área que necesita el material o servicio.'],['Decisión','¿Hay presupuesto disponible?','Finanzas','',[['Sí',3],['No',9]]],['Actividad','Cotizar con suplidores','Compras','Mínimo tres cotizaciones comparables.'],['Actividad','Seleccionar suplidor','Compras','Precio, plazo, calidad y condiciones de pago.'],['Actividad','Aprobar orden de compra','Gerencia',''],['Actividad','Emitir orden de compra','Compras',''],['Actividad','Recibir y verificar','Almacén','Se compara contra la orden: cantidad y calidad.'],['Fin','Entregar al área solicitante','Almacén',''],['Fin','Informar rechazo al solicitante','Compras','']]},
+ {n:'Ejecución de obra',f:[['Inicio','Planificar la semana','Residente','Programa semanal según el cronograma.'],['Actividad','Solicitar materiales','Residente','Con al menos 3 días de anticipación.'],['Actividad','Despachar materiales a obra','Almacén',''],['Actividad','Ejecutar partidas','Residente',''],['Decisión','¿Cumple la calidad?','Calidad','Inspección contra planos y especificaciones.',[['Sí',7],['No',6]]],['Actividad','Corregir trabajos','Residente','',4],['Fin','Reportar avance','Residente','Avance físico y financiero de la semana.']]},
+ {n:'Cuentas por cobrar',f:[['Inicio','Emitir factura o cubicación','Finanzas',''],['Actividad','Enviar al cliente','Finanzas','Se confirma la recepción.'],['Actividad','Dar seguimiento al pago','Finanzas','Según la fecha de vencimiento.'],['Decisión','¿Pagó a tiempo?','Finanzas','',[['Sí',6],['No',5]]],['Actividad','Gestionar cobro','Gerencia','Llamada o reunión con el cliente.',3],['Actividad','Registrar el cobro','Finanzas',''],['Fin','Conciliar con el banco','Contabilidad','']]},
+ {n:'Cuentas por pagar',f:[['Inicio','Recibir factura del suplidor','Finanzas',''],['Decisión','¿Coincide con la orden y la recepción?','Finanzas','',[['Sí',4],['No',3]]],['Actividad','Aclarar diferencias con el suplidor','Compras','',2],['Actividad','Programar el pago','Finanzas','Según condiciones y flujo de caja.'],['Actividad','Aprobar el pago','Gerencia',''],['Actividad','Pagar','Finanzas',''],['Fin','Registrar y archivar','Contabilidad','']]},
+ {n:'Reclutamiento y selección',f:[['Inicio','Recibir requisición de personal','RR. HH.','El área indica el puesto y el perfil.'],['Actividad','Publicar la vacante','RR. HH.',''],['Actividad','Filtrar candidatos','RR. HH.',''],['Actividad','Entrevistar','Área solicitante',''],['Decisión','¿Hay candidato idóneo?','Área solicitante','',[['Sí',6],['No',2]]],['Actividad','Verificar referencias','RR. HH.',''],['Actividad','Hacer la oferta','RR. HH.',''],['Fin','Ingresar e inducir','RR. HH.','']]},
+ {n:'Quejas y reclamaciones',f:[['Inicio','Recibir la queja','Servicio al cliente','Por cualquier canal.'],['Actividad','Registrar la queja','Servicio al cliente','Fecha, cliente, motivo y evidencia.'],['Actividad','Analizar la causa','Responsable del área',''],['Actividad','Definir la solución','Responsable del área',''],['Actividad','Responder al cliente','Servicio al cliente','En el plazo comprometido.'],['Decisión','¿El cliente queda conforme?','Servicio al cliente','',[['Sí',7],['No',3]]],['Fin','Cerrar y registrar','Servicio al cliente','']]}];
+function tplActs(t){const ids=t.f.map(()=>uid());return t.f.map((r,i)=>{const[forma,nombre,resp,desc,nx]=r,a={id:ids[i],orden:i+1,forma,nombre,responsable:resp,descripcion:desc,sig:[],ramas:[]};
+  if(forma==='Decisión'&&Array.isArray(nx))a.ramas=nx.map(([e,n])=>({etiqueta:e,dest:ids[n-1]||''}));else if(typeof nx==='number')a.sig=[ids[nx-1]];return a})}
+function applyTpl(i){const t=PLANT[i],tb=$('#aedBody');if(!t||!tb)return;tb.innerHTML='';const acts=tplActs(t);
+  acts.forEach((a,k)=>{tb.insertAdjacentHTML('beforeend',actRow(a,k))});
+  [...tb.rows].forEach((tr,k)=>{const a=acts[k];const s=tr.querySelector('select[name=sig]');if(s)s.dataset.v=(a.sig||[])[0]||'';tr.querySelectorAll('select[name=rn]').forEach((x,j)=>x.dataset.v=(a.ramas[j]||{}).dest||'')});
+  refreshSig();toast('Plantilla “'+t.n+'” cargada. Ajusta nombres y responsables a tu empresa.')}
+
+/* ================= caracterización ================= */
 function happyPath(d){
   const acts=orderActs(d);if(!acts.length)return[];const idx=Object.fromEntries(acts.map((a,i)=>[a.id,i]));
   let cur=acts.find(a=>a.forma==='Inicio')||acts[0];const seen=new Set(),path=[];
@@ -627,15 +622,17 @@ function moda(arr){const m={};let b='',n=0;arr.filter(Boolean).forEach(x=>{m[x]=
 function proponer(d,k){const U=unidades(d);if(!U.length)return[];k=Math.max(1,Math.min(k,U.length));const base=Math.floor(U.length/k),extra=U.length%k,out=[];let i=0;
   for(let g=0;g<k;g++){const n=base+(g<extra?1:0),grp=U.slice(i,i+n).flat();i+=n;out.push({id:uid(),nombre:(grp.find(a=>a.forma!=='Decisión')||grp[0]).nombre,responsable:moda(grp.map(a=>a.responsable)),acts:grp.map(a=>a.id),sipoc:{p:'',e:'',s:'',c:''}})}return out}
 const defK=d=>{const n=unidades(d).length;return n<=6?n:(n<=10?5:6)};
-function wzInit(d){if(S.wzFor===d.id)return;S.wzFor=d.id;S.dirty=false;S.wz=clone(Array.isArray(d.macro)&&d.macro.length?d.macro:proponer(d,defK(d)));S.wp=clone(d.proc||{});S.wc=clone(d.chk||{})}
+
+function wzInit(d){if(S.wzFor===d.id)return;S.wzFor=d.id;S.dirty=false;S.wz=clone(Array.isArray(d.macro)&&d.macro.length?d.macro:proponer(d,defK(d)));S.wp=clone(d.proc||{});S.wc=clone(d.chk||{});S.wx=clone(d.carx||{ind:[],rie:[]});S.wx.ind=S.wx.ind||[];S.wx.rie=S.wx.rie||[]}
 const ro=()=>canWrite?'':' disabled';
-const needFlow=d=>`<div class="card empty"><h3>Primero el flujo</h3><p>La caracterización se arma a partir de las actividades del flujo. Agrega al menos dos.</p><button class="btn pri" data-a="step" data-s="flujo">Ir al flujo</button></div>`;
+const needFlow=()=>`<div class="card empty"><h3>Primero el flujo</h3><p>Esta parte se arma a partir de las actividades del flujo. Agrega al menos dos.</p><button class="btn pri" data-a="step" data-s="flujo">Ir al flujo</button></div>`;
 function carHTML(d){
-  if(core(d).length<2)return `<div class="sh"><div><h2>Caracterización</h2></div></div>${needFlow(d)}`;
-  const W=S.wz,k=W.length,nU=unidades(d).length,inP=new Set(W.flatMap(m=>m.acts)),fuera=orderActs(d).filter(a=>!inP.has(a.id));
+  if(core(d).length<2)return `<div class="sh"><div><h2>Caracterización</h2></div></div>${needFlow()}`;
+  const W=S.wz,k=W.length,nU=unidades(d).length,inP=new Set(W.flatMap(m=>m.acts)),fuera=orderActs(d).filter(a=>!inP.has(a.id)),X=S.wx;
   const chip=(a,mi,first,last)=>`<span class="chip2">${first&&mi>0&&canWrite?`<button data-a="mv-act" data-m="${mi}" data-d="-1" title="Pasar a la anterior" aria-label="Pasar a la anterior">‹</button>`:''}${esc(a.nombre)}${last&&mi<k-1&&canWrite?`<button data-a="mv-act" data-m="${mi}" data-d="1" title="Pasar a la siguiente" aria-label="Pasar a la siguiente">›</button>`:''}</span>`;
   const ta=(i,f,ph)=>`<textarea data-s="${f}" data-m="${i}" rows="4" placeholder="${ph}"${ro()}>${esc((W[i].sipoc||{})[f]||'')}</textarea>`;
-  return `<div class="sh"><div><h2>Caracterización</h2><p>El proceso resumido en sus grandes actividades y, para cada una, quién entrega, qué entra, qué sale y quién lo recibe (SIPOC).</p></div></div>
+  const xin=(t,i,f,ph,area)=>area?`<textarea data-x="${t}" data-i="${i}" data-f="${f}" rows="2" placeholder="${ph}"${ro()}>${esc(X[t][i][f]||'')}</textarea>`:`<input data-x="${t}" data-i="${i}" data-f="${f}" value="${esc(X[t][i][f]||'')}" placeholder="${ph}"${ro()}>`;
+  return `<div class="sh"><div><h2>Caracterización</h2><p>El proceso resumido en sus grandes actividades; para cada una, quién entrega, qué entra, qué sale y quién lo recibe (SIPOC). Además, cómo se mide y qué riesgos tiene.</p></div>${svBadge()}</div>
   <div class="card pad"><h3 style="margin:0 0 4px;font-size:16px">1. Grandes actividades</h3>
   <p class="hint">Se siguió el camino normal del flujo (la primera opción de cada decisión, sin retrocesos); cada decisión queda dentro de la actividad que la precede. Si el flujo es corto, cada actividad es una gran actividad; si es largo, se agrupan en 5 o 6. Renombra cada bloque con <b>verbo + objeto</b> y usa ‹ › para mover actividades entre bloques.</p>
   <div class="chev">${W.map((m,i)=>`<div class="cv"><small>${i+1}</small>${esc(m.nombre||'Sin nombre')}<i>${esc(m.responsable||'')}</i></div>`).join('')}</div>
@@ -648,90 +645,101 @@ function carHTML(d){
   <div class="card pad" style="margin-top:14px"><div class="sh" style="margin-bottom:8px"><div><h3 style="margin:0;font-size:16px">2. SIPOC</h3><p class="hint" style="margin:2px 0 0">Un elemento por línea. Los clientes y proveedores pueden ser áreas internas.</p></div>${canWrite?'<button class="btn sm" data-a="wz-sug">Conectar actividades automáticamente</button>':''}</div>
   <div class="scroll sip"><table><thead><tr><th>Proveedores<br><small>quién entrega</small></th><th>Entradas<br><small>qué se recibe</small></th><th>Gran actividad</th><th>Salidas<br><small>qué se entrega</small></th><th>Clientes<br><small>quién lo recibe</small></th></tr></thead><tbody>
   ${W.map((m,i)=>`<tr><td>${ta(i,'p','Ej.: Cliente')}</td><td>${ta(i,'e','Ej.: Planos y alcance')}</td><td><div class="sp"><b>${i+1}. ${esc(m.nombre)}</b><br><small>${esc(m.responsable||'')}</small></div></td><td>${ta(i,'s','Ej.: Presupuesto aprobado')}</td><td>${ta(i,'c','Ej.: Gerencia')}</td></tr>`).join('')}
-  </tbody></table></div></div>${footNav(d,true)}`}
+  </tbody></table></div></div>
+  <div class="card pad" style="margin-top:14px"><h3 style="margin:0;font-size:16px">3. Indicadores <span class="mut" style="font-weight:400">(opcional, 2 o 3 bastan)</span></h3><p class="hint">Cómo se sabe si el proceso funciona bien. Ej.: “Días para entregar un presupuesto”, meta “≤ 5”, mensual.</p>
+  ${X.ind.length?`<div class="scroll xt"><table><thead><tr><th>Indicador</th><th>Cómo se calcula</th><th style="width:110px">Meta</th><th style="width:130px">Frecuencia</th><th style="width:44px"></th></tr></thead><tbody>${X.ind.map((r,i)=>`<tr><td>${xin('ind',i,'n','Qué se mide')}</td><td>${xin('ind',i,'f','Fórmula o fuente',1)}</td><td>${xin('ind',i,'m','Ej.: ≤ 5 días')}</td><td>${xin('ind',i,'q','Ej.: Mensual')}</td><td>${canWrite?`<button class="x" data-a="x-del" data-t="ind" data-i="${i}" aria-label="Quitar">×</button>`:''}</td></tr>`).join('')}</tbody></table></div>`:''}
+  ${canWrite&&X.ind.length<5?'<button class="btn sm" data-a="x-add" data-t="ind">+ Agregar indicador</button>':''}${!X.ind.length&&!canWrite?'<p class="mut">Sin indicadores.</p>':''}</div>
+  <div class="card pad" style="margin-top:14px"><h3 style="margin:0;font-size:16px">4. Riesgos <span class="mut" style="font-weight:400">(opcional)</span></h3><p class="hint">Qué puede salir mal y qué se hace para evitarlo. Ej.: “Precios de suplidores desactualizados” → “Actualizar la base de precios cada mes”.</p>
+  ${X.rie.length?`<div class="scroll xt"><table><thead><tr><th>Riesgo</th><th>Consecuencia</th><th>Control</th><th style="width:44px"></th></tr></thead><tbody>${X.rie.map((r,i)=>`<tr><td>${xin('rie',i,'r','Qué puede pasar',1)}</td><td>${xin('rie',i,'c','Qué provoca',1)}</td><td>${xin('rie',i,'k','Qué se hace para evitarlo',1)}</td><td>${canWrite?`<button class="x" data-a="x-del" data-t="rie" data-i="${i}" aria-label="Quitar">×</button>`:''}</td></tr>`).join('')}</tbody></table></div>`:''}
+  ${canWrite&&X.rie.length<6?'<button class="btn sm" data-a="x-add" data-t="rie">+ Agregar riesgo</button>':''}${!X.rie.length&&!canWrite?'<p class="mut">Sin riesgos registrados.</p>':''}</div>
+  ${footNav(d)}`}
 
-/* ================= paso: procedimiento ================= */
-const PF=[['codigo','Código','Ej.: PR-COM-01'],['version','Versión','1'],['fecha','Vigencia',''],['elaboro','Elaborado por',''],['aprobo','Aprobado por','']];
+/* ================= procedimiento (con versiones aprobadas) ================= */
+const PF=[['codigo','Código','Ej.: PR-COM-01'],['elaboro','Elaborado por','']];
 const PT=[['objetivo','Objetivo','Para qué existe. Ej.: Establecer los pasos para elaborar y enviar presupuestos.'],['alcance','Alcance','Dónde empieza, dónde termina y a qué áreas aplica.'],['definiciones','Definiciones','Términos que alguien nuevo no entendería (uno por línea).'],['referencias','Documentos y registros','Formularios, plantillas o sistemas que se usan (uno por línea).']];
-function procHTMLshell(d){
-  if(core(d).length<2)return `<div class="sh"><div><h2>Procedimiento</h2></div></div>${needFlow(d)}`;
-  if(!(Array.isArray(d.macro)&&d.macro.length))return `<div class="sh"><div><h2>Procedimiento</h2></div></div><div class="card empty"><h3>Primero la caracterización</h3><p>El procedimiento se organiza por las grandes actividades. Confírmalas en la caracterización.</p><button class="btn pri" data-a="step" data-s="car">Ir a caracterización</button></div>`;
-  const p=S.wp;
-  return `<div class="sh"><div><h2>Procedimiento</h2><p>Completa los datos de la izquierda; el documento se arma solo con el flujo y la caracterización.</p></div><div class="row noprint"><button class="btn sm" data-a="pdf" data-t="procDoc">Descargar PDF</button><button class="btn sm" data-a="docx">Descargar Word (.docx)</button></div></div>
-  <div class="pgrid"><div class="card pad">${canWrite?`<div class="two">${PF.map(([k,l,ph])=>`<label>${l}<input data-p="${k}" ${k==='fecha'?'type="date"':''} value="${esc(p[k]||'')}" placeholder="${ph}"></label>`).join('')}</div>
-  ${PT.map(([k,l,ph])=>`<label>${l}<textarea data-p="${k}" rows="3" placeholder="${ph}">${esc(p[k]||'')}</textarea></label>`).join('')}`:'<p class="mut">Vista de consulta.</p>'}</div>
-  <div class="pprev card"><div id="procDoc" class="doc ptarget"></div></div></div>${footNav(d,true)}`}
+const slimA=a=>({id:a.id,orden:a.orden,forma:a.forma,nombre:a.nombre,responsable:a.responsable,descripcion:a.descripcion,sig:a.sig,ramas:a.ramas});
+const firma=(d,p,W,X)=>JSON.stringify({p:{codigo:p.codigo||'',elaboro:p.elaboro||'',objetivo:p.objetivo||'',alcance:p.alcance||'',definiciones:p.definiciones||'',referencias:p.referencias||''},m:W||[],a:orderActs(d).map(slimA),x:X||{ind:[],rie:[]},n:d.nombre,o:d.dueno||''});
+function estadoVer(d){const v=versOf(d.id),last=v[v.length-1],cur=firma(d,S.wp,S.wz,S.wx);
+  if(!last)return{n:1,borr:true,last:null,v};return{n:last.datos===cur?num(last.version):num(last.version)+1,borr:last.datos!==cur,last,v}}
+function procShell(d){
+  if(core(d).length<2)return `<div class="sh"><div><h2>Procedimiento</h2></div></div>${needFlow()}`;
+  if(!(Array.isArray(d.macro)&&d.macro.length))return `<div class="sh"><div><h2>Procedimiento</h2></div></div><div class="card empty"><h3>Primero la caracterización</h3><p>El procedimiento se organiza por las grandes actividades. Revísalas en la caracterización.</p><button class="btn pri" data-a="step" data-s="car">Ir a caracterización</button></div>`;
+  const p=S.wp,E=estadoVer(d);
+  return `<div class="sh"><div><h2>Procedimiento</h2><p>Completa los datos de la izquierda; el documento se arma solo con el flujo y la caracterización. Cuando esté listo, apruébalo para fijar la versión.</p></div><div class="row noprint">${svBadge()}<button class="btn sm" data-a="pdf" data-t="procDoc">Descargar PDF</button><button class="btn sm" data-a="docx">Descargar Word (.docx)</button></div></div>
+  <div id="vstat">${vstatHTML(d,E)}</div>
+  <div class="pgrid"><div class="card pad">${canWrite?`<div class="two">${PF.map(([k,l,ph])=>`<label>${l}<input data-p="${k}" value="${esc(p[k]||'')}" placeholder="${ph}"></label>`).join('')}</div>
+  ${PT.map(([k,l,ph])=>`<label>${l}<textarea data-p="${k}" rows="3" placeholder="${ph}">${esc(p[k]||'')}</textarea></label>`).join('')}`:'<p class="mut">Vista de consulta.</p>'}
+  ${E.v.length?`<div class="vlist"><h4 style="margin:0 0 4px">Versiones aprobadas</h4>${E.v.slice().reverse().map(x=>`<div class="vrow"><span><b>Versión ${esc(x.version)}</b> · ${esc(fmtD(x.fecha))} · ${esc(x.aprobo||'')}<br><span class="mut">${esc(x.cambio||'')}</span></span><button class="btn sm" data-a="ver-pdf" data-id="${esc(x.id)}">PDF</button></div>`).join('')}</div>`:''}</div>
+  <div class="pprev card"><div id="procDoc" class="doc ptarget"></div></div></div>${footNav(d)}`}
+function vstatHTML(d,E){return E.last&&!E.borr?`<div class="vstat ok"><b>Versión ${E.n} vigente</b> · aprobada el ${esc(fmtD(E.last.fecha))} por ${esc(E.last.aprobo||'—')}.</div>`:
+  `<div class="vstat dr"><b>${E.last?`Borrador de la versión ${E.n}`:'Borrador · versión 1'}</b>${E.last?` · hay cambios desde la versión ${esc(E.last.version)} aprobada el ${esc(fmtD(E.last.fecha))}.`:' · aún no se ha aprobado.'}${canWrite?'<span style="flex:1"></span><button class="btn pri sm" data-a="aprobar">Aprobar versión '+E.n+'</button>':''}</div>`}
 const lines=t=>String(t||'').split(/\n+/).map(x=>x.trim()).filter(Boolean);
 const ulOf=t=>{const l=lines(t);return l.length?'<ul>'+l.map(x=>`<li>${esc(x)}</li>`).join('')+'</ul>':'<p class="pend">Pendiente.</p>'};
-function procDoc(d,p,W){
-  const acts=orderActs(d),nm=Object.fromEntries(acts.map((a,i)=>[a.id,i+1])),inP=new Set(W.flatMap(m=>m.acts));
-  const resp={};acts.forEach(a=>{const r=(a.responsable||'').trim()||'Sin responsable';(resp[r]=resp[r]||[]).push(a)});
+function procDoc(d,p,W,X,ver,vers){
+  X=X||{ind:[],rie:[]};const acts=orderActs(d),nm=Object.fromEntries(acts.map((a,i)=>[a.id,i+1])),inP=new Set(W.flatMap(m=>m.acts));
+  const resp={};acts.forEach(a=>{const r=(a.responsable||'').trim()||'Sin responsable';const k=norm(r);(resp[k]=resp[k]||{n:r,l:[]}).l.push(a)});
   const fuera=acts.filter(a=>!inP.has(a.id));
-  const fila=a=>{const sb=subsOf(d,a);return `<tr><td>${nm[a.id]}</td><td><b>${esc(a.nombre)}</b>${a.forma==='Decisión'?'<br><small>'+ramasOf(a).map(r=>{const t=actOf(d,r.dest);return esc(r.etiqueta)+' → '+(t?nm[t.id]+'. '+esc(t.nombre):'—')}).join('; ')+'</small>':''}${sb.length?`<br><small>Ver ${sb.length>1?'subprocesos':'subproceso'}: ${sb.map(s=>esc(s.nombre)).join(', ')}</small>`:''}</td><td>${esc(a.responsable||'')}</td><td>${esc(a.descripcion||'')}</td></tr>`};
+  const fila=a=>{const sb=subsOf(d,a);return `<tr><td>${nm[a.id]}</td><td><b>${esc(a.nombre)}</b>${a.forma==='Decisión'?'<br><small>'+ramasOf(a).map(r=>{const t=actOf(d,r.dest);return esc(r.etiqueta)+' → '+(t?nm[t.id]+'. '+esc(t.nombre):'—')}).join('; ')+'</small>':''}${sb.length?`<br><small>Flujos de detalle: ${sb.map(s=>esc(s.nombre)).join(', ')}</small>`:''}</td><td>${esc(a.responsable||'')}</td><td>${esc(a.descripcion||'')}</td></tr>`};
   const img='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(layoutFlow(d).svg);
-  const titulo=d.raiz?'Flujo general de '+(d.nombre||'la empresa'):d.nombre;
-  return `<table class="dh"><tr><td rowspan="2" class="dt"><small style="color:#6b7280;font-size:11px">PROCEDIMIENTO</small><br>${esc(titulo)}</td><td>Código<br><b>${esc(p.codigo||'—')}</b></td><td>Versión<br><b>${esc(p.version||'1')}</b></td></tr><tr><td>Vigencia<br><b>${esc(p.fecha||'—')}</b></td><td>Responsable<br><b>${esc(d.dueno||'—')}</b></td></tr></table>
+  const titulo=d.raiz?'Flujo general de '+(d.nombre||'la empresa'):d.nombre;let s=6;
+  return `<table class="dh"><tr><td rowspan="2" class="dt"><small style="color:#6b7280;font-size:11px">PROCEDIMIENTO</small><br>${esc(titulo)}</td><td>Código<br><b>${esc(p.codigo||'—')}</b></td><td>Versión<br><b>${esc(ver)}</b></td></tr><tr><td>Elaborado por<br><b>${esc(p.elaboro||'—')}</b></td><td>Responsable<br><b>${esc(d.dueno||'—')}</b></td></tr></table>
   <h3>1. Objetivo</h3>${p.objetivo?`<p>${esc(p.objetivo)}</p>`:'<p class="pend">Pendiente.</p>'}
   <h3>2. Alcance</h3>${p.alcance?`<p>${esc(p.alcance)}</p>`:'<p class="pend">Pendiente.</p>'}
-  <h3>3. Responsabilidades</h3><ul>${Object.entries(resp).map(([r,l])=>`<li><b>${esc(r)}:</b> ${l.map(a=>esc(a.nombre)).join('; ')}.</li>`).join('')}</ul>
+  <h3>3. Responsabilidades</h3><ul>${Object.values(resp).map(r=>`<li><b>${esc(r.n)}:</b> ${r.l.map(a=>esc(a.nombre)).join('; ')}.</li>`).join('')}</ul>
   <h3>4. Definiciones</h3>${ulOf(p.definiciones)}
   <h3>5. Documentos y registros</h3>${ulOf(p.referencias)}
-  <h3>6. Caracterización (SIPOC)</h3><table><thead><tr><th>Proveedores</th><th>Entradas</th><th>Actividad</th><th>Salidas</th><th>Clientes</th></tr></thead><tbody>${W.map((m,i)=>{const s=m.sipoc||{},c=t=>lines(t).map(esc).join('<br>')||'—';return `<tr><td>${c(s.p)}</td><td>${c(s.e)}</td><td><b>${i+1}. ${esc(m.nombre)}</b></td><td>${c(s.s)}</td><td>${c(s.c)}</td></tr>`}).join('')}</tbody></table>
+  <h3>6. Caracterización (SIPOC)</h3><table><thead><tr><th>Proveedores</th><th>Entradas</th><th>Actividad</th><th>Salidas</th><th>Clientes</th></tr></thead><tbody>${W.map((m,i)=>{const q=m.sipoc||{},c=t=>lines(t).map(esc).join('<br>')||'—';return `<tr><td>${c(q.p)}</td><td>${c(q.e)}</td><td><b>${i+1}. ${esc(m.nombre)}</b></td><td>${c(q.s)}</td><td>${c(q.c)}</td></tr>`}).join('')}</tbody></table>
   <h3>7. Descripción de actividades</h3>${W.map((m,i)=>`<h4>7.${i+1} ${esc(m.nombre)}${m.responsable?` · <span style="font-weight:400">${esc(m.responsable)}</span>`:''}</h4><table><thead><tr><th>#</th><th>Actividad</th><th>Responsable</th><th>Descripción</th></tr></thead><tbody>${m.acts.map(id=>actOf(d,id)).filter(Boolean).map(fila).join('')}</tbody></table>`).join('')}
   ${fuera.length?`<h4>7.${W.length+1} Excepciones y variantes</h4><table><thead><tr><th>#</th><th>Actividad</th><th>Responsable</th><th>Descripción</th></tr></thead><tbody>${fuera.map(fila).join('')}</tbody></table>`:''}
-  <h3>8. Diagrama de flujo</h3><img class="dimg" src="${img}" alt="Diagrama de flujo">
-  <h3>9. Control de cambios</h3><table><thead><tr><th>Versión</th><th>Fecha</th><th>Elaboró</th><th>Aprobó</th></tr></thead><tbody><tr><td>${esc(p.version||'1')}</td><td>${esc(p.fecha||'')}</td><td>${esc(p.elaboro||'')}</td><td>${esc(p.aprobo||'')}</td></tr></tbody></table>`}
-function procPreview(){const el=$('#procDoc'),d=D(S.cur);if(el&&d)el.innerHTML=procDoc(d,S.wp,S.wz)}
+  ${X.ind.length?`<h3>${++s+1}. Indicadores</h3><table><thead><tr><th>Indicador</th><th>Cómo se calcula</th><th>Meta</th><th>Frecuencia</th></tr></thead><tbody>${X.ind.map(r=>`<tr><td>${esc(r.n||'')}</td><td>${esc(r.f||'')}</td><td>${esc(r.m||'')}</td><td>${esc(r.q||'')}</td></tr>`).join('')}</tbody></table>`:''}
+  ${X.rie.length?`<h3>${++s+1}. Riesgos y controles</h3><table><thead><tr><th>Riesgo</th><th>Consecuencia</th><th>Control</th></tr></thead><tbody>${X.rie.map(r=>`<tr><td>${esc(r.r||'')}</td><td>${esc(r.c||'')}</td><td>${esc(r.k||'')}</td></tr>`).join('')}</tbody></table>`:''}
+  <h3>${++s+1}. Diagrama de flujo</h3><img class="dimg" src="${img}" alt="Diagrama de flujo">
+  <h3>${++s+1}. Control de cambios</h3><table><thead><tr><th>Versión</th><th>Fecha</th><th>Descripción del cambio</th><th>Aprobó</th></tr></thead><tbody>${vers.length?vers.map(v=>`<tr><td>${esc(v.version)}</td><td>${esc(fmtD(v.fecha))}</td><td>${esc(v.cambio||'')}</td><td>${esc(v.aprobo||'')}</td></tr>`).join(''):'<tr><td colspan="4"><i>Sin versiones aprobadas.</i></td></tr>'}</tbody></table>`}
+function verLabel(E){return E.borr?`${E.n} (borrador)`:String(E.n)}
+function procPreview(){const el=$('#procDoc'),d=D(S.cur);if(!el||!d)return;const E=estadoVer(d);el.innerHTML=procDoc(d,S.wp,S.wz,S.wx,verLabel(E),E.v);const vs=$('#vstat');if(vs)vs.innerHTML=vstatHTML(d,E)}
+function snapDoc(d,v){const sn=JSON.parse(v.datos),dd={...d,nombre:sn.n,dueno:sn.o,actividades:sn.a};const vers=versOf(d.id).filter(x=>num(x.version)<=num(v.version));return procDoc(dd,sn.p,sn.m,sn.x,String(v.version),vers)}
 
-/* ================= paso: oportunidades ================= */
+/* ================= oportunidades ================= */
 const QS=[{k:'espera',c:'Esperas',q:'¿Hay esperas o tiempos muertos antes o durante esta actividad?'},{k:'reproceso',c:'Reprocesos',q:'¿Se repite o se corrige trabajo con frecuencia?'},{k:'manual',c:'Trabajo manual',q:'¿Se hace a mano algo que podría hacerse con un sistema o plantilla?'},{k:'duplicado',c:'Duplicidad',q:'¿Se pide o se captura la misma información más de una vez?'},{k:'traslado',c:'Traslados',q:'¿Hay traslados de documentos, materiales o personas que se podrían evitar?'},{k:'aprobacion',c:'Aprobaciones',q:'¿Requiere firmas o aprobaciones de más?'},{k:'error',c:'Errores y quejas',q:'¿Ocurren errores, faltantes o quejas con frecuencia?'},{k:'estandar',c:'Falta de estándar',q:'¿No está claro quién lo hace, cómo o cuándo?'}];
-const prioCls=p=>({Alta:'pa',Media:'pm',Baja:'pb'})[p]||'';
-function opCard(o,d){const a=actOf(d,o.actividadId),ins=inisOf(o.id);
-  return `<article class="opc"><div class="ch"><div><strong>${esc(o.titulo)}</strong><div class="cm"><span class="chip ${prioCls(o.prioridad)}">${esc(o.prioridad||'Media')}</span><span class="chip${o.estado==='Cerrada'?' cl':''}">${esc(o.estado||'Identificada')}</span>${a?`<span>en “${esc(a.nombre)}”</span>`:''}${o.responsable?`<span>· ${esc(o.responsable)}</span>`:''}${o.categoria&&o.categoria!=='Libre'?`<span>· ${esc(o.categoria)}</span>`:''}</div></div>
+const prioChip=o=>{const[i,e]=ie(o),p=prio(o);return `<span class="chip ${prioCls(p)}" title="Impacto ${nivTxt(i)} · esfuerzo ${nivTxt(e)}">Prioridad ${p.toLowerCase()}</span>${i>=2&&e===1?'<span class="chip qw">Ganancia rápida</span>':''}`};
+function opCard(o,d){const a=actOf(d,o.actividadId),[i,e]=ie(o);
+  return `<article class="opc"><div class="ch"><div><strong>${esc(o.titulo)}</strong><div class="cm">${prioChip(o)}<span class="chip${o.estado==='Cerrada'?' cl':''}">${esc(o.estado||'Identificada')}</span><span>Impacto ${nivTxt(i)} · esfuerzo ${nivTxt(e)}</span>${a?`<span>· en “${esc(a.nombre)}”</span>`:''}${o.responsable?`<span>· ${esc(o.responsable)}</span>`:''}</div></div>
   ${canWrite?`<span class="acts"><button class="lnk" data-a="op-edit" data-id="${esc(o.id)}">Editar</button><button class="lnk" data-a="op-del" data-id="${esc(o.id)}" style="color:#b42318">Eliminar</button></span>`:''}</div>
-  ${o.descripcion?`<p>${esc(o.descripcion)}</p>`:''}
-  <div class="inis">${ins.map(i=>{const av=Math.max(0,Math.min(100,num(i.avance))),venc=i.fecha&&i.fecha<hoy()&&i.estado!=='Completada';return `<div class="ini"><div><b>${esc(i.titulo)}</b><div class="cm"><span class="chip${i.estado==='Completada'?' cl':''}">${esc(i.estado||'No iniciada')}</span>${i.responsable?`<span>${esc(i.responsable)}</span>`:''}${i.fecha?`<span style="${venc?'color:#b42318;font-weight:600':''}">${venc?'Vencida · ':''}${esc(i.fecha)}</span>`:''}<span class="prog"><i style="width:${av}%"></i></span><span>${av}%</span></div></div>${canWrite?`<span class="acts"><button class="lnk" data-a="in-edit" data-id="${esc(i.id)}">Editar</button><button class="lnk" data-a="in-del" data-id="${esc(i.id)}" style="color:#b42318">Eliminar</button></span>`:''}</div>`}).join('')}
-  ${canWrite?`<button class="lnk" data-a="in-new" data-op="${esc(o.id)}">+ Iniciativa</button>`:(ins.length?'':'<span class="mut" style="font-size:13px">Sin iniciativas.</span>')}</div></article>`}
+  ${o.descripcion?`<p>${esc(o.descripcion)}</p>`:''}${o.creadoPor?`<p class="edit-by">Registrada por ${esc(o.creadoPor)}${o.creado?' · '+esc(fmtF(o.creado)):''}</p>`:''}</article>`}
 function opsHTML(d){
   const W=S.wz,acts=orderActs(d),inP=new Set(W.flatMap(m=>m.acts)),C=S.wc;
   const groups=W.length?W.map((m,i)=>({t:`${i+1}. ${m.nombre}`,l:m.acts.map(id=>actOf(d,id)).filter(Boolean)})):[];
   const otros=acts.filter(a=>!inP.has(a.id));
   if(!W.length)groups.push({t:'Actividades',l:otros.splice(0)});else if(otros.length)groups.push({t:'Excepciones y variantes',l:otros});
-  const reg=new Set(opsOf(d.id).filter(i=>i.origen).map(i=>i.origen)),ops=opsOf(d.id).sort((a,b)=>Number(isOpenOp(b))-Number(isOpenOp(a))||['Alta','Media','Baja'].indexOf(a.prioridad)-['Alta','Media','Baja'].indexOf(b.prioridad));
-  return `<div class="sh"><div><h2>Oportunidades de mejora</h2><p>Responde unas preguntas sencillas por actividad. Cada “sí” se convierte en una oportunidad; a cada oportunidad puedes asignarle iniciativas.</p></div>${canWrite?'<button class="btn sm" data-a="op-new">+ Registrar oportunidad</button>':''}</div>
+  const reg=new Set(opsOf(d.id).filter(i=>i.origen).map(i=>i.origen)),ops=opsOf(d.id).sort((a,b)=>Number(isOpenOp(b))-Number(isOpenOp(a))||score(b)-score(a));
+  return `<div class="sh"><div><h2>Oportunidades de mejora</h2><p>Responde unas preguntas sencillas por actividad. Cada “sí” se convierte en una oportunidad. La prioridad se calcula sola con el impacto y el esfuerzo.</p></div>${canWrite?'<button class="btn sm" data-a="op-new">+ Registrar oportunidad</button>':''}</div>
   ${acts.length&&canWrite?`<div class="card pad"><h3 style="margin:0 0 4px;font-size:16px">Preguntas guiadas</h3><ol class="qlist">${QS.map(q=>`<li><b>${esc(q.c)}:</b> ${esc(q.q)}</li>`).join('')}</ol>
   <div class="scroll mx"><table><thead><tr><th>Actividad</th>${QS.map(q=>`<th title="${esc(q.q)}">${esc(q.c)}</th>`).join('')}</tr></thead><tbody>
   ${groups.map(g=>`<tr class="gr"><td colspan="${QS.length+1}">${esc(g.t)}</td></tr>`+g.l.map(a=>`<tr><td>${esc(a.nombre)}<br><small>${esc(a.responsable||'')}</small></td>${QS.map(q=>{const on=(C[a.id]||[]).includes(q.k),done=reg.has(a.id+'|'+q.k);return `<td class="ck"><input type="checkbox" data-q="${q.k}" data-id="${esc(a.id)}"${on||done?' checked':''}${done?' disabled':''} aria-label="${esc(q.c+': '+a.nombre)}"></td>`}).join('')}</tr>`).join('')).join('')}
   </tbody></table></div><div id="sugBox">${sugHTML(d)}</div></div>`:''}
-  <div class="card pad" style="margin-top:14px"><h3 style="margin:0 0 10px;font-size:16px">Oportunidades registradas (${ops.length})</h3>${ops.length?ops.map(o=>opCard(o,d)).join(''):'<p class="mut">Aún no hay oportunidades en este proceso.</p>'}</div>
+  <div class="card pad" style="margin-top:14px"><h3 style="margin:0 0 10px;font-size:16px">Oportunidades registradas (${ops.length})</h3>${ops.length?ops.map(o=>opCard(o,d)).join(''):'<p class="mut">Aún no hay oportunidades en este flujo.</p>'}</div>
   ${footNav(d)}`}
+const nivSel=(n,v,attr)=>sel(n,NIV.map(([k,l])=>[k,l]),v,attr);
 function sugHTML(d){const C=S.wc,reg=new Set(opsOf(d.id).filter(i=>i.origen).map(i=>i.origen)),sug=[];
   orderActs(d).forEach(a=>(C[a.id]||[]).forEach(k=>{const q=QS.find(x=>x.k===k);if(q&&!reg.has(a.id+'|'+k))sug.push({a,q})}));
   if(!sug.length)return '';
-  return `<div class="sug"><h4 style="margin:0 0 4px">Oportunidades sugeridas (${sug.length})</h4><p class="hint">Ajusta el título para que diga qué pasa (p. ej. “Esperamos 3 días la firma del gerente”) y registra.</p>
-  ${sug.map((s,i)=>`<div class="sr"><input type="checkbox" data-sg="${i}" checked aria-label="Incluir"><input class="st2" data-sgt="${i}" value="${esc(s.q.c+': '+s.a.nombre)}" aria-label="Título"><select data-sgp="${i}" aria-label="Prioridad"><option>Alta</option><option selected>Media</option><option>Baja</option></select><input type="hidden" data-sgk="${i}" value="${esc(s.a.id+'|'+s.q.k)}"></div>`).join('')}
+  return `<div class="sug"><h4 style="margin:0 0 4px">Oportunidades sugeridas (${sug.length})</h4><p class="hint">Ajusta el título para que diga qué pasa (p. ej. “Esperamos 3 días la firma del gerente”). <b>Impacto</b>: cuánto mejora si se resuelve. <b>Esfuerzo</b>: cuánto cuesta resolverlo.</p>
+  ${sug.map((s,i)=>`<div class="sr"><input type="checkbox" data-sg="${i}" checked aria-label="Incluir"><input class="st2" data-sgt="${i}" value="${esc(s.q.c+': '+s.a.nombre)}" aria-label="Título"><label style="margin:0;font-size:12px">Impacto${nivSel('i'+i,2,` data-sgi="${i}" style="min-height:40px;margin:0"`)}</label><label style="margin:0;font-size:12px">Esfuerzo${nivSel('e'+i,2,` data-sge="${i}" style="min-height:40px;margin:0"`)}</label><input type="hidden" data-sgk="${i}" value="${esc(s.a.id+'|'+s.q.k)}"></div>`).join('')}
   <div class="row"><button class="btn pri sm" data-a="op-reg">Registrar seleccionadas</button></div></div>`}
-function opDlg(o,actId){const d=D(S.cur),e=o||{};
+function opDlg(o,actId){const d=D(S.cur),e=o||{},[i,ef]=o?ie(o):[2,2];
   openDlg(`<h3>${o?'Editar':'Nueva'} oportunidad</h3><label>Título<input name="titulo" required value="${esc(e.titulo||'')}" placeholder="Qué pasa, en concreto"></label>
-  <label>Actividad${sel('act',[['','Todo el proceso'],...orderActs(d).map(a=>[a.id,a.nombre])],e.actividadId||actId||'')}</label>
+  <label>Actividad${sel('act',[['','Todo el flujo'],...orderActs(d).map(a=>[a.id,a.nombre])],e.actividadId||actId||'')}</label>
   <label>Descripción / causa<textarea name="descripcion" rows="3">${esc(e.descripcion||'')}</textarea></label>
-  <div class="two"><label>Prioridad${sel('prioridad',['Alta','Media','Baja'],e.prioridad||'Media')}</label><label>Estado${sel('estado',EST_OP,e.estado||'Identificada')}</label></div>
-  <label>Responsable<input name="responsable" value="${esc(e.responsable||'')}" list="dlR2"></label><datalist id="dlR2">${responsables().map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
+  <div class="two"><label>Impacto (cuánto mejora)${nivSel('impacto',i)}</label><label>Esfuerzo (cuánto cuesta)${nivSel('esfuerzo',ef)}</label><label>Estado${sel('estado',EST_OP,e.estado||'Identificada')}</label><label>Responsable<input name="responsable" value="${esc(e.responsable||'')}" list="dlR2"></label></div><datalist id="dlR2">${responsables().map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
   <div class="row end" style="margin-top:12px"><button type="button" class="btn" data-a="dlg-close">Cancelar</button><button class="btn pri">Guardar</button></div>`,
-  fd=>{put('items',{...(o||{id:uid(),tipo:'oportunidad',diagramaId:d.id,categoria:'Libre'}),titulo:String(fd.get('titulo')).trim(),actividadId:fd.get('act')||null,descripcion:String(fd.get('descripcion')||'').trim(),prioridad:fd.get('prioridad'),estado:fd.get('estado'),responsable:String(fd.get('responsable')||'').trim(),actualizado:new Date().toISOString()})})}
-function inDlg(i,opId){const e=i||{},o=S.items[opId||e.oportunidadId];
-  openDlg(`<h3>${i?'Editar':'Nueva'} iniciativa</h3>${o?`<p class="mut">Para: ${esc(o.titulo)}</p>`:''}<label>Iniciativa<input name="titulo" required value="${esc(e.titulo||'')}" placeholder="Qué se va a hacer"></label>
-  <div class="two"><label>Responsable<input name="responsable" value="${esc(e.responsable||'')}"></label><label>Fecha compromiso<input type="date" name="fecha" value="${esc(e.fecha||'')}"></label><label>Estado${sel('estado',EST_IN,e.estado||'No iniciada')}</label><label>Avance %<input type="number" name="avance" min="0" max="100" value="${esc(e.avance||0)}"></label></div>
-  <div class="row end" style="margin-top:12px"><button type="button" class="btn" data-a="dlg-close">Cancelar</button><button class="btn pri">Guardar</button></div>`,
-  fd=>{put('items',{...(i||{id:uid(),tipo:'iniciativa',oportunidadId:opId,diagramaId:o?o.diagramaId:S.cur}),titulo:String(fd.get('titulo')).trim(),responsable:String(fd.get('responsable')||'').trim(),fecha:fd.get('fecha'),estado:fd.get('estado'),avance:fd.get('avance'),actualizado:new Date().toISOString()})})}
+  fd=>{const n={...(o||{id:uid(),tipo:'oportunidad',diagramaId:d.id,categoria:'Libre'}),titulo:String(fd.get('titulo')).trim(),actividadId:fd.get('act')||null,descripcion:String(fd.get('descripcion')||'').trim(),impacto:num(fd.get('impacto')),esfuerzo:num(fd.get('esfuerzo')),estado:fd.get('estado'),responsable:String(fd.get('responsable')||'').trim()};delete n.prioridad;put('items',n)})}
 
-/* ================= guardar pasos ================= */
-function wzSave(next){const d=D(S.cur);
-  if(canWrite){
-    if(S.step==='car'){if(S.wz.some(m=>!String(m.nombre).trim())){toast('Ponle nombre a cada gran actividad.');return}put('diagramas',{...d,macro:clone(S.wz)})}
-    else if(S.step==='proc')put('diagramas',{...d,proc:clone(S.wp)});
-    S.dirty=false;toast('Guardado.')}
-  if(next)goStep(next);else render(true)}
+/* ================= guardar (automático) ================= */
+function wzSave(silent){const d=D(S.cur);if(!d||!canWrite)return;
+  if(S.step==='car')put('diagramas',{...d,macro:clone(S.wz),carx:clone(S.wx)});
+  else if(S.step==='proc')put('diagramas',{...d,proc:clone(S.wp)});
+  S.dirty=false;if(!silent)toast('Guardado.')}
+function marcar(){S.dirty=true;setSv('Cambios sin guardar…','wk');clearTimeout(S.asT);S.asT=setTimeout(()=>wzSave(true),1500)}
 
 /* ================= exportar: PDF y Word sin imprimir ================= */
 function bajar(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name.replace(/[\\/:*?"<>|]+/g,' ');document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)}
@@ -779,11 +787,13 @@ function zipStore(files){const out=[],cd=[];let off=0;const le=(n,b)=>{const a=n
   return new Blob(out,{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'})}
 /* Word (.docx) generado desde los datos del procedimiento */
 async function svgPng(svg,w){const im=await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg));const r=im.height/im.width,cv=document.createElement('canvas');cv.width=w;cv.height=Math.round(w*r);const x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,cv.width,cv.height);x.drawImage(im,0,0,cv.width,cv.height);return{u8:b64u8(cv.toDataURL('image/png').split(',')[1]),r}}
-async function procDocx(d,p,W){
-  const X=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  const run=(t,o={})=>`<w:r><w:rPr>${o.b?'<w:b/>':''}${o.i?'<w:i/>':''}${o.c?`<w:color w:val="${o.c}"/>`:''}${o.sz?`<w:sz w:val="${o.sz}"/>`:''}</w:rPr><w:t xml:space="preserve">${X(t)}</w:t></w:r>`;
+
+async function procDocx(d,p,W,X,ver,vers){
+  X=X||{ind:[],rie:[]};
+  const XE=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const run=(t,o={})=>`<w:r><w:rPr>${o.b?'<w:b/>':''}${o.i?'<w:i/>':''}${o.c?`<w:color w:val="${o.c}"/>`:''}${o.sz?`<w:sz w:val="${o.sz}"/>`:''}</w:rPr><w:t xml:space="preserve">${XE(t)}</w:t></w:r>`;
   const P=(t,o={})=>`<w:p><w:pPr>${o.st?`<w:pStyle w:val="${o.st}"/>`:''}${o.list?'<w:ind w:left="360" w:hanging="220"/>':''}<w:spacing w:after="${o.after??80}"/></w:pPr>${Array.isArray(t)?t.join(''):run(t,o)}</w:p>`;
-  const cell=(c,o={})=>`<w:tc><w:tcPr>${o.w?`<w:tcW w:w="${o.w}" w:type="dxa"/>`:''}${o.fill?`<w:shd w:val="clear" w:color="auto" w:fill="${o.fill}"/>`:''}</w:tcPr>${(Array.isArray(c)?c:[c]).map(x=>x.startsWith('<w:p')?x:P(x,{b:o.b,after:0,sz:20})).join('')||P('',{after:0})}</w:tc>`;
+  const cell=(c,o={})=>`<w:tc><w:tcPr>${o.w?`<w:tcW w:w="${o.w}" w:type="dxa"/>`:''}${o.fill?`<w:shd w:val="clear" w:color="auto" w:fill="${o.fill}"/>`:''}</w:tcPr>${(Array.isArray(c)?c:[c]).map(x=>String(x).startsWith('<w:p')?x:P(x,{b:o.b,after:0,sz:20})).join('')||P('',{after:0})}</w:tc>`;
   const tbl=(head,rows,ws)=>`<w:tbl><w:tblPr><w:tblStyle w:val="Tabla"/><w:tblW w:w="5000" w:type="pct"/></w:tblPr><w:tblGrid>${ws.map(w=>`<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>${head?`<w:tr><w:trPr><w:tblHeader/></w:trPr>${head.map((h,i)=>cell(h,{b:1,fill:'E7F2EE',w:ws[i]})).join('')}</w:tr>`:''}${rows.map(r=>`<w:tr><w:trPr><w:cantSplit/></w:trPr>${r.map((c,i)=>cell(c,{w:ws[i]})).join('')}</w:tr>`).join('')}</w:tbl>${P('',{after:60})}`;
   const H1=t=>P(t,{st:'Titulo1'}),H2=t=>P(t,{st:'Titulo2'}),pend=t=>t?P(t):P('Pendiente.',{i:1,c:'B42318'});
   const lst=t=>{const l=lines(t);return l.length?l.map(x=>P('• '+x,{list:1,after:40})).join(''):P('Pendiente.',{i:1,c:'B42318'})};
@@ -791,17 +801,19 @@ async function procDocx(d,p,W){
   const resp={};acts.forEach(a=>{const r=(a.responsable||'').trim()||'Sin responsable';const k=norm(r);(resp[k]=resp[k]||{n:r,l:[]}).l.push(a)});
   const fila=a=>{const sb=subsOf(d,a),extra=[];if(a.forma==='Decisión')extra.push(ramasOf(a).map(r=>{const t=actOf(d,r.dest);return r.etiqueta+' → '+(t?nm[t.id]+'. '+t.nombre:'—')}).join('; '));if(sb.length)extra.push('Flujos de detalle: '+sb.map(s=>s.nombre).join(', '));
     return[String(nm[a.id]),[P(a.nombre,{b:1,after:0,sz:20}),...extra.map(x=>P(x,{after:0,sz:18,c:'6B7280'}))],a.responsable||'',a.descripcion||'']};
-  const titulo=d.raiz?'Flujo general de '+(d.nombre||'la empresa'):d.nombre;
-  let b=tbl(null,[[[P('PROCEDIMIENTO',{sz:16,c:'6B7280',after:0}),P(titulo,{b:1,sz:30,c:'0B5D4B',after:0})],[P('Código',{sz:16,c:'6B7280',after:0}),P(p.codigo||'—',{b:1,after:0})],[P('Versión',{sz:16,c:'6B7280',after:0}),P(p.version||'1',{b:1,after:0})]],
-    ['',[P('Vigencia',{sz:16,c:'6B7280',after:0}),P(p.fecha||'—',{b:1,after:0})],[P('Responsable',{sz:16,c:'6B7280',after:0}),P(d.dueno||'—',{b:1,after:0})]]],[4800,2300,2300]);
+  const titulo=d.raiz?'Flujo general de '+(d.nombre||'la empresa'):d.nombre;let s=6;
+  let b=tbl(null,[[[P('PROCEDIMIENTO',{sz:16,c:'6B7280',after:0}),P(titulo,{b:1,sz:30,c:'0B5D4B',after:0})],[P('Código',{sz:16,c:'6B7280',after:0}),P(p.codigo||'—',{b:1,after:0})],[P('Versión',{sz:16,c:'6B7280',after:0}),P(ver,{b:1,after:0})]],
+    ['',[P('Elaborado por',{sz:16,c:'6B7280',after:0}),P(p.elaboro||'—',{b:1,after:0})],[P('Responsable',{sz:16,c:'6B7280',after:0}),P(d.dueno||'—',{b:1,after:0})]]],[4800,2300,2300]);
   b+=H1('1. Objetivo')+pend(p.objetivo)+H1('2. Alcance')+pend(p.alcance)+H1('3. Responsabilidades')+Object.values(resp).map(r=>P([run(r.n+': ',{b:1}),run(r.l.map(a=>a.nombre).join('; ')+'.')],{list:1,after:40})).join('');
   b+=H1('4. Definiciones')+lst(p.definiciones)+H1('5. Documentos y registros')+lst(p.referencias);
-  b+=H1('6. Caracterización (SIPOC)')+tbl(['Proveedores','Entradas','Actividad','Salidas','Clientes'],W.map((m,i)=>{const s=m.sipoc||{},c=t=>lines(t).map(x=>P(x,{after:0,sz:20}));return[c(s.p),c(s.e),[P((i+1)+'. '+m.nombre,{b:1,after:0,sz:20})],c(s.s),c(s.c)]}),[1800,1900,1900,1900,1800]);
+  b+=H1('6. Caracterización (SIPOC)')+tbl(['Proveedores','Entradas','Actividad','Salidas','Clientes'],W.map((m,i)=>{const q=m.sipoc||{},c=t=>lines(t).map(x=>P(x,{after:0,sz:20}));return[c(q.p),c(q.e),[P((i+1)+'. '+m.nombre,{b:1,after:0,sz:20})],c(q.s),c(q.c)]}),[1800,1900,1900,1900,1800]);
   b+=H1('7. Descripción de actividades');W.forEach((m,i)=>{b+=H2(`7.${i+1} ${m.nombre}${m.responsable?' · '+m.responsable:''}`)+tbl(['#','Actividad','Responsable','Descripción'],m.acts.map(id=>actOf(d,id)).filter(Boolean).map(fila),[500,3200,1900,3800])});
   if(fuera.length)b+=H2(`7.${W.length+1} Excepciones y variantes`)+tbl(['#','Actividad','Responsable','Descripción'],fuera.map(fila),[500,3200,1900,3800]);
+  if(X.ind.length)b+=H1(`${++s+1}. Indicadores`)+tbl(['Indicador','Cómo se calcula','Meta','Frecuencia'],X.ind.map(r=>[r.n||'',r.f||'',r.m||'',r.q||'']),[2600,3600,1600,1600]);
+  if(X.rie.length)b+=H1(`${++s+1}. Riesgos y controles`)+tbl(['Riesgo','Consecuencia','Control'],X.rie.map(r=>[r.r||'',r.c||'',r.k||'']),[3100,3100,3200]);
   const png=await svgPng(layoutFlow(d).svg,1800),cx=6120000,cy=Math.round(cx*png.r);
-  b+=H1('8. Diagrama de flujo')+`<w:p><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="1" name="Diagrama"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="1" name="diagrama.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rImg"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
-  b+=H1('9. Control de cambios')+tbl(['Versión','Fecha','Elaboró','Aprobó'],[[p.version||'1',p.fecha||'',p.elaboro||'',p.aprobo||'']],[1500,2000,3000,3000]);
+  b+=H1(`${++s+1}. Diagrama de flujo`)+`<w:p><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="1" name="Diagrama"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="1" name="diagrama.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rImg"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
+  b+=H1(`${++s+1}. Control de cambios`)+tbl(['Versión','Fecha','Descripción del cambio','Aprobó'],vers.length?vers.map(v=>[String(v.version),fmtD(v.fecha),v.cambio||'',v.aprobo||'']):[['—','','Sin versiones aprobadas','']],[1100,1700,4200,2400]);
   const docXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>${b}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="567" w:gutter="0"/></w:sectPr></w:body></w:document>`;
   const styles=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/><w:sz w:val="21"/><w:lang w:val="es-DO"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="80" w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>
 <w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>
@@ -816,48 +828,74 @@ async function procDocx(d,p,W){
 
 /* ================= portafolio ================= */
 function pathOf(id){const d=D(id);if(!d)return'—';return [...ancestors(id).map(x=>x.d.raiz?'Empresa':x.d.nombre),d.raiz?'Flujo general':d.nombre].join(' › ')}
-function portfolio(){
-  const all=Object.values(S.items),ops=all.filter(i=>i.tipo==='oportunidad'),ins=all.filter(i=>i.tipo==='iniciativa');
-  const k=[[ops.filter(isOpenOp).length,'Oportunidades abiertas',''],[ops.filter(o=>isOpenOp(o)&&o.prioridad==='Alta').length,'Abiertas de prioridad alta','al'],[ins.filter(i=>i.estado==='En curso').length,'Iniciativas en curso',''],[ins.filter(i=>i.fecha&&i.fecha<hoy()&&i.estado!=='Completada').length,'Iniciativas vencidas','al']];
-  const f=S.pf||(S.pf={t:'oportunidad',e:'open',q:''});
-  let rows=all.filter(i=>i.tipo===f.t);if(f.e==='open')rows=rows.filter(i=>f.t==='oportunidad'?isOpenOp(i):i.estado!=='Completada');
+function portRows(){const f=S.pf;let rows=Object.values(S.items).filter(i=>i.tipo==='oportunidad');
+  if(f.e==='open')rows=rows.filter(isOpenOp);else if(f.e)rows=rows.filter(i=>(i.estado||'Identificada')===f.e);
+  if(f.p)rows=rows.filter(i=>prio(i)===f.p);
   if(f.q){const q=norm(f.q);rows=rows.filter(i=>norm(i.titulo+' '+(i.responsable||'')+' '+pathOf(i.diagramaId)).includes(q))}
-  rows.sort((a,b)=>pathOf(a.diagramaId).localeCompare(pathOf(b.diagramaId),'es'));
-  $('#port').innerHTML=`<div><div class="sh"><div><h2>Portafolio de mejora</h2><p>Todas las oportunidades e iniciativas de la empresa en un solo lugar.</p></div><button class="btn sm" data-a="csv">Copiar CSV</button></div>
+  return rows.sort((a,b)=>Number(isOpenOp(b))-Number(isOpenOp(a))||score(b)-score(a)||pathOf(a.diagramaId).localeCompare(pathOf(b.diagramaId),'es'))}
+function portfolio(){
+  const ops=Object.values(S.items).filter(i=>i.tipo==='oportunidad');
+  const k=[[ops.filter(isOpenOp).length,'Oportunidades abiertas',''],[ops.filter(o=>isOpenOp(o)&&prio(o)==='Alta').length,'Abiertas de prioridad alta','al'],[ops.filter(o=>o.estado==='En implementación').length,'En implementación',''],[ops.filter(o=>o.estado==='Cerrada').length,'Cerradas','']];
+  const f=S.pf||(S.pf={e:'open',p:'',q:''}),rows=portRows();
+  $('#port').innerHTML=`<div><div class="sh"><div><h2>Portafolio de mejora</h2><p>Todas las oportunidades de la empresa, ordenadas por prioridad (impacto alto y esfuerzo bajo primero).</p></div><button class="btn sm" data-a="csv">Copiar CSV</button></div>
   <div class="kpis">${k.map(([n,l,c])=>`<div class="card kpi ${n&&c?c:''}"><b>${n}</b><span>${l}</span></div>`).join('')}</div>
-  <div class="filters"><select id="pfT" aria-label="Tipo"><option value="oportunidad"${f.t==='oportunidad'?' selected':''}>Oportunidades</option><option value="iniciativa"${f.t==='iniciativa'?' selected':''}>Iniciativas</option></select>
-  <select id="pfE" aria-label="Estado"><option value="open"${f.e==='open'?' selected':''}>Solo abiertas / pendientes</option><option value=""${f.e===''?' selected':''}>Todas</option></select>
+  <div class="filters"><select id="pfE" aria-label="Estado"><option value="open"${f.e==='open'?' selected':''}>Solo abiertas</option><option value=""${f.e===''?' selected':''}>Todas</option>${EST_OP.map(x=>`<option${f.e===x?' selected':''}>${x}</option>`).join('')}</select>
+  <select id="pfP" aria-label="Prioridad"><option value="">Todas las prioridades</option>${['Alta','Media','Baja'].map(x=>`<option${f.p===x?' selected':''}>${x}</option>`).join('')}</select>
   <input id="pfQ" type="search" placeholder="Buscar" value="${esc(f.q)}" aria-label="Buscar"></div>
-  <div class="card scroll"><table class="t"><thead><tr><th>${f.t==='oportunidad'?'Oportunidad':'Iniciativa'}</th><th>Proceso</th>${f.t==='oportunidad'?'<th>Prioridad</th><th>Estado</th><th>Iniciativas</th>':'<th>Oportunidad</th><th>Estado</th><th>Fecha</th><th>Avance</th>'}<th>Responsable</th></tr></thead><tbody id="pfRows">
-  ${rows.length?rows.map(i=>`<tr><td><b>${esc(i.titulo)}</b></td><td><button class="lnk" data-a="node" data-id="${esc(i.diagramaId)}" data-s="ops">${esc(pathOf(i.diagramaId))}</button></td>
-  ${f.t==='oportunidad'?`<td><span class="chip ${prioCls(i.prioridad)}">${esc(i.prioridad||'')}</span></td><td>${esc(i.estado||'')}</td><td>${inisOf(i.id).length}</td>`:`<td>${esc((S.items[i.oportunidadId]||{}).titulo||'—')}</td><td>${esc(i.estado||'')}</td><td class="nw"${i.fecha&&i.fecha<hoy()&&i.estado!=='Completada'?' style="color:#b42318;font-weight:600"':''}>${esc(i.fecha||'')}</td><td class="nw">${num(i.avance)}%</td>`}<td>${esc(i.responsable||'')}</td></tr>`).join(''):'<tr><td colspan="6" class="mut">Sin registros con estos filtros.</td></tr>'}
+  <div class="card scroll"><table class="t stack"><thead><tr><th>Oportunidad</th><th>Flujo</th><th>Prioridad</th><th>Impacto</th><th>Esfuerzo</th><th>Estado</th><th>Responsable</th></tr></thead><tbody>
+  ${rows.length?rows.map(i=>{const[im,ef]=ie(i);return `<tr><td><b>${esc(i.titulo)}</b></td><td><button class="lnk" data-a="node" data-id="${esc(i.diagramaId)}" data-s="ops">${esc(pathOf(i.diagramaId))}</button></td><td><span class="chip ${prioCls(prio(i))}">${prio(i)}</span></td><td>${nivTxt(im)}</td><td>${nivTxt(ef)}</td><td>${esc(i.estado||'Identificada')}</td><td>${esc(i.responsable||'')}</td></tr>`}).join(''):'<tr><td colspan="7" class="mut">Sin oportunidades con estos filtros.</td></tr>'}
   </tbody></table></div></div>`}
 
 /* ================= diálogos ================= */
 function openDlg(html,ok,cancel,wide){const f=$('#dlgForm'),dg=$('#dlg');dg.classList.toggle('wide',!!wide);f.innerHTML=html;dlgOk=ok;dlgCancel=cancel||null;try{dg.showModal()}catch(e){dg.setAttribute('open','')}const x=f.querySelector('input:not([type=checkbox]):not([type=file]):not([type=hidden]),textarea');if(x)x.focus()}
 function closeDlg(cancelled){stopDictado();const dg=$('#dlg');if(cancelled&&dlgCancel)dlgCancel();dlgOk=dlgCancel=null;try{dg.close()}catch(e){dg.removeAttribute('open')}}
-function nodeDlg(n,cat,parentAct){
-  const e=n||{},isMap=!parentAct&&(!n||(!n.raiz&&!n.parentActId));
-  openDlg(`<h3>${n?(n.raiz?'Datos del flujo general':'Datos del proceso'):'Nuevo proceso'}</h3>
-  ${n&&n.raiz?'':`<label>Nombre del proceso<input name="nombre" required value="${esc(e.nombre||(parentAct?parentAct.nombre:''))}" placeholder="Ej.: Gestión comercial"></label>`}
-  <label>Responsable del proceso<input name="dueno" value="${esc(e.dueno||(parentAct?parentAct.responsable||'':''))}" list="dlR3"></label><datalist id="dlR3">${responsables().map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
-  ${isMap&&!(n&&n.raiz)?`<label>Franja del mapa${sel('categoria',CATS.map(c=>[c[0],c[2]]),e.categoria||cat||'operativo')}</label>`:''}
+function nodeDlg(n,cat){
+  const e=n||{},isMap=!n||isArea(n);
+  openDlg(`<h3>${n?(n.raiz?'Datos del flujo general':isArea(n)?'Datos del proceso':'Datos del flujo'):'Nuevo proceso'}</h3>
+  ${n&&n.raiz?'':`<label>Nombre<input name="nombre" required value="${esc(e.nombre||'')}" placeholder="Ej.: Gestión comercial"></label>`}
+  <label>Responsable<input name="dueno" value="${esc(e.dueno||'')}" list="dlR3"></label><datalist id="dlR3">${responsables().map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
+  ${isMap?`<label>Franja del mapa${sel('categoria',CATS.map(c=>[c[0],c[2]]),e.categoria||cat||'operativo')}</label>`:''}
   <div class="row end" style="margin-top:12px"><button type="button" class="btn" data-a="dlg-close">Cancelar</button><button class="btn pri">${n?'Guardar':'Crear'}</button></div>`,
   fd=>{const base={...(fd.has('nombre')?{nombre:String(fd.get('nombre')).trim()}:{}),dueno:String(fd.get('dueno')||'').trim()};
     if(n){const upd={...D(n.id),...base};if(fd.has('categoria')&&fd.get('categoria')!==n.categoria){upd.categoria=fd.get('categoria');upd.ordenMapa=Math.max(0,...procOrd(upd.categoria).map(x=>num(x.ordenMapa)))+1}put('diagramas',upd);return}
-    const c=fd.get('categoria'),id=uid();S.selMap=id;put('diagramas',{id,...base,parentId:'raiz',parentActId:null,categoria:c,ordenMapa:Math.max(0,...procOrd(c).map(x=>num(x.ordenMapa)))+1,actividades:[],creado:new Date().toISOString()});S.selMap=id;toast('Proceso agregado. Selecciónalo para crear sus flujos.')})}
-function flowDlg(pid){const p=D(pid);if(!p||!canWrite)return;const first=!flowsOf(p).length;
-  openDlg(`<h3>${first?'Crear flujo':'Agregar flujo'}</h3><p class="mut">Proceso: ${esc(p.nombre)}</p>
-  <label>Nombre del flujo<input name="nombre" required value="${first?esc(p.nombre):''}" placeholder="Ej.: Cuentas por cobrar"></label>
-  <label>Responsable<input name="dueno" value="${esc(p.dueno||'')}" list="dlR6"></label><datalist id="dlR6">${responsables().map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
+    const c=fd.get('categoria'),id=uid();S.selMap=id;put('diagramas',{id,...base,parentId:'raiz',parentActId:null,categoria:c,ordenMapa:Math.max(0,...procOrd(c).map(x=>num(x.ordenMapa)))+1,actividades:[],creado:new Date().toISOString()});toast('Proceso agregado. Selecciónalo para crear sus flujos.')})}
+function newFlowDlg(pid,act){const p=D(pid);if(!p||!canWrite)return;const first=act?!subsOf(p,act).length:!flowsOf(p).length;
+  openDlg(`<h3>${act?(first?'Crear flujo de detalle':'Agregar flujo'):(first?'Crear flujo':'Agregar flujo')}</h3><p class="mut">${act?'De la actividad: '+esc(act.nombre):'Proceso: '+esc(p.nombre)}</p>
+  <label>Nombre del flujo<input name="nombre" required value="${first?esc(act?act.nombre:p.nombre):''}" placeholder="Ej.: Cuentas por cobrar"></label>
+  <label>Responsable<input name="dueno" value="${esc(act?act.responsable||'':p.dueno||'')}" list="dlR5"></label><datalist id="dlR5">${responsables().map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
   <div class="row end" style="margin-top:12px"><button type="button" class="btn" data-a="dlg-close">Cancelar</button><button class="btn pri">Crear y dibujar</button></div>`,
-  fd=>{const f={id:uid(),nombre:String(fd.get('nombre')).trim(),dueno:String(fd.get('dueno')||'').trim(),parentId:p.id,parentActId:null,actividades:[],creado:new Date().toISOString()};put('diagramas',f);toast('Flujo creado.');setTimeout(()=>goNode(f.id,'flujo'),0)})}
-function subDlg(){const d=D(S.cur),a=actOf(d,S.sel);if(!a||!canWrite)return;const first=!subsOf(d,a).length;
-  openDlg(`<h3>${first?'Crear flujo de detalle':'Agregar flujo'}</h3><p class="mut">De la actividad: ${esc(a.nombre)}</p>
-  <label>Nombre del flujo<input name="nombre" required value="${first?esc(a.nombre):''}" placeholder="Ej.: Cuentas por cobrar"></label>
-  <label>Responsable<input name="dueno" value="${esc(a.responsable||'')}" list="dlR5"></label><datalist id="dlR5">${responsables().map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
-  <div class="row end" style="margin-top:12px"><button type="button" class="btn" data-a="dlg-close">Cancelar</button><button class="btn pri">Crear y dibujar su flujo</button></div>`,
-  fd=>{const sub={id:uid(),nombre:String(fd.get('nombre')).trim(),dueno:String(fd.get('dueno')||'').trim(),parentId:d.id,parentActId:a.id,actividades:[],creado:new Date().toISOString()};put('diagramas',sub);toast('Flujo creado.');setTimeout(()=>goNode(sub.id,'flujo'),0)})}
+  fd=>{const f={id:uid(),nombre:String(fd.get('nombre')).trim(),dueno:String(fd.get('dueno')||'').trim(),parentId:p.id,parentActId:act?act.id:null,actividades:[],creado:new Date().toISOString()};put('diagramas',f);toast('Flujo creado.');setTimeout(()=>goNode(f.id,'flujo'),0)})}
+function histDlg(){const d=D(S.cur),hs=Object.values(S.items).filter(i=>i.tipo==='hist'&&i.nodo===d.id).sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
+  openDlg(`<h3>Historial · ${esc(d.raiz?'Flujo general':d.nombre)}</h3><p class="mut">Copias automáticas del estado anterior (como máximo una cada 10 minutos; se guardan las 15 más recientes). Restaurar guarda primero una copia del estado actual.</p>
+  <div style="max-height:52vh;overflow:auto">${hs.length?hs.map(x=>{let n=0,a='';try{const o=JSON.parse(x.datos);n=(o.actividades||[]).length;a=o.nombre||''}catch(e){}return `<div class="hrow"><span><b>${esc(fmtF(x.editado||x.fecha))}</b> · ${esc(x.por||'—')}<br><span class="mut">${n} actividades${x.nota?' · '+esc(x.nota):''}</span></span><button type="button" class="btn sm" data-a="hist-rest" data-id="${esc(x.id)}">Restaurar</button></div>`}).join(''):'<p class="mut">Aún no hay copias. Se crean automáticamente al hacer cambios.</p>'}</div>
+  <div class="row end" style="margin-top:12px"><button type="button" class="btn" data-a="dlg-close">Cerrar</button></div>`,()=>{})}
+function nombreDlg(first){openDlg(`<h3>${first?'¿Cómo te llamas?':'Cambiar nombre'}</h3><p class="mut">Se usa para registrar quién hizo cada cambio. Se guarda solo en este navegador.</p><label>Nombre y apellido<input name="n" required value="${esc(yo())}" placeholder="Ej.: María Pérez"></label><div class="row end" style="margin-top:12px">${first?'':'<button type="button" class="btn" data-a="dlg-close">Cancelar</button>'}<button class="btn pri">Guardar</button></div>`,
+  fd=>{const v=String(fd.get('n')).trim();if(!v)return false;try{localStorage.setItem('mp_nombre',v)}catch(e){}whoBtn()})}
+function whoBtn(){const b=$('#who');b.hidden=!canWrite||S.demo;b.textContent=yo()?'Editando como '+yo():'Indicar mi nombre'}
+
+/* ================= ejemplo ================= */
+function demoData(){const D2={},I={},now=new Date().toISOString(),mk=(o)=>{D2[o.id]={actividades:[],creado:now,editadoPor:'Equipo de ejemplo',editado:now,...o};return D2[o.id]};
+  mk({id:'raiz',raiz:true,nombre:'Constructora Ejemplo',dueno:'Gerencia general'});
+  const A=(id,n,c,o,du)=>mk({id,nombre:n,parentId:'raiz',parentActId:null,categoria:c,ordenMapa:o,dueno:du});
+  A('pe','Planificación estratégica','estrategico',1,'Gerencia general');A('rd','Revisión por la dirección','estrategico',2,'Gerencia general');
+  A('gc','Gestión comercial','operativo',1,'Comercial');A('pr','Presupuestos','operativo',2,'Presupuesto');A('eo','Ejecución de obra','operativo',3,'Dirección de obras');A('ec','Entrega y cierre','operativo',4,'Dirección de obras');
+  A('co','Compras','apoyo',1,'Compras');A('gf','Gestión financiera','apoyo',2,'Finanzas');A('rh','Recursos humanos','apoyo',3,'RR. HH.');
+  const g=['Captar al cliente|Comercial','Elaborar presupuesto|Presupuesto','Firmar contrato|Gerencia','Comprar materiales|Compras','Ejecutar la obra|Dirección de obras','Facturar y cobrar|Finanzas','Entregar la obra|Dirección de obras'];
+  D2.raiz.actividades=g.map((x,i)=>{const[n,r]=x.split('|');return{id:'g'+i,orden:i+1,forma:i===0?'Inicio':i===g.length-1?'Fin':'Actividad',nombre:n,responsable:r,descripcion:'',sig:[],ramas:[]}});
+  const F=(id,par,ti,du,act)=>{const f=mk({id,nombre:PLANT[ti].n,parentId:par,parentActId:act||null,dueno:du,actividades:tplActs(PLANT[ti])});f.macro=proponer(f,defK(f));return f};
+  F('f1','gc',0,'Comercial');const p=F('f2','pr',1,'Presupuesto');F('f3','co',2,'Compras');F('f4','eo',3,'Dirección de obras');F('f5','gf',4,'Finanzas');F('f6','gf',5,'Finanzas');F('f7','rh',6,'RR. HH.');
+  const sp=[['Cliente\nComercial','Planos y alcance','Información verificada','Presupuesto'],['Ingeniería','Información verificada','Cantidades por partida','Compras'],['Suplidores','Lista de materiales','Cotizaciones comparadas','Presupuesto'],['Compras','Cotizaciones','Costos unitarios','Gerencia'],['Presupuesto','Presupuesto preliminar','Presupuesto aprobado','Comercial\nCliente']];
+  p.macro.forEach((m,i)=>{const s=sp[i]||sp[sp.length-1];m.sipoc={p:s[0],e:s[1],s:s[2],c:s[3]}});
+  p.carx={ind:[{n:'Días para entregar un presupuesto',f:'Fecha de entrega − fecha de recepción de planos',m:'≤ 5 días',q:'Mensual'},{n:'Presupuestos ganados',f:'Ganados ÷ enviados × 100',m:'≥ 30 %',q:'Trimestral'}],rie:[{r:'Precios de suplidores desactualizados',c:'Margen menor al previsto',k:'Actualizar la base de precios cada mes'},{r:'Planos incompletos',c:'Errores de cubicación',k:'Lista de verificación al recibir planos'}]};
+  p.proc={codigo:'PR-PRE-01',elaboro:'Jefe de presupuesto',objetivo:'Establecer los pasos para elaborar presupuestos completos, a tiempo y con el margen esperado.',alcance:'Desde que se reciben los planos y el alcance del cliente hasta que el presupuesto aprobado se entrega a Comercial.',definiciones:'Partida: rubro del presupuesto\nCubicación: medición de cantidades de obra',referencias:'Plantilla de presupuesto\nBase de precios unitarios'};
+  I.v1={id:'v1',tipo:'procver',diagramaId:'f2',version:1,fecha:now,aprobo:'Gerencia general',cambio:'Versión inicial',datos:firma(p,p.proc,p.macro,p.carx)};
+  const op=(id,fl,ai,t,i,e,st,c)=>{I[id]={id,tipo:'oportunidad',diagramaId:fl,actividadId:D2[fl].actividades[ai].id,titulo:t,impacto:i,esfuerzo:e,estado:st,categoria:c,responsable:D2[fl].actividades[ai].responsable,creadoPor:'Equipo de ejemplo',creado:now}};
+  op('o1','f2',5,'Se cotiza desde cero en cada presupuesto (sin base de precios)',3,1,'En análisis','Trabajo manual');op('o2','f2',1,'Los planos llegan incompletos en 6 de cada 10 proyectos',3,2,'Identificada','Reprocesos');
+  op('o3','f2',7,'La revisión de márgenes espera hasta 3 días por la gerencia',2,1,'Identificada','Esperas');op('o4','f5',2,'No hay recordatorio automático de vencimientos',3,1,'En implementación','Trabajo manual');op('o5','f3',4,'Doble aprobación para compras pequeñas',2,1,'Identificada','Aprobaciones');
+  return{diag:D2,items:I}}
+function entrarDemo(){S.bk={diag:S.diag,items:S.items,revs:S.revs,cw:canWrite,cur:S.cur,step:S.step};S.demo=true;canWrite=false;const x=demoData();S.diag=x.diag;S.items=x.items;S.revs={};
+  $('#banner').innerHTML='Estás viendo una <b>empresa de ejemplo</b> (datos ficticios, solo lectura). Explora el mapa, el flujo de “Presupuestos” y su procedimiento. <button class="lnk" data-a="demo-exit">Salir del ejemplo</button>';$('#banner').classList.add('demo');$('#modeTag').textContent='Ejemplo';$('#modeTag').classList.remove('g');whoBtn();goNode('raiz','mapa')}
+function salirDemo(){const b=S.bk;S.demo=false;S.diag=b.diag;S.items=b.items;S.revs=b.revs;canWrite=b.cw;$('#banner').textContent='';$('#banner').classList.remove('demo');$('#modeTag').textContent=canWrite?'Edición':'Solo consulta';$('#modeTag').classList.toggle('g',canWrite);whoBtn();goNode(D(b.cur)?b.cur:'raiz',b.step)}
 
 /* ================= eventos ================= */
 document.addEventListener('click',async e=>{
@@ -871,84 +909,83 @@ document.addEventListener('click',async e=>{
   case 'close-dr':S.sel=null;S.selMap=null;if(S.step==='mapa')content();else overlay();drawer();break;
   case 'proc-new':nodeDlg(null,b.dataset.cat);break;
   case 'node-edit':nodeDlg(D(id)||d);break;
-  case 'node-del':{const n=D(id)||d;if(n.raiz)break;if(kids(n.id).length){toast('Tiene subprocesos. Elimínalos primero.');break}if(!armed(b))break;
-    opsOf(n.id).forEach(o=>{inisOf(o.id).forEach(i=>del('items',i.id));del('items',o.id)});if(n.assetId)run('api_trash',C,K,n.assetId).catch(()=>{});
-    const back=par(n),sa=n.parentActId;del('diagramas',n.id);S.selMap=null;goNode(back,back==='raiz'&&!sa?'mapa':'flujo',sa);toast('Proceso eliminado.');break}
+  case 'node-del':{const n=D(id)||d;if(n.raiz)break;if(kids(n.id).length){toast('Tiene flujos dentro. Elimínalos primero.');break}if(!armed(b))break;
+    Object.values(S.items).filter(i=>i.diagramaId===n.id||i.nodo===n.id).forEach(i=>del('items',i.id));
+    const back=par(n),sa=n.parentActId;del('diagramas',n.id);S.selMap=null;const bd=D(back);goNode(back,bd&&bd.raiz?(sa?'flujo':'mapa'):(isArea(bd)?'area':'flujo'),sa);toast('Eliminado.');break}
   case 'mv':{const n=D(S.selMap),l=procOrd(n.categoria),i=l.indexOf(n),j=i+(+b.dataset.d);if(j<0||j>=l.length)break;l.splice(j,0,l.splice(i,1)[0]);l.forEach((x,k)=>{if(num(x.ordenMapa)!==k+1)put('diagramas',{...x,ordenMapa:k+1})});break}
-  case 'iso-lbl':{const cf=cfg();openDlg(`<h3>Textos del mapa</h3><label>Entrada (izquierda)<input name="izq" value="${esc(cf.izq)}"></label><label>Salida (derecha)<input name="der" value="${esc(cf.der)}"></label><div class="row end" style="margin-top:12px"><button type="button" class="btn" data-a="dlg-close">Cancelar</button><button class="btn pri">Guardar</button></div>`,fd=>{put('items',{id:'cfg_mapa',tipo:'config',izq:String(fd.get('izq')).trim()||cf.izq,der:String(fd.get('der')).trim()||cf.der})});break}
-  case 'pdf':{const t=document.getElementById(b.dataset.t);if(!t)break;if(b.dataset.t==='procDoc')procPreview();b.disabled=true;const tx=b.textContent;b.textContent='Generando…';
-    try{const iso=b.dataset.t==='isoMap',blob=await htmlToPdf(t,iso);bajar(blob,(iso?'Mapa de procesos':'Procedimiento '+(D(S.cur).raiz?'flujo general':D(S.cur).nombre))+'.pdf');toast('PDF descargado.')}catch(err){console.error(err);toast('No se pudo generar el PDF.')}b.disabled=false;b.textContent=tx;break}
-  case 'docx':{b.disabled=true;const tx=b.textContent;b.textContent='Generando…';try{const d=D(S.cur),blob=await procDocx(d,S.wp,S.wz);bajar(blob,'Procedimiento '+(d.raiz?'flujo general':d.nombre)+'.docx');toast('Documento de Word descargado.')}catch(err){console.error(err);toast('No se pudo generar el documento.')}b.disabled=false;b.textContent=tx;break}
-  case 'print':{const t=document.getElementById(b.dataset.t);if(!t)break;if(b.dataset.t==='procDoc')procPreview();document.body.classList.add('pr');setTimeout(()=>{try{window.print()}catch(err){toast('El navegador no permitió imprimir.')}document.body.classList.remove('pr')},60);break}
-  case 'act':{const now=Date.now();if(S.zonas)break;if(lastClk.id===id&&now-lastClk.t<450){lastClk={};const a2=actOf(d,id),sb=a2?subsOf(d,a2):[];if(sb.length===1){goNode(sb[0].id,'flujo');break}}lastClk={id,t:now};S.sel=id;overlay();drawer();break}
-  case 'acts':actsDlg(!!b.dataset.dictar);break;
+  case 'act':{const now=Date.now();if(lastClk.id===id&&now-lastClk.t<450){lastClk={};const a2=actOf(d,id),sb=a2?subsOf(d,a2):[];if(sb.length===1){goNode(sb[0].id,'flujo');break}}lastClk={id,t:now};S.sel=id;overlay();drawer();break}
+  case 'acts':actsDlg(!!b.dataset.dictar);if(b.dataset.tpl)setTimeout(()=>{const s=$('#tplSel');if(s)s.focus()},120);break;
+  case 'tpl-apply':{const s=$('#tplSel');if(!s||s.value==='')break;const tb=$('#aedBody');if(tb&&tb.rows.length&&!armed(b))break;applyTpl(+s.value);break}
   case 'act-edit':{const x=actOf(d,S.sel);if(x)actDlg(x);break}
   case 'act-del':{if(!armed(b))break;const aid=S.sel;closeDlg(false);S.sel=null;opsOf(d.id).filter(i=>i.actividadId===aid).forEach(it=>put('items',{...it,actividadId:null}));
     put('diagramas',{...D(d.id),actividades:(D(d.id).actividades||[]).filter(x=>x.id!==aid).map(x=>({...x,sig:(x.sig||[]).filter(s=>s!==aid),ramas:(x.ramas||[]).map(r=>r.dest===aid?{...r,dest:''}:r)}))});break}
-  case 'sub-new':subDlg();break;
-  case 'flow-new':flowDlg(b.dataset.p);break;
-  case 'area-migrar':{if(!d||!isArea(d))break;const f={id:uid(),nombre:d.nombre,dueno:d.dueno||'',parentId:d.id,parentActId:null,actividades:d.actividades||[],macro:d.macro,proc:d.proc,chk:d.chk,assetId:d.assetId,kind:d.kind,vista:d.vista,revisado:d.revisado,creado:new Date().toISOString()};
+  case 'sub-new':{const x=actOf(d,S.sel);if(x)newFlowDlg(d.id,x);break}
+  case 'flow-new':newFlowDlg(b.dataset.p,null);break;
+  case 'area-migrar':{if(!d||!isArea(d))break;const f={id:uid(),nombre:d.nombre,dueno:d.dueno||'',parentId:d.id,parentActId:null,actividades:d.actividades||[],macro:d.macro,proc:d.proc,chk:d.chk,carx:d.carx,creado:new Date().toISOString()};
     put('diagramas',JSON.parse(JSON.stringify(f)));kids(d.id).filter(k=>k.parentActId).forEach(k=>put('diagramas',{...k,parentId:f.id}));Object.values(S.items).filter(i=>i.diagramaId===d.id).forEach(i=>put('items',{...i,diagramaId:f.id}));
-    const n={...d,actividades:[]};['macro','proc','chk','assetId','kind','vista','revisado'].forEach(k=>delete n[k]);put('diagramas',n);toast('Convertido en flujo del proceso.');break}
-  case 'docs':{if(!d||d.raiz)break;const on=!!b.dataset.v;put('diagramas',{...d,docs:on});ck='';toast(on?'Se agregaron Caracterización y Procedimiento a este proceso.':'Caracterización y Procedimiento ocultos (lo ya registrado se conserva).');render(true);break}
-  case 'vista':{if(!d)break;const v=b.dataset.v;S.page=1;S.zonas=false;if(canWrite)put('diagramas',{...d,vista:v});else{S.diag[d.id]={...d,vista:v};render(true)}break}
-  case 'pg':S.page=Math.min(S.pages,Math.max(1,S.page+(+b.dataset.d)));S.sel=null;drawer();drawStage();break;
-  case 'zonas':S.zonas=!S.zonas;S.sel=null;flujoBar(d);overlay();drawer();if(S.zonas)toast('Arrastra sobre el PDF para marcar cada actividad.');break;
+    const n={...d,actividades:[]};['macro','proc','chk','carx'].forEach(k=>delete n[k]);put('diagramas',n);toast('Convertido en flujo del proceso.');break}
   case 'zoom':{const z=+b.dataset.d;S.zoom=z===0?1:Math.min(4,Math.max(.4,S.zoom*(z>0?1.25:.8)));drawStage();break}
-  case 'imp':$('#fileImp').click();break;
-  case 'detect':if(d&&d.kind==='pdf')detect(d);break;
-  case 'unimp':{if(!armed(b))break;const old=d.assetId;const n={...d};delete n.assetId;delete n.kind;delete n.vista;put('diagramas',n);if(old)run('api_trash',C,K,old).catch(()=>{});ck='';render(true);break}
   case 'row-add':{const tb=$('#aedBody'),n=tb.rows.length;tb.insertAdjacentHTML('beforeend',actRow({},n));refreshSig();tb.rows[n].querySelector('[name=nombre]').focus();break}
   case 'row-del':{const gid=b.closest('tr').dataset.id;b.closest('tr').remove();document.querySelectorAll('#aedBody select').forEach(s=>{if(s.dataset.v===gid)s.dataset.v=''});refreshSig();break}
-  case 'rama-add':b.insertAdjacentHTML('beforebegin',ramaRow({etiqueta:''}));refreshSig();b.previousElementSibling.querySelector('[name=rl]').focus();break;
   case 'row-up':case 'row-dn':{const tr=b.closest('tr');if(a==='row-up'&&tr.previousElementSibling)tr.parentNode.insertBefore(tr,tr.previousElementSibling);else if(a==='row-dn'&&tr.nextElementSibling)tr.parentNode.insertBefore(tr.nextElementSibling,tr);refreshSig();b.focus();break}
-  case 'act-mv':{moveAct(d,S.sel,+b.dataset.d);break}
+  case 'act-mv':moveAct(d,S.sel,+b.dataset.d);break;
+  case 'rama-add':b.insertAdjacentHTML('beforebegin',ramaRow({etiqueta:''}));refreshSig();b.previousElementSibling.querySelector('[name=rl]').focus();break;
   case 'rama-del':b.closest('.rama').remove();break;
   case 'dic-start':if(listening){stopDictado();flushDictado(false)}else startDictado();break;
   case 'dic-apply':flushDictado(true);break;
   case 'dlg-close':closeDlg(true);break;
-  case 'chk':$('#dlgForm').querySelectorAll('.rev input[type=checkbox]').forEach(c=>c.checked=!!b.dataset.v);break;
-  case 'wz-save':wzSave(b.dataset.next);break;
-  case 'wz-propose':S.wz=proponer(d,+($('#wzK')||{}).value||5);S.dirty=true;content();break;
-  case 'mv-act':{const i=+b.dataset.m,dir=+b.dataset.d,W=S.wz;if(W[i].acts.length<2){toast('Cada gran actividad debe tener al menos una actividad.');break}if(dir<0)W[i-1].acts.push(W[i].acts.shift());else W[i+1].acts.unshift(W[i].acts.pop());S.dirty=true;content();break}
-  case 'wz-sug':{const W=S.wz;W.forEach((m,i)=>{m.sipoc=m.sipoc||{p:'',e:'',s:'',c:''};if(i>0&&!m.sipoc.e.trim()&&(W[i-1].sipoc||{}).s)m.sipoc.e=W[i-1].sipoc.s;if(i>0&&!m.sipoc.p.trim()&&W[i-1].responsable)m.sipoc.p=W[i-1].responsable;if(i<W.length-1&&!m.sipoc.c.trim()&&W[i+1].responsable)m.sipoc.c=W[i+1].responsable});S.dirty=true;content();toast('Conexiones sugeridas. Revisa y completa.');break}
-  case 'proc-copy':{const el=$('#procDoc');try{await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([`<div style="font-family:Arial">${el.innerHTML}</div>`],{type:'text/html'}),'text/plain':new Blob([el.innerText],{type:'text/plain'})})]);toast('Copiado. Pégalo en Word o Google Docs con Ctrl+V.')}catch(err){toast('El navegador no permitió copiar. Usa Imprimir › Guardar como PDF.')}break}
+  case 'wz-propose':S.wz=proponer(d,+($('#wzK')||{}).value||5);marcar();content();break;
+  case 'mv-act':{const i=+b.dataset.m,dir=+b.dataset.d,W=S.wz;if(W[i].acts.length<2){toast('Cada gran actividad debe tener al menos una actividad.');break}if(dir<0)W[i-1].acts.push(W[i].acts.shift());else W[i+1].acts.unshift(W[i].acts.pop());marcar();content();break}
+  case 'wz-sug':{const W=S.wz;W.forEach((m,i)=>{m.sipoc=m.sipoc||{p:'',e:'',s:'',c:''};if(i>0&&!m.sipoc.e.trim()&&(W[i-1].sipoc||{}).s)m.sipoc.e=W[i-1].sipoc.s;if(i>0&&!m.sipoc.p.trim()&&W[i-1].responsable)m.sipoc.p=W[i-1].responsable;if(i<W.length-1&&!m.sipoc.c.trim()&&W[i+1].responsable)m.sipoc.c=W[i+1].responsable});marcar();content();toast('Conexiones sugeridas. Revisa y completa.');break}
+  case 'x-add':{S.wx[b.dataset.t].push({});marcar();content();const ins=document.querySelectorAll(`[data-x="${b.dataset.t}"]`);if(ins.length)ins[ins.length-(b.dataset.t==='ind'?4:3)].focus();break}
+  case 'x-del':S.wx[b.dataset.t].splice(+b.dataset.i,1);marcar();content();break;
+  case 'aprobar':{flushAuto();const E=estadoVer(d);openDlg(`<h3>Aprobar versión ${E.n}</h3><p class="mut">Se fija una copia del procedimiento tal como está ahora. Los cambios posteriores quedarán como borrador de la versión ${E.n+1}.</p>
+    <div class="two"><label>Aprobado por<input name="ap" required value="${esc(yo())}"></label><label>Fecha<input type="date" name="f" value="${hoy()}"></label></div><label>Descripción del cambio<input name="c" required value="${E.n===1?'Versión inicial':''}" placeholder="Qué cambió respecto a la versión anterior"></label>
+    <div class="row end" style="margin-top:12px"><button type="button" class="btn" data-a="dlg-close">Cancelar</button><button class="btn pri">Aprobar</button></div>`,
+    fd=>{const dd=D(S.cur);put('items',{id:'v'+uid(),tipo:'procver',diagramaId:dd.id,version:E.n,fecha:new Date(fd.get('f')+'T12:00:00').toISOString(),aprobo:String(fd.get('ap')).trim(),cambio:String(fd.get('c')).trim(),datos:firma(dd,S.wp,S.wz,S.wx)});toast('Versión '+E.n+' aprobada.');render(true)});break}
+  case 'ver-pdf':{const v=S.items[id];if(!v)break;const box=document.createElement('div');box.className='doc';box.innerHTML=snapDoc(d,v);
+    try{bajar(await htmlToPdf(box,false),'Procedimiento '+(d.raiz?'flujo general':d.nombre)+' v'+v.version+'.pdf');toast('PDF de la versión '+v.version+' descargado.')}catch(err){toast('No se pudo generar el PDF.')}break}
+  case 'pdf':{const t=document.getElementById(b.dataset.t);if(!t)break;if(b.dataset.t==='procDoc')procPreview();b.disabled=true;const tx=b.textContent;b.textContent='Generando…';
+    try{const iso=b.dataset.t==='isoMap';bajar(await htmlToPdf(t,iso),(iso?'Mapa de procesos':'Procedimiento '+(d.raiz?'flujo general':d.nombre))+'.pdf');toast('PDF descargado.')}catch(err){console.error(err);toast('No se pudo generar el PDF.')}b.disabled=false;b.textContent=tx;break}
+  case 'docx':{b.disabled=true;const tx=b.textContent;b.textContent='Generando…';try{const E=estadoVer(d);bajar(await procDocx(d,S.wp,S.wz,S.wx,verLabel(E),E.v),'Procedimiento '+(d.raiz?'flujo general':d.nombre)+'.docx');toast('Documento de Word descargado.')}catch(err){console.error(err);toast('No se pudo generar el documento.')}b.disabled=false;b.textContent=tx;break}
   case 'op-new':opDlg(null,b.dataset.act);break;
   case 'op-edit':opDlg(S.items[id]);break;
-  case 'op-del':if(armed(b)){inisOf(id).forEach(i=>del('items',i.id));del('items',id)}break;
-  case 'in-new':inDlg(null,b.dataset.op);break;
-  case 'in-edit':inDlg(S.items[id]);break;
-  case 'in-del':if(armed(b))del('items',id);break;
+  case 'op-del':if(armed(b))del('items',id);break;
   case 'op-reg':{const list=[...document.querySelectorAll('#sugBox [data-sg]')].filter(x=>x.checked).map(x=>{const i=x.dataset.sg,[act,k]=document.querySelector(`[data-sgk="${i}"]`).value.split('|'),q=QS.find(z=>z.k===k);
-      return{titulo:document.querySelector(`[data-sgt="${i}"]`).value.trim()||q.c,prioridad:document.querySelector(`[data-sgp="${i}"]`).value,actividadId:act,categoria:q.c,descripcion:q.q,origen:act+'|'+k}});
+      return{titulo:document.querySelector(`[data-sgt="${i}"]`).value.trim()||q.c,impacto:num(document.querySelector(`[data-sgi="${i}"]`).value),esfuerzo:num(document.querySelector(`[data-sge="${i}"]`).value),actividadId:act,categoria:q.c,descripcion:q.q,origen:act+'|'+k}});
     if(!list.length){toast('No hay oportunidades seleccionadas.');break}
-    list.forEach(o=>put('items',{id:uid(),tipo:'oportunidad',diagramaId:d.id,estado:'Identificada',actualizado:new Date().toISOString(),...o}));put('diagramas',{...D(d.id),chk:clone(S.wc)});S.dirty=false;render(true);toast(list.length===1?'1 oportunidad registrada.':list.length+' oportunidades registradas.');break}
-  case 'csv':{const f=S.pf,q=v=>'"'+String(v??'').replace(/"/g,'""')+'"',rows=Object.values(S.items).filter(i=>i.tipo===f.t);
-    const csv=[['Tipo','Título','Proceso','Prioridad','Estado','Responsable','Fecha','Avance'].map(q).join(','),...rows.map(i=>[i.tipo,i.titulo,pathOf(i.diagramaId),i.prioridad,i.estado,i.responsable,i.fecha,i.avance].map(q).join(','))].join('\n');
+    list.forEach(o=>put('items',{id:uid(),tipo:'oportunidad',diagramaId:d.id,estado:'Identificada',...o}));put('diagramas',{...D(d.id),chk:clone(S.wc)},{raw:true});S.dirty=false;render(true);toast(list.length===1?'1 oportunidad registrada.':list.length+' oportunidades registradas.');break}
+  case 'hist':histDlg();break;
+  case 'hist-rest':{const h=S.items[id];if(!h)break;let o;try{o=JSON.parse(h.datos)}catch(err){toast('Copia dañada.');break}const cur=D(o.id);if(!cur){toast('El flujo ya no existe.');break}
+    closeDlg(false);put('diagramas',{...cur,actividades:o.actividades,macro:o.macro,carx:o.carx,proc:o.proc,nombre:o.nombre,dueno:o.dueno},{force:true,nota:'Antes de restaurar'});S.wzFor=null;ck='';render(true);toast('Versión restaurada.');break}
+  case 'demo':entrarDemo();break;
+  case 'demo-exit':salirDemo();break;
+  case 'csv':{const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"',rows=portRows();
+    const csv=[['Oportunidad','Flujo','Prioridad','Impacto','Esfuerzo','Estado','Responsable','Descripción'].map(q).join(','),...rows.map(i=>{const[im,ef]=ie(i);return[i.titulo,pathOf(i.diagramaId),prio(i),nivTxt(im),nivTxt(ef),i.estado||'Identificada',i.responsable,i.descripcion].map(q).join(',')})].join('\n');
     try{await navigator.clipboard.writeText(csv);toast('CSV copiado. Pégalo en Google Sheets.')}catch(err){toast('El navegador no permitió copiar.')}break}
   }});
 let rsT;document.addEventListener('input',e=>{const t=e.target;
   if(t.name==='nombre'&&t.closest('#aedBody')){clearTimeout(rsT);rsT=setTimeout(refreshSig,300);return}
   if(t.id==='pfQ'){S.pf.q=t.value;const pos=t.selectionStart;portfolio();const n=$('#pfQ');n.focus();n.setSelectionRange(pos,pos);return}
   if(!t.closest('#content'))return;
-  if(t.dataset.f!==undefined&&t.dataset.m!==undefined){S.wz[+t.dataset.m][t.dataset.f]=t.value;S.dirty=true;const cv=document.querySelectorAll('.chev .cv')[+t.dataset.m];if(cv)cv.innerHTML=`<small>${+t.dataset.m+1}</small>${esc(S.wz[+t.dataset.m].nombre||'Sin nombre')}<i>${esc(S.wz[+t.dataset.m].responsable||'')}</i>`}
-  else if(t.dataset.s&&t.dataset.m!==undefined){const m=S.wz[+t.dataset.m];m.sipoc=m.sipoc||{p:'',e:'',s:'',c:''};m.sipoc[t.dataset.s]=t.value;S.dirty=true}
-  else if(t.dataset.p){S.wp[t.dataset.p]=t.value;S.dirty=true;procPreview()}
-  else if(t.dataset.q&&t.type==='checkbox'){const id=t.dataset.id,arr=S.wc[id]=S.wc[id]||[];if(t.checked){if(!arr.includes(t.dataset.q))arr.push(t.dataset.q)}else S.wc[id]=arr.filter(x=>x!==t.dataset.q);S.dirty=true;$('#sugBox').innerHTML=sugHTML(D(S.cur))}
-  else if(t.id==='wzK'){S.wz=proponer(D(S.cur),+t.value);S.dirty=true;content()}});
+  if(t.dataset.x){S.wx[t.dataset.x][+t.dataset.i][t.dataset.f]=t.value;marcar()}
+  else if(t.dataset.f!==undefined&&t.dataset.m!==undefined){S.wz[+t.dataset.m][t.dataset.f]=t.value;marcar();const cv=document.querySelectorAll('.chev .cv')[+t.dataset.m];if(cv)cv.innerHTML=`<small>${+t.dataset.m+1}</small>${esc(S.wz[+t.dataset.m].nombre||'Sin nombre')}<i>${esc(S.wz[+t.dataset.m].responsable||'')}</i>`}
+  else if(t.dataset.s&&t.dataset.m!==undefined){const m=S.wz[+t.dataset.m];m.sipoc=m.sipoc||{p:'',e:'',s:'',c:''};m.sipoc[t.dataset.s]=t.value;marcar()}
+  else if(t.dataset.p){S.wp[t.dataset.p]=t.value;marcar();procPreview()}
+  else if(t.dataset.q&&t.type==='checkbox'){const id=t.dataset.id,arr=S.wc[id]=S.wc[id]||[];if(t.checked){if(!arr.includes(t.dataset.q))arr.push(t.dataset.q)}else S.wc[id]=arr.filter(x=>x!==t.dataset.q);$('#sugBox').innerHTML=sugHTML(D(S.cur))}
+  else if(t.id==='wzK'){S.wz=proponer(D(S.cur),+t.value);marcar();content()}});
 document.addEventListener('change',e=>{const t=e.target;
-  if(t.id==='pfT'||t.id==='pfE'){S.pf[t.id==='pfT'?'t':'e']=t.value;portfolio();return}
+  if(t.id==='pfE'||t.id==='pfP'){S.pf[t.id==='pfE'?'e':'p']=t.value;portfolio();return}
   if(t.dataset.a==='cat'){const n=D(S.selMap);if(!n)return;const c=t.value;setTimeout(()=>put('diagramas',{...n,categoria:c,ordenMapa:c?Math.max(0,...procOrd(c).filter(x=>x.id!==n.id).map(x=>num(x.ordenMapa)))+1:0}),0);return}
   if(t.name==='forma'&&t.closest('#aedBody')){const tr=t.closest('tr'),cell=tr.querySelector('td.s');cell.innerHTML=sigCell(t.value==='Decisión'?{forma:'Decisión',ramas:[{etiqueta:'Sí'},{etiqueta:'No'}]}:{forma:t.value,sig:[]});refreshSig();return}
   if((t.name==='sig'||t.name==='rn')&&t.closest('#aedBody')){t.dataset.v=t.value;delete t.dataset.pend}});
 document.addEventListener('submit',async e=>{const f=e.target;e.preventDefault();
   if(f.id==='dlgForm'&&dlgOk){const btn=f.querySelector('.btn.pri');if(btn)btn.disabled=true;let r;try{r=await dlgOk(new FormData(f))}finally{if(btn)btn.disabled=false}if(r!==false){dlgCancel=null;closeDlg(false)}}});
-$('#dlg').addEventListener('cancel',()=>{stopDictado();if(dlgCancel)dlgCancel();dlgOk=dlgCancel=null});
-document.querySelectorAll('#views button').forEach(b=>b.addEventListener('click',()=>{const v=b.dataset.v;if(v==='app'&&S.view==='app'){goNode('raiz','mapa');return}S.view=v;render(true);window.scrollTo(0,0)}));
-$('#btnRefresh').addEventListener('click',()=>{if(!pending)load()});
-$('#fileImp').addEventListener('change',async e=>{const f=e.target.files[0],d=D(S.cur);e.target.value='';if(!f||!d)return;
-  try{const up=await uploadFile(f),old=d.assetId;put('diagramas',{...D(d.id),assetId:up.id,kind:up.kind,vista:'archivo',revisado:up.kind!=='pdf'});ck='';render(true);
-    if(old)run('api_trash',C,K,old).catch(()=>{});toast(up.kind==='pdf'?'PDF importado. Se leerán sus actividades.':'Imagen importada. Usa “Marcar zonas” para marcar actividades.')}catch(err){toast(err.message)}});
+$('#dlg').addEventListener('cancel',e=>{if(!dlgCancel&&$('#dlgForm').querySelector('[name=n]')&&!yo()){e.preventDefault();return}stopDictado();if(dlgCancel)dlgCancel();dlgOk=dlgCancel=null});
+document.querySelectorAll('#views button').forEach(b=>b.addEventListener('click',()=>{const v=b.dataset.v;if(v==='app'&&S.view==='app'){goNode('raiz','mapa');return}flushAuto();S.view=v;render(true);window.scrollTo(0,0)}));
+$('#btnRefresh').addEventListener('click',()=>{if(!pending&&!S.demo){flushAuto();load()}});
+$('#who').addEventListener('click',()=>nombreDlg(false));
+window.addEventListener('beforeunload',e=>{if(S.dirty||pending){flushAuto();e.preventDefault();e.returnValue=''}});
 
 /* arrastrar filas en la tabla de actividades */
 let dragRow=null;
@@ -984,42 +1021,20 @@ function moveTip(e){const r=tip.getBoundingClientRect();let x=e.clientX+14,y=e.c
 document.addEventListener('mouseover',e=>{const b=e.target.closest('.hs');if(b&&!drag&&!(mv&&mv.on))showTip(e,b)});
 document.addEventListener('mousemove',e=>{if(!tip.hidden){if(!e.target.closest('.hs')||(mv&&mv.on))tip.hidden=true;else moveTip(e)}});
 document.addEventListener('scroll',()=>{tip.hidden=true},true);
-/* zonas manuales sobre PDF o imagen */
-document.addEventListener('pointerdown',e=>{const ov=e.target.closest('#ov');if(!ov||!S.zonas||e.target!==ov||!canWrite)return;const r=ov.getBoundingClientRect();drag={ov,r,x:e.clientX-r.left,y:e.clientY-r.top,el:document.createElement('div')};drag.el.className='draw';ov.appendChild(drag.el);ov.setPointerCapture(e.pointerId);tip.hidden=true;e.preventDefault()});
-document.addEventListener('pointermove',e=>{if(!drag)return;const x=e.clientX-drag.r.left,y=e.clientY-drag.r.top;Object.assign(drag.el.style,{left:Math.min(x,drag.x)+'px',top:Math.min(y,drag.y)+'px',width:Math.abs(x-drag.x)+'px',height:Math.abs(y-drag.y)+'px'});drag.ex=x;drag.ey=y});
-document.addEventListener('pointerup',()=>{if(!drag)return;const g=drag;drag=null;g.el.remove();if(g.ex==null||Math.abs(g.ex-g.x)<8||Math.abs(g.ey-g.y)<8)return;
-  const z={x:Math.min(g.x,g.ex)/g.r.width,y:Math.min(g.y,g.ey)/g.r.height,w:Math.abs(g.ex-g.x)/g.r.width,h:Math.abs(g.ey-g.y)/g.r.height,pag:S.page};
-  openDlg(`<h3>Nueva actividad</h3><label>Actividad<input name="n" required></label><div class="two"><label>Responsable<input name="r" list="dlR4"></label><label>Tipo${sel('f',FORMAS,'Actividad')}</label></div><datalist id="dlR4">${responsables().map(r=>`<option value="${esc(r)}">`).join('')}</datalist><label>Descripción breve<textarea name="ds" rows="3"></textarea></label><div class="row end" style="margin-top:12px"><button type="button" class="btn" data-a="dlg-close">Cancelar</button><button class="btn pri">Crear</button></div>`,
-  fd=>{const d=D(S.cur),id=uid();put('diagramas',{...d,actividades:[...(d.actividades||[]),{...z,id,orden:(d.actividades||[]).length+1,nombre:String(fd.get('n')).trim(),responsable:String(fd.get('r')||'').trim(),forma:fd.get('f'),descripcion:String(fd.get('ds')||'').trim()}]})})});
-let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{if(S.view==='app'&&S.step==='flujo'){lastKey='';drawStage()}},150)}).observe(document.body);
 
-/* ================= administración ================= */
-let adminList=[];
-function adminRender(){
-  $('#admin').innerHTML=`<div class="card pad" style="max-width:1100px;margin:0 auto;width:100%"><div class="sh"><div><h2>Clientes</h2><p>Cada cliente tiene dos enlaces: <b>Ver</b> (solo consulta) y <b>Gestionar</b> (carga y edita). También puedes crearlos desde la hoja de cálculo.</p></div></div>
-  <form id="newCli" class="row" style="margin:6px 0 14px"><input name="n" placeholder="Nombre del cliente" required style="flex:1;min-height:42px;border:1px solid var(--line2);border-radius:9px;padding:6px 12px;font-size:16px"><button class="btn pri">Crear cliente</button></form>
-  <div class="scroll"><table class="t"><thead><tr><th>Cliente</th><th>Enlace Ver</th><th>Enlace Gestionar</th><th></th></tr></thead><tbody>${adminList.length?adminList.map(c=>`<tr><td><b>${esc(c.nombre)}</b></td>
-  <td><div class="lk"><input readonly value="${esc(c.ver)}" aria-label="Enlace Ver"><button class="btn sm" data-x="copy">Copiar</button></div></td>
-  <td><div class="lk"><input readonly value="${esc(c.gestionar)}" aria-label="Enlace Gestionar"><button class="btn sm" data-x="copy">Copiar</button></div></td>
-  <td class="nw"><a class="btn sm" href="${esc(c.gestionar)}" target="_blank" rel="noopener">Abrir</a> <button class="lnk" data-x="key" data-id="${esc(c.id)}">Nueva clave</button></td></tr>`).join(''):'<tr><td colspan="4" class="mut">Aún no hay clientes.</td></tr>'}</tbody></table></div></div>`}
-async function adminInit(){$('#views').hidden=$('#btnRefresh').hidden=true;$('#app').hidden=true;$('#admin').hidden=false;$('#cliName').textContent='Administración';
-  adminRender();try{adminList=await run('api_clients',BOOT.admin);adminRender()}catch(e){toast(e.message)}
-  $('#admin').addEventListener('submit',async e=>{e.preventDefault();const n=e.target.n.value.trim();if(!n)return;try{adminList=await run('api_createClient',BOOT.admin,n);adminRender();toast('Cliente creado.')}catch(err){toast(err.message)}});
-  $('#admin').addEventListener('click',async e=>{const b=e.target.closest('[data-x]');if(!b)return;
-    if(b.dataset.x==='copy'){const inp=b.previousElementSibling;try{await navigator.clipboard.writeText(inp.value);toast('Enlace copiado.')}catch(err){inp.select();toast('Pulsa Ctrl+C para copiar.')}}
-    if(b.dataset.x==='key'){if(!armed(b))return;try{adminList=await run('api_newKey',BOOT.admin,b.dataset.id);adminRender();toast('Clave nueva generada.')}catch(err){toast(err.message)}}})}
+let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{if(S.view==='app'&&S.step==='flujo'){lastKey='';drawStage()}},150)}).observe(document.body);
 
 /* ================= arranque ================= */
 (async()=>{
   const q=new URLSearchParams(location.search);$('#banner').textContent='Cargando…';
-  try{BOOT=await run('api_boot',{admin:q.get('admin')||'',cliente:q.get('cliente')||'',clave:q.get('clave')||''})}
+  try{BOOT=await run('api_boot',{cliente:q.get('cliente')||'',clave:q.get('clave')||''})}
   catch(e){document.body.innerHTML=`<div class="card msgbox"><h2 style="margin-top:0">Mapa de procesos</h2><p>${esc(e.message)}</p></div>`;return}
   $('#banner').textContent='';
-  if(BOOT.mode==='admin'){$('#modeTag').textContent='Administrador';$('#modeTag').classList.add('g');adminInit();return}
   C=BOOT.cliente.id;K=BOOT.k||'';canWrite=BOOT.mode==='gestionar';document.title='Mapa de procesos · '+BOOT.cliente.nombre;
-  $('#cliName').textContent=BOOT.cliente.nombre;$('#modeTag').textContent=canWrite?'Edición':'Solo consulta';$('#modeTag').classList.toggle('g',canWrite);
+  $('#cliName').textContent=BOOT.cliente.nombre;$('#modeTag').textContent=canWrite?'Edición':'Solo consulta';$('#modeTag').classList.toggle('g',canWrite);whoBtn();
   $('#app').hidden=false;await load();
-  setInterval(()=>{if(!pending&&!S.dirty&&!$('#dlg').open&&document.visibilityState==='visible')load()},120000);
+  if(canWrite&&!yo())nombreDlg(true);
+  setInterval(()=>{if(!pending&&!S.dirty&&!S.demo&&!$('#dlg').open&&document.visibilityState==='visible')load()},120000);
 })();
 }
 </script>
