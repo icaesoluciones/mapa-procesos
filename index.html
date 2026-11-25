@@ -128,6 +128,37 @@ td button.lnk{text-align:left}
 @media(max-width:1180px){.grid{grid-template-columns:minmax(0,1fr) 340px}#tree{grid-column:1/-1}}
 @media(max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}#viewport{max-height:70vh;min-height:300px}}
 @media(max-width:600px){table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--line)}.stack td{display:flow-root;border:0;padding:3px 10px;padding-inline-start:8em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;color:var(--mut)}.stack td:empty{display:none}.two{grid-template-columns:1fr}.views{margin-left:0}}
+.steps{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;padding:10px max(2vw,14px);background:var(--panel);border-bottom:1px solid var(--line)}
+.st-t{font-weight:700;margin-right:10px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.st{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel);border-radius:20px;padding:5px 12px 5px 5px;min-height:38px;font-size:14px}
+.st b{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--soft);font-size:13px}
+.st.ok b{background:var(--ok);color:#fff}.st.on{border-color:var(--ink);background:var(--ink);color:#fff}.st.on b{background:var(--acc);color:#fff}.st-s{color:var(--mut)}
+#wiz{padding:14px max(2vw,14px)}.wz{max-width:1240px;margin:0 auto}.wz-h h2{font-size:28px;line-height:1.1;margin:2px 0 4px}.wz-nav{border-top:1px solid var(--line);padding-top:12px;margin-top:16px}
+.chev{display:flex;gap:0;margin:14px 0 8px;overflow-x:auto;padding-bottom:4px}
+.cv{flex:1 1 0;min-width:140px;background:var(--ink);color:#fff;padding:12px 26px 12px 30px;clip-path:polygon(0 0,calc(100% - 18px) 0,100% 50%,calc(100% - 18px) 100%,0 100%,18px 50%);font-weight:700;font-size:14px;line-height:1.25;margin-right:-10px}
+.cv:first-child{clip-path:polygon(0 0,calc(100% - 18px) 0,100% 50%,calc(100% - 18px) 100%,0 100%);padding-left:16px}.cv:nth-child(even){background:var(--acc)}
+.cv small{display:block;font-size:12px;opacity:.75}.cv i{display:block;font-style:normal;font-weight:400;font-size:12px;opacity:.85;margin-top:2px}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin-top:10px}
+.mcard{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--panel)}
+.mh{display:flex;gap:8px;align-items:center}.mn{flex:none;width:30px;height:30px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:700}
+.mh input{flex:1;font-size:16px;font-weight:700;border:1px solid var(--line);border-radius:6px;padding:7px 8px;min-height:40px}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.chip2{display:inline-flex;align-items:center;gap:2px;background:var(--soft);border:1px solid var(--line);border-radius:16px;padding:3px 9px;font-size:13px}
+.chip2 button{border:0;background:var(--ink);color:#fff;border-radius:50%;width:22px;height:22px;line-height:1;padding:0;margin:0 2px}
+.inl{display:flex;gap:6px;align-items:center;margin:0;color:var(--ink);font-size:14px}.inl select{width:auto;display:inline-block;margin:0;min-height:36px}
+.fuera{margin-top:12px;font-size:14px}.fuera summary{cursor:pointer}
+.sip textarea{width:100%;border:1px solid var(--line);border-radius:6px;padding:6px;font-size:14px;min-height:90px;resize:vertical}.sip td{padding:6px}.sip .sp{background:var(--soft);min-width:150px}
+.pgrid{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:16px;align-items:start;margin-top:8px}
+.pprev{border:1px solid var(--line);border-radius:10px;background:#fff;max-height:78vh;overflow:auto}
+.doc{padding:28px 32px;color:#141210;font:14px/1.5 Arial,Helvetica,sans-serif}.doc h3{font-size:16px;margin:20px 0 6px;border-bottom:1px solid #141210;padding-bottom:3px}.doc h4{font-size:14px;margin:14px 0 6px}
+.doc table{width:100%;border-collapse:collapse;font-size:13px;margin:4px 0}.doc td,.doc th{border:1px solid #9c968d;padding:5px 7px;vertical-align:top;text-align:left;color:#141210}.doc th{background:#e7e4df;font-weight:700}
+.doc .dh td{font-size:12px}.doc .dh .dt{font-size:18px;font-weight:700;width:50%}.doc .dh small{font-size:11px;letter-spacing:0}.doc .pend{color:#c8371e;font-style:italic}.doc .dimg{max-width:100%;border:1px solid #d3cec6}
+.qlist{font-size:14px;columns:2 320px;margin:6px 0 10px}.qlist li{break-inside:avoid;margin-bottom:3px}
+.mx table{min-width:900px}.mx th{font-size:12px;text-align:center;cursor:help}.mx th:first-child{text-align:left}.mx td{padding:6px 8px}.mx .ck{text-align:center}.mx .ck input{width:20px;height:20px}.mx .gr td{background:var(--soft);font-weight:700}
+.sug{border:1px solid var(--ink);border-radius:10px;padding:12px;margin-top:14px}.sr{display:flex;gap:8px;align-items:center;margin-bottom:6px}.sr input[type=checkbox]{width:20px;height:20px;flex:none}.sr .st2{flex:1;border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:15px;min-height:38px}.sr select{min-height:38px;border:1px solid var(--line);border-radius:6px}
+.libre{margin-top:14px;border:1px solid var(--line);border-radius:10px;padding:10px 12px}.libre summary{cursor:pointer}
+@media(max-width:900px){.pgrid{grid-template-columns:minmax(0,1fr)}}
+@media print{body.printing *{visibility:hidden!important}body.printing #procDoc,body.printing #procDoc *{visibility:visible!important}body.printing #procDoc{position:absolute;left:0;top:0;width:100%;padding:0}body.printing .pprev{border:0;max-height:none;overflow:visible}body.printing{background:#fff}@page{margin:16mm}}
 @media(prefers-reduced-motion:reduce){#toast{transition:none}}
 </style>
 <script>window.__errs=[];window.addEventListener('error',function(e){var m=(e.message||'Error')+(e.lineno?' (línea '+e.lineno+':'+e.colno+')':'')+(e.filename?' '+String(e.filename).slice(-60):'');window.__errs.push(m);var b=document.getElementById('jsErr');if(!b){b=document.createElement('pre');b.id='jsErr';b.style.cssText='position:fixed;left:8px;right:8px;bottom:8px;z-index:99;background:#7a1d0e;color:#fff;padding:10px 12px;border-radius:8px;font:12px/1.4 monospace;white-space:pre-wrap;max-height:40vh;overflow:auto';(document.body||document.documentElement).appendChild(b)}b.textContent='Error de la aplicación (envía una captura a soporte):\n'+window.__errs.join('\n')});</script>
@@ -141,6 +172,7 @@ td button.lnk{text-align:left}
   <button id="btnNew" class="btn pri" hidden>+ Diagrama general</button>
 </header>
 <div id="banner"></div>
+<nav id="steps" class="steps" hidden aria-label="Pasos del asistente"></nav>
 <main id="mapa" class="grid">
   <aside id="tree" class="col"></aside>
   <section class="col center">
@@ -166,6 +198,7 @@ td button.lnk{text-align:left}
   </section>
   <aside id="panel" class="col"></aside>
 </main>
+<main id="wiz" hidden></main>
 <main id="port" hidden>
   <div class="kpis" id="kpis"></div>
   <div class="filters">
@@ -380,6 +413,8 @@ function render(force){
   const d=D(S.cur);if(S.act&&!actOf(d,S.act))S.act=null;
   $('#mapa').hidden=S.view!=='mapa';$('#port').hidden=S.view!=='port';
   document.querySelectorAll('#views button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.view));
+  $('#wiz').hidden=S.view!=='wiz';steps();
+  if(S.view==='wiz'){if(D(S.cur)){if(force||!S.wzDirty)wzRender();return}S.view='mapa';$('#wiz').hidden=true}
   if(S.view==='port'){portfolio();return}
   tree();crumbs();actSel();panel(force);toolbar();drawStage()}
 function toolbar(){const d=D(S.cur),gen=isGen(d);
@@ -535,6 +570,181 @@ function startDictado(){
   try{rec.start()}catch(e){toast('No se pudo iniciar el dictado.');stopDictado();return}
   const b=$('#dicBtn');b.classList.add('on');b.textContent='Detener dictado';$('#dicInterim').textContent='Escuchando…'}
 
+/* ---------- asistente por pasos ---------- */
+const PASOS=[['Flujo','Dibuja el proceso actividad por actividad.'],['Camino principal','Resume el flujo en 5 o 6 grandes actividades.'],['SIPOC','Proveedores, entradas, salidas y clientes de cada gran actividad.'],['Procedimiento','Documento formal generado con lo anterior.'],['Oportunidades','Preguntas sencillas para encontrar mejoras.']];
+const QS=[
+  {k:'espera',c:'Esperas',q:'¿Hay esperas o tiempos muertos antes o durante esta actividad?'},
+  {k:'reproceso',c:'Reprocesos',q:'¿Se repite o se corrige trabajo con frecuencia?'},
+  {k:'manual',c:'Trabajo manual',q:'¿Se hace a mano algo que podría hacerse con un sistema o plantilla?'},
+  {k:'duplicado',c:'Duplicidad',q:'¿Se pide o se captura la misma información más de una vez?'},
+  {k:'traslado',c:'Traslados',q:'¿Hay traslados de documentos, materiales o personas que se podrían evitar?'},
+  {k:'aprobacion',c:'Aprobaciones',q:'¿Requiere firmas o aprobaciones de más?'},
+  {k:'error',c:'Errores y quejas',q:'¿Ocurren errores, faltantes o quejas con frecuencia?'},
+  {k:'estandar',c:'Falta de estándar',q:'¿No está claro quién lo hace, cómo o cuándo?'}];
+const wzEdit=()=>canWrite?'':' disabled';
+function happyPath(d){
+  const acts=orderActs(d);if(!acts.length)return[];
+  const idx=Object.fromEntries(acts.map((a,i)=>[a.id,i]));
+  let cur=acts.find(a=>a.forma==='Inicio')||acts[0];const seen=new Set(),path=[];
+  while(cur&&!seen.has(cur.id)&&path.length<500){
+    seen.add(cur.id);path.push(cur);if(cur.forma==='Fin')break;
+    const c=cur.forma==='Decisión'&&(cur.ramas||[]).length?cur.ramas.map(r=>r.dest).filter(id=>id in idx):(cur.sig||[]).filter(id=>id in idx);
+    const fw=c.filter(id=>idx[id]>idx[cur.id]&&!seen.has(id));
+    const nx=fw.length?fw[0]:(acts[idx[cur.id]+1]?acts[idx[cur.id]+1].id:null);
+    cur=nx?acts[idx[nx]]:null}
+  return path}
+function core(d){const p=happyPath(d),c=p.filter(a=>a.forma!=='Inicio'&&a.forma!=='Fin');return c.length?c:p}
+function moda(arr){const m={};let b='',n=0;arr.filter(Boolean).forEach(x=>{m[x]=(m[x]||0)+1;if(m[x]>n){n=m[x];b=x}});return b}
+function proponer(d,k){
+  const c=core(d);if(!c.length)return[];k=Math.max(1,Math.min(k,c.length));
+  const base=Math.floor(c.length/k),extra=c.length%k,out=[];let i=0;
+  for(let g=0;g<k;g++){const n=base+(g<extra?1:0),grp=c.slice(i,i+n);i+=n;
+    const name=(grp.find(a=>a.forma!=='Decisión')||grp[0]).nombre;
+    out.push({id:uid(),nombre:name,responsable:moda(grp.map(a=>a.responsable)),acts:grp.map(a=>a.id),sipoc:{p:'',e:'',s:'',c:''}})}
+  return out}
+function wzInit(d){
+  if(S.wzFor===d.id)return;S.wzFor=d.id;S.wzDirty=false;
+  S.wz=clone(Array.isArray(d.macro)&&d.macro.length?d.macro:proponer(d,core(d).length<=6?core(d).length:(core(d).length<=10?5:6)));
+  S.wp=clone(d.proc||{});S.wc=clone(d.chk||{})}
+function pasoHecho(d,n){
+  if(n===1)return(d.actividades||[]).length>=2;
+  if(n===2)return Array.isArray(d.macro)&&d.macro.length>0;
+  if(n===3)return(d.macro||[]).some(m=>m.sipoc&&(m.sipoc.e||m.sipoc.s));
+  if(n===4)return!!(d.proc&&d.proc.objetivo);
+  if(n===5)return Object.values(S.items).some(i=>i.diagramaId===d.id&&i.tipo==='oportunidad')}
+function steps(){
+  const el=$('#steps'),d=D(S.cur);
+  if(!d||(S.view!=='mapa'&&S.view!=='wiz')){el.hidden=true;return}
+  const cur=S.view==='mapa'?1:S.step;el.hidden=false;
+  el.innerHTML=`<span class="st-t">${esc(d.nombre)}</span>${PASOS.map((p,i)=>`<button class="st${cur===i+1?' on':''}${pasoHecho(d,i+1)?' ok':''}" data-a="paso" data-n="${i+1}"><b>${pasoHecho(d,i+1)&&cur!==i+1?'✓':i+1}</b>${p[0]}</button>`).join('<span class="st-s">›</span>')}`}
+function irPaso(n){if(S.view==='wiz'&&S.wzDirty&&canWrite&&!confirmarSalida())return;S.view=n===1?'mapa':'wiz';S.step=n;S.act=S.view==='mapa'?S.act:null;render(true);window.scrollTo(0,0)}
+function confirmarSalida(){toast('Tienes cambios sin guardar en este paso. Pulsa Guardar o vuelve a hacer clic para descartarlos.');S.wzDirty=false;return false}
+function wzRender(){
+  const d=D(S.cur),w=$('#wiz');wzInit(d);
+  const n=S.step||2,head=`<div class="wz-h"><p class="eyebrow">Paso ${n} de 5</p><h2>${PASOS[n-1][0]}</h2><p class="mut">${PASOS[n-1][1]}</p></div>`;
+  let h='';
+  if(n===2)h=wzPaso2(d);else if(n===3)h=wzPaso3(d);else if(n===4)h=wzPaso4(d);else h=wzPaso5(d);
+  w.innerHTML=`<div class="col wz">${head}${h}</div>`;
+  if(n===4)procPreview()}
+const nav=(prev,next,saveLbl)=>`<div class="row end wz-nav"><button class="btn" data-a="paso" data-n="${prev}">‹ Paso anterior</button>${canWrite?`<button class="btn" data-a="wz-save">${saveLbl||'Guardar'}</button>`:''}${next?`<button class="btn pri" data-a="wz-save" data-next="${next}">${canWrite?'Guardar y continuar ›':'Siguiente ›'}</button>`:''}</div>`;
+function actChip(a,mi,first,last,k){return `<span class="chip2">${first&&mi>0&&canWrite?`<button data-a="wz-mv" data-m="${mi}" data-dir="-1" title="Pasar a la gran actividad anterior" aria-label="Pasar a la anterior">‹</button>`:''}${esc(a.nombre)}${last&&mi<k-1&&canWrite?`<button data-a="wz-mv" data-m="${mi}" data-dir="1" title="Pasar a la siguiente gran actividad" aria-label="Pasar a la siguiente">›</button>`:''}</span>`}
+function wzPaso2(d){
+  const c=core(d);if(c.length<2)return `<p>Primero dibuja el flujo con al menos dos actividades.</p><div class="row"><button class="btn pri" data-a="paso" data-n="1">Ir al paso 1</button></div>`;
+  const W=S.wz,k=W.length,inPath=new Set(W.flatMap(m=>m.acts)),fuera=orderActs(d).filter(a=>!inPath.has(a.id)&&a.forma!=='Inicio'&&a.forma!=='Fin');
+  return `<div class="chev">${W.map((m,i)=>`<div class="cv"><small>${i+1}</small>${esc(m.nombre||'Sin nombre')}<i>${esc(m.responsable||'')}</i></div>`).join('')}</div>
+  <p class="hint">La herramienta siguió el camino normal del proceso (la primera opción de cada decisión, sin retrocesos) y lo agrupó. Ponle a cada bloque un nombre con <b>verbo + objeto</b> (p. ej. “Elaborar presupuesto”). Usa ‹ › para mover actividades entre bloques.</p>
+  ${canWrite?`<div class="row"><label class="inl">Grandes actividades <select id="wzK">${[3,4,5,6,7].filter(x=>x<=c.length).map(x=>`<option${x===k?' selected':''}>${x}</option>`).join('')}</select></label><button class="btn sm" data-a="wz-propose">Volver a proponer</button></div>`:''}
+  <div class="mgrid">${W.map((m,i)=>`<div class="mcard"><div class="mh"><span class="mn">${i+1}</span><input data-f="nombre" data-m="${i}" value="${esc(m.nombre)}" aria-label="Nombre de la gran actividad"${wzEdit()}></div>
+    <label>Responsable<input data-f="responsable" data-m="${i}" value="${esc(m.responsable||'')}" list="dlRespW"${wzEdit()}></label>
+    <div class="chips">${m.acts.map((id,j)=>{const a=actOf(d,id);return a?actChip(a,i,j===0,j===m.acts.length-1,k):''}).join('')}</div></div>`).join('')}</div>
+  <datalist id="dlRespW">${responsables().map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
+  ${fuera.length?`<details class="fuera"><summary>Actividades fuera del camino principal (${fuera.length})</summary><p class="hint">Son variantes o excepciones (retrocesos, caminos alternos). Aparecerán en el procedimiento como “Excepciones”.</p><ul>${fuera.map(a=>`<li>${esc(a.nombre)}${a.responsable?' · '+esc(a.responsable):''}</li>`).join('')}</ul></details>`:''}
+  ${nav(1,3)}`}
+function wzPaso3(d){
+  const W=S.wz;if(!(Array.isArray(d.macro)&&d.macro.length))return `<p>Primero confirma las grandes actividades.</p><div class="row"><button class="btn pri" data-a="paso" data-n="2">Ir al paso 2</button></div>`;
+  const ta=(i,f,ph)=>`<textarea data-s="${f}" data-m="${i}" rows="4" placeholder="${ph}"${wzEdit()}>${esc((W[i].sipoc||{})[f]||'')}</textarea>`;
+  return `<p class="hint">Escribe un elemento por línea. <b>Proveedores</b>: quién entrega. <b>Entradas</b>: qué se recibe (información, documentos, materiales). <b>Salidas</b>: qué se entrega al terminar. <b>Clientes</b>: quién recibe esas salidas (pueden ser áreas internas).</p>
+  ${canWrite?`<div class="row"><button class="btn sm" data-a="wz-sug">Sugerir conexiones entre actividades</button><span class="hint" style="margin:0">Copia las salidas de cada actividad como entradas de la siguiente (solo en celdas vacías).</span></div>`:''}
+  <div class="tbl sip"><table class="stack"><thead><tr><th>Proveedores</th><th>Entradas</th><th>Gran actividad</th><th>Salidas</th><th>Clientes</th></tr></thead><tbody>
+  ${W.map((m,i)=>`<tr><td>${ta(i,'p','Ej.: Cliente')}</td><td>${ta(i,'e','Ej.: Planos y alcance')}</td><td class="sp"><b>${i+1}. ${esc(m.nombre)}</b><br><small>${esc(m.responsable||'')}</small></td><td>${ta(i,'s','Ej.: Presupuesto aprobado')}</td><td>${ta(i,'c','Ej.: Gerencia comercial')}</td></tr>`).join('')}
+  </tbody></table></div>${nav(2,4)}`}
+const PF=[['codigo','Código','Ej.: PR-COM-01'],['version','Versión','1'],['fecha','Fecha de vigencia',''],['elaboro','Elaborado por',''],['aprobo','Aprobado por','']];
+const PT=[['objetivo','Objetivo','Para qué existe este procedimiento. Ej.: Establecer los pasos para elaborar y enviar presupuestos a clientes.'],['alcance','Alcance','Dónde empieza y dónde termina, y a qué áreas aplica.'],['definiciones','Definiciones','Términos que alguien nuevo no entendería (uno por línea).'],['referencias','Documentos y registros','Formularios, plantillas o sistemas que se usan (uno por línea).']];
+function wzPaso4(d){
+  if(!(Array.isArray(d.macro)&&d.macro.length))return `<p>Primero confirma las grandes actividades (paso 2).</p><div class="row"><button class="btn pri" data-a="paso" data-n="2">Ir al paso 2</button></div>`;
+  const p=S.wp;
+  return `<div class="pgrid"><div class="pform">${canWrite?`<div class="two">${PF.map(([k,l,ph])=>`<label>${l}<input data-p="${k}" ${k==='fecha'?'type="date"':''} value="${esc(p[k]||'')}" placeholder="${ph}"></label>`).join('')}</div>
+  ${PT.map(([k,l,ph])=>`<label>${l}<textarea data-p="${k}" rows="${k==='objetivo'||k==='alcance'?3:3}" placeholder="${ph}">${esc(p[k]||'')}</textarea></label>`).join('')}
+  <p class="hint">Las responsabilidades, el SIPOC, la descripción paso a paso, las excepciones, los indicadores y el diagrama se completan solos con lo que ya registraste.</p>`:'<p class="hint">Vista de consulta del procedimiento.</p>'}
+  <div class="row"><button class="btn sm" data-a="proc-print">Imprimir / Guardar PDF</button><button class="btn sm" data-a="proc-copy">Copiar para Word o Google Docs</button></div></div>
+  <div class="pprev"><div id="procDoc" class="doc"></div></div></div>${nav(3,5)}`}
+function lines(t){return String(t||'').split(/\n+/).map(x=>x.trim()).filter(Boolean)}
+const ulOf=t=>{const l=lines(t);return l.length?'<ul>'+l.map(x=>`<li>${esc(x)}</li>`).join('')+'</ul>':'<p class="pend">Pendiente.</p>'};
+function procHTML(d,p,W){
+  const acts=orderActs(d),num=Object.fromEntries(acts.map((a,i)=>[a.id,i+1])),inP=new Set(W.flatMap(m=>m.acts));
+  const resp={};acts.forEach(a=>{const r=(a.responsable||'').trim()||'Sin responsable';(resp[r]=resp[r]||[]).push(a)});
+  const fuera=acts.filter(a=>!inP.has(a.id)&&a.forma!=='Inicio'&&a.forma!=='Fin');
+  const ind=Object.values(S.items).filter(i=>i.diagramaId===d.id&&i.tipo==='indicador');
+  const fila=a=>`<tr><td>${num[a.id]}</td><td><b>${esc(a.nombre)}</b>${a.forma==='Decisión'&&(a.ramas||[]).length?'<br><small>'+a.ramas.map(r=>{const t=actOf(d,r.dest);return esc(r.etiqueta)+' → '+(t?num[t.id]+'. '+esc(t.nombre):'—')}).join('; ')+'</small>':''}</td><td>${esc(a.responsable||'')}</td><td>${esc(a.descripcion||'')}</td></tr>`;
+  const L=layoutFlow(d),img='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(L.svg);
+  return `<table class="dh"><tr><td rowspan="2" class="dt"><small>PROCEDIMIENTO</small><br>${esc(d.nombre)}</td><td>Código<br><b>${esc(p.codigo||'—')}</b></td><td>Versión<br><b>${esc(p.version||'1')}</b></td></tr><tr><td>Vigencia<br><b>${esc(p.fecha||'—')}</b></td><td>Responsable del proceso<br><b>${esc(d.dueno||'—')}</b></td></tr></table>
+  <h3>1. Objetivo</h3>${p.objetivo?`<p>${esc(p.objetivo)}</p>`:'<p class="pend">Pendiente.</p>'}
+  <h3>2. Alcance</h3>${p.alcance?`<p>${esc(p.alcance)}</p>`:'<p class="pend">Pendiente.</p>'}
+  <h3>3. Responsabilidades</h3><ul>${Object.entries(resp).map(([r,l])=>`<li><b>${esc(r)}:</b> ${l.map(a=>esc(a.nombre)).join('; ')}.</li>`).join('')}</ul>
+  <h3>4. Definiciones</h3>${ulOf(p.definiciones)}
+  <h3>5. Documentos y registros</h3>${ulOf(p.referencias)}
+  <h3>6. Visión general (SIPOC)</h3><table class="dt2"><thead><tr><th>Proveedores</th><th>Entradas</th><th>Actividad</th><th>Salidas</th><th>Clientes</th></tr></thead><tbody>${W.map((m,i)=>{const s=m.sipoc||{};const c=t=>lines(t).map(esc).join('<br>')||'—';return `<tr><td>${c(s.p)}</td><td>${c(s.e)}</td><td><b>${i+1}. ${esc(m.nombre)}</b></td><td>${c(s.s)}</td><td>${c(s.c)}</td></tr>`}).join('')}</tbody></table>
+  <h3>7. Descripción del procedimiento</h3>${W.map((m,i)=>`<h4>7.${i+1} ${esc(m.nombre)}${m.responsable?` <small>· ${esc(m.responsable)}</small>`:''}</h4><table class="dt2"><thead><tr><th>#</th><th>Actividad</th><th>Responsable</th><th>Descripción</th></tr></thead><tbody>${m.acts.map(id=>actOf(d,id)).filter(Boolean).map(fila).join('')}</tbody></table>`).join('')}
+  ${fuera.length?`<h4>7.${W.length+1} Excepciones y variantes</h4><table class="dt2"><thead><tr><th>#</th><th>Actividad</th><th>Responsable</th><th>Descripción</th></tr></thead><tbody>${fuera.map(fila).join('')}</tbody></table>`:''}
+  <h3>8. Indicadores</h3>${ind.length?`<table class="dt2"><thead><tr><th>Indicador</th><th>Fórmula</th><th>Meta</th><th>Frecuencia</th><th>Responsable</th></tr></thead><tbody>${ind.map(i=>`<tr><td>${esc(i.titulo)}</td><td>${esc(i.descripcion||'')}</td><td>${esc((i.sentido==='min'?'≤ ':'≥ ')+(i.meta||'—')+' '+(i.unidad||''))}</td><td>${esc(i.frecuencia||'')}</td><td>${esc(i.responsable||'')}</td></tr>`).join('')}</tbody></table>`:'<p class="pend">Sin indicadores registrados para este proceso.</p>'}
+  <h3>9. Diagrama de flujo</h3><img class="dimg" src="${img}" alt="Diagrama de flujo de ${esc(d.nombre)}">
+  <h3>10. Control de cambios</h3><table class="dt2"><thead><tr><th>Versión</th><th>Fecha</th><th>Elaboró</th><th>Aprobó</th></tr></thead><tbody><tr><td>${esc(p.version||'1')}</td><td>${esc(p.fecha||'')}</td><td>${esc(p.elaboro||'')}</td><td>${esc(p.aprobo||'')}</td></tr></tbody></table>`}
+function procPreview(){const el=$('#procDoc'),d=D(S.cur);if(el&&d)el.innerHTML=procHTML(d,S.wp,S.wz)}
+function wzPaso5(d){
+  const W=S.wz,acts=orderActs(d),inP=new Set(W.flatMap(m=>m.acts)),C=S.wc;
+  const groups=(W.length?W.map((m,i)=>({t:`${i+1}. ${m.nombre}`,l:m.acts.map(id=>actOf(d,id)).filter(Boolean)})):[]);
+  const otros=acts.filter(a=>!inP.has(a.id)&&a.forma!=='Inicio'&&a.forma!=='Fin');
+  if(!W.length)groups.push({t:'Actividades',l:otros.splice(0)});else if(otros.length)groups.push({t:'Excepciones y variantes',l:otros});
+  const reg=new Set(Object.values(S.items).filter(i=>i.diagramaId===d.id&&i.origen).map(i=>i.origen));
+  const ops=Object.values(S.items).filter(i=>i.diagramaId===d.id&&i.tipo==='oportunidad');
+  return `<p class="hint">Revisa cada actividad y marca las preguntas que respondas con <b>“sí”</b>. Cada marca se convierte en una oportunidad sugerida que puedes ajustar y registrar. Pasa el cursor sobre el título de cada columna para ver la pregunta completa.</p>
+  <ol class="qlist">${QS.map(q=>`<li><b>${esc(q.c)}:</b> ${esc(q.q)}</li>`).join('')}</ol>
+  <div class="tbl mx"><table><thead><tr><th>Actividad</th>${QS.map(q=>`<th title="${esc(q.q)}">${esc(q.c)}</th>`).join('')}</tr></thead><tbody>
+  ${groups.map(g=>`<tr class="gr"><td colspan="${QS.length+1}">${esc(g.t)}</td></tr>`+g.l.map(a=>`<tr><td>${esc(a.nombre)}<br><small>${esc(a.responsable||'')}</small></td>${QS.map((q,qi)=>{const on=(C[a.id]||[]).includes(q.k),done=reg.has(a.id+'|'+q.k);return `<td class="ck"><input type="checkbox" data-q="${q.k}" data-id="${esc(a.id)}"${on||done?' checked':''}${done||!canWrite?' disabled':''} aria-label="${esc(q.c+': '+a.nombre)}"></td>`}).join('')}</tr>`).join('')).join('')}
+  </tbody></table></div>
+  <div id="sugBox">${sugHTML(d)}</div>
+  ${canWrite?`<details class="libre"><summary><b>Registrar otra oportunidad libremente</b></summary><div class="two"><label>Título<input id="olT"></label><label>Actividad<select id="olA"><option value="">Proceso completo</option>${acts.map(a=>`<option value="${esc(a.id)}">${esc(a.nombre)}</option>`).join('')}</select></label></div><label>Descripción<textarea id="olD" rows="2"></textarea></label><div class="row"><label class="inl">Prioridad <select id="olP"><option>Alta</option><option selected>Media</option><option>Baja</option></select></label><button class="btn sm pri" data-a="op-libre">Registrar</button></div></details>`:''}
+  <h4 style="margin-top:16px">Oportunidades registradas en este proceso (${ops.length})</h4>${ops.length?ops.map(card).join(''):'<p class="mut">Aún no hay.</p>'}
+  <div class="row end wz-nav"><button class="btn" data-a="paso" data-n="4">‹ Paso anterior</button><button class="btn" data-a="go-port">Ver portafolio de mejora</button></div>`}
+function sugHTML(d){
+  const C=S.wc,reg=new Set(Object.values(S.items).filter(i=>i.diagramaId===d.id&&i.origen).map(i=>i.origen)),sug=[];
+  orderActs(d).forEach(a=>(C[a.id]||[]).forEach(k=>{const q=QS.find(x=>x.k===k);if(q&&!reg.has(a.id+'|'+k))sug.push({a,q})}));
+  if(!sug.length||!canWrite)return '';
+  return `<div class="sug"><h4>Oportunidades sugeridas (${sug.length})</h4><p class="hint">Ajusta el título para que diga qué pasa (p. ej. “Esperamos 3 días la firma del gerente”) y registra.</p>
+  ${sug.map((s,i)=>`<div class="sr"><input type="checkbox" data-sg="${i}" checked aria-label="Incluir"><input class="st2" data-sgt="${i}" value="${esc(s.q.c+': '+s.a.nombre)}" aria-label="Título"><select data-sgp="${i}" aria-label="Prioridad"><option>Alta</option><option selected>Media</option><option>Baja</option></select><input type="hidden" data-sgk="${i}" value="${esc(s.a.id+'|'+s.q.k)}"></div>`).join('')}
+  <div class="row"><button class="btn pri sm" data-a="op-reg">Registrar oportunidades seleccionadas</button></div></div>`}
+function wzSave(next){
+  const d=D(S.cur),n=S.step;
+  if(canWrite){
+    if(n===2){if(S.wz.some(m=>!m.nombre.trim())){toast('Ponle nombre a cada gran actividad.');return}
+      const old=Object.fromEntries((d.macro||[]).map(m=>[m.id,m]));S.wz=S.wz.map(m=>({...m,sipoc:(old[m.id]||{}).sipoc||m.sipoc||{p:'',e:'',s:'',c:''}}));put('diagramas',{...d,macro:clone(S.wz)})}
+    else if(n===3)put('diagramas',{...d,macro:clone(S.wz)});
+    else if(n===4)put('diagramas',{...d,proc:clone(S.wp)});
+    S.wzDirty=false;toast('Guardado.')}
+  if(next)irPaso(+next)}
+function regOps(list){const d=D(S.cur);list.forEach(o=>put('items',{id:uid(),tipo:'oportunidad',diagramaId:d.id,actividadId:o.act||null,titulo:o.t,descripcion:o.desc||'',prioridad:o.p,estado:'Identificada',categoria:o.cat||'',origen:o.origen||'',actualizado:new Date().toISOString()}));
+  put('diagramas',{...D(d.id),chk:clone(S.wc)});toast(list.length===1?'1 oportunidad registrada.':list.length+' oportunidades registradas.')}
+function wzClick(b){
+  const a=b.dataset.a,d=D(S.cur);
+  if(a==='paso'){irPaso(+b.dataset.n);return true}
+  if(a==='wz-save'){wzSave(b.dataset.next);return true}
+  if(a==='wz-propose'){const k=+($('#wzK')||{}).value||5;S.wz=proponer(d,k);S.wzDirty=true;wzRender();return true}
+  if(a==='wz-mv'){const i=+b.dataset.m,dir=+b.dataset.dir,W=S.wz;
+    if(dir<0){if(W[i].acts.length<2){toast('Cada gran actividad debe tener al menos una actividad.');return true}W[i-1].acts.push(W[i].acts.shift())}
+    else{if(W[i].acts.length<2){toast('Cada gran actividad debe tener al menos una actividad.');return true}W[i+1].acts.unshift(W[i].acts.pop())}
+    S.wzDirty=true;wzRender();return true}
+  if(a==='wz-sug'){const W=S.wz;W.forEach((m,i)=>{m.sipoc=m.sipoc||{p:'',e:'',s:'',c:''};
+    if(i>0&&!m.sipoc.e.trim()&&(W[i-1].sipoc||{}).s)m.sipoc.e=W[i-1].sipoc.s;
+    if(i>0&&!m.sipoc.p.trim()&&W[i-1].responsable)m.sipoc.p=W[i-1].responsable;
+    if(i<W.length-1&&!m.sipoc.c.trim()&&W[i+1].responsable)m.sipoc.c=W[i+1].responsable});S.wzDirty=true;wzRender();toast('Conexiones sugeridas. Revisa y completa.');return true}
+  if(a==='proc-print'){procPreview();document.body.classList.add('printing');setTimeout(()=>{try{window.print()}catch(e){toast('El navegador no permitió imprimir.')}document.body.classList.remove('printing')},50);return true}
+  if(a==='proc-copy'){const html=$('#procDoc').innerHTML;
+    try{navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([`<div style="font-family:Arial">${html}</div>`],{type:'text/html'}),'text/plain':new Blob([$('#procDoc').innerText],{type:'text/plain'})})]).then(()=>toast('Copiado. Pégalo en Word o Google Docs con Ctrl+V.'),()=>toast('El navegador no permitió copiar. Usa Imprimir › Guardar como PDF.'))}catch(e){toast('El navegador no permitió copiar. Usa Imprimir › Guardar como PDF.')}return true}
+  if(a==='op-reg'){const list=[...document.querySelectorAll('#sugBox [data-sg]')].filter(x=>x.checked).map(x=>{const i=x.dataset.sg,[act,k]=document.querySelector(`[data-sgk="${i}"]`).value.split('|'),q=QS.find(z=>z.k===k);
+      return{t:document.querySelector(`[data-sgt="${i}"]`).value.trim()||q.c,p:document.querySelector(`[data-sgp="${i}"]`).value,act,cat:q.c,desc:q.q,origen:act+'|'+k}});
+    if(!list.length){toast('No hay oportunidades seleccionadas.');return true}regOps(list);return true}
+  if(a==='op-libre'){const t=$('#olT').value.trim();if(!t){toast('Escribe el título de la oportunidad.');return true}
+    regOps([{t,p:$('#olP').value,act:$('#olA').value||null,desc:$('#olD').value.trim(),cat:'Libre'}]);return true}
+  if(a==='go-port'){S.scope={d:d.id,a:null,label:d.nombre};S.view='port';$('#fTipo').value='oportunidad';render();return true}
+  return false}
+function wzInput(e){const t=e.target;if(!t.closest('#wiz'))return;
+  if(t.dataset.f){S.wz[+t.dataset.m][t.dataset.f]=t.value;S.wzDirty=true;const cv=document.querySelectorAll('.chev .cv')[+t.dataset.m];if(cv)cv.innerHTML=`<small>${+t.dataset.m+1}</small>${esc(S.wz[+t.dataset.m].nombre||'Sin nombre')}<i>${esc(S.wz[+t.dataset.m].responsable||'')}</i>`}
+  else if(t.dataset.s){const m=S.wz[+t.dataset.m];m.sipoc=m.sipoc||{p:'',e:'',s:'',c:''};m.sipoc[t.dataset.s]=t.value;S.wzDirty=true}
+  else if(t.dataset.p){S.wp[t.dataset.p]=t.value;S.wzDirty=true;procPreview()}
+  else if(t.dataset.q&&t.type==='checkbox'){const id=t.dataset.id,arr=S.wc[id]=S.wc[id]||[];if(t.checked){if(!arr.includes(t.dataset.q))arr.push(t.dataset.q)}else S.wc[id]=arr.filter(x=>x!==t.dataset.q);$('#sugBox').innerHTML=sugHTML(D(S.cur))}
+  else if(t.id==='wzK'){S.wz=proponer(D(S.cur),+t.value);S.wzDirty=true;wzRender()}}
+document.addEventListener('input',wzInput);
+
 /* ---------- portafolio ---------- */
 function portRows(){
   let rows=Object.values(S.items);
@@ -576,12 +786,13 @@ function diagDlg(ex,parent){
     if(up.kind!=='pdf')toast('Usa “Actividades (formulario)” o “Más opciones” para marcar las actividades.')})}
 
 /* ---------- acciones ---------- */
-function openDiag(id,act){S.cur=id;S.act=act||null;S.form=null;S.view='mapa';const a=actOf(D(id),S.act);S.page=a&&!isGen(D(id))?(a.pag||1):1;render(true)}
+function openDiag(id,act){if(S.view==='wiz'&&id!==S.cur){S.view='mapa'}S.cur=id;S.act=act||null;S.form=null;S.view='mapa';const a=actOf(D(id),S.act);S.page=a&&!isGen(D(id))?(a.pag||1):1;render(true)}
 function selAct(id){const d=D(S.cur),a=actOf(d,id);S.act=a?a.id:null;S.form=null;if(a&&!isGen(d)&&(a.pag||1)!==S.page)S.page=a.pag||1;
   if(a&&S.auto){const ch=kids(d.id,a.id);if(ch.length===1){openDiag(ch[0].id);return}}render(true)}
 function armed(b){if(b.dataset.armed)return true;b.dataset.armed=1;const t=b.textContent;b.textContent='¿Confirmar?';setTimeout(()=>{if(b.isConnected){delete b.dataset.armed;b.textContent=t}},3000);return false}
 document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,id=b.dataset.id;
+  if(wzClick(b))return;
   if(a==='sel-act'){const now=Date.now();if(id&&lastClk.id===id&&now-lastClk.t<450&&!S.edit){lastClk={};const ch=kids(S.cur,id);if(ch.length){openDiag(ch[0].id);return}}lastClk={id,t:now};selAct(id)}
   else if(a==='open-diag')openDiag(id,b.dataset.act||null);
   else if(a==='new-root')diagDlg(null,null);
@@ -695,7 +906,7 @@ async function adminInit(){$('#views').hidden=$('#btnRefresh').hidden=true;$('#m
 
   $('#cliName').textContent=BOOT.cliente.nombre;$('#modeTag').textContent=canWrite?'Gestionar':'Ver';$('#modeTag').classList.toggle('g',canWrite);
   $('#btnNew').hidden=!canWrite;$('#banner').textContent='Cargando…';render(true);load();
-  setInterval(()=>{if(!pending&&!S.form&&!$('#dlg').open&&document.visibilityState==='visible')load()},120000);
+  setInterval(()=>{if(!pending&&!S.form&&S.view!=='wiz'&&!$('#dlg').open&&document.visibilityState==='visible')load()},120000);
 })();
 }
 </script>
