@@ -281,12 +281,17 @@ const openIn=ids=>Object.values(S.items).filter(i=>ids.has(i.diagramaId)&&isOpen
 const hasFile=d=>!!(d&&d.assetId);
 const isGen=d=>!hasFile(d)||d.vista==='generado';
 function responsables(){return [...new Set(Object.values(S.diag).flatMap(d=>[(d.dueno||'').trim(),...(d.actividades||[]).map(a=>String(a.responsable||'').trim())]).filter(Boolean))].sort()}
-const STEPS=[['mapa','Mapa de procesos'],['flujo','Flujo'],['car','Caracterización'],['proc','Procedimiento'],['ops','Oportunidades']];
-const docsOn=d=>d.raiz||(d.docs!==undefined?!!d.docs:!d.parentActId);
-const stepsOf=d=>d.raiz?STEPS:STEPS.slice(1).filter(s=>docsOn(d)||s[0]==='flujo'||s[0]==='ops');
+const STEPS=[['mapa','Mapa de procesos'],['flujo','Flujo'],['car','Caracterización'],['proc','Procedimiento'],['ops','Oportunidades'],['area','Flujos del proceso']];
+const isArea=d=>!!d&&!d.raiz&&par(d)==='raiz'&&!d.parentActId;
+const nivel2=d=>{const p=D(par(d));return !!p&&(p.raiz||isArea(p))};
+const docsOn=d=>d.docs!==undefined?!!d.docs:nivel2(d);
+const FL=['flujo','car','proc','ops'];
+const stepsOf=d=>d.raiz?STEPS.filter(s=>s[0]==='mapa'||s[0]==='flujo'):isArea(d)?STEPS.filter(s=>s[0]==='area'):STEPS.filter(s=>FL.includes(s[0])&&(docsOn(d)||s[0]==='flujo'||s[0]==='ops'));
+const flowsOf=d=>kids(d.id,null);
 const stepKeys=d=>stepsOf(d).map(s=>s[0]).filter(s=>s!=='mapa');
 function hecho(d,s){if(!d)return false;
   if(s==='mapa')return mapKids().length>0;
+  if(s==='area')return flowsOf(d).length>0;
   if(s==='flujo')return(d.actividades||[]).length>=2;
   if(s==='car')return Array.isArray(d.macro)&&d.macro.length>0&&d.macro.some(m=>m.sipoc&&(m.sipoc.e||m.sipoc.s));
   if(s==='proc')return!!(d.proc&&d.proc.objetivo);
@@ -381,14 +386,15 @@ function render(force){
   drawer()}
 function crumbs(){const d=D(S.cur),an=ancestors(d.id);
   const nm=(i)=>i+1<an.length?an[i+1].d.nombre:d.nombre;
-  $('#crumbs').innerHTML=an.map((x,i)=>{const a0=actOf(x.d,x.act),a=a0&&norm(a0.nombre)!==norm(nm(i))?a0:null;return `<button data-a="node" data-id="${esc(x.d.id)}"${a?` data-sel="${esc(a.id)}"`:''}>${esc(x.d.raiz?'Empresa':x.d.nombre)}</button><span aria-hidden="true">›</span>${a?`<span class="via">${esc(a.nombre)}</span><span aria-hidden="true">›</span>`:''}`}).join('')+`<span class="cur">${esc(d.raiz?(d.nombre||'Empresa'):d.nombre)}</span>${d.raiz?'':`<span class="via">${esc(CATS.find(c=>c[0]===d.categoria)?.[1]||(d.parentActId?'Subproceso':'Proceso'))}</span>`}`}
+  $('#crumbs').innerHTML=an.map((x,i)=>{const a0=actOf(x.d,x.act),a=a0&&norm(a0.nombre)!==norm(nm(i))?a0:null;return `<button data-a="node" data-id="${esc(x.d.id)}"${a?` data-sel="${esc(a.id)}"`:''}>${esc(x.d.raiz?'Empresa':x.d.nombre)}</button><span aria-hidden="true">›</span>${a?`<span class="via">${esc(a.nombre)}</span><span aria-hidden="true">›</span>`:''}`}).join('')+`<span class="cur">${esc(d.raiz?(d.nombre||'Empresa'):d.nombre)}</span>${d.raiz?'':`<span class="via">${isArea(d)?'Proceso '+esc((CATS.find(c=>c[0]===d.categoria)||[,'sin clasificar'])[1].toLowerCase()):'Flujo'}</span>`}`}
 function steps(){const d=D(S.cur),L=stepsOf(d);
-  $('#steps').innerHTML=L.map(([k,l],i)=>`<button class="st${S.step===k?' on':''}${hecho(d,k)?' ok':''}" role="tab" aria-selected="${S.step===k}" data-a="step" data-s="${k}"><b>${hecho(d,k)&&S.step!==k?'✓':i+1}</b>${l}</button>`).join('')+(!d.raiz&&!docsOn(d)&&canWrite?'<button class="st" data-a="docs" data-v="1" style="border-style:dashed;color:var(--mut)"><b>+</b>Agregar caracterización y procedimiento</button>':'')}
+  $('#steps').innerHTML=L.map(([k,l],i)=>`<button class="st${S.step===k?' on':''}${hecho(d,k)?' ok':''}" role="tab" aria-selected="${S.step===k}" data-a="step" data-s="${k}"><b>${hecho(d,k)&&S.step!==k?'✓':i+1}</b>${l}</button>`).join('')+(!d.raiz&&!isArea(d)&&!docsOn(d)&&canWrite?'<button class="st" data-a="docs" data-v="1" style="border-style:dashed;color:var(--mut)"><b>+</b>Agregar caracterización y procedimiento</button>':'')}
 let ck='';
 function content(){
   const d=D(S.cur),key=d.id+'|'+S.step,el=$('#content');
   const rebuild=key!==ck||S.step!=='flujo';ck=key;
   if(S.step==='mapa'){el.innerHTML=isoHTML();return}
+  if(S.step==='area'){el.innerHTML=areaHTML(d);return}
   if(S.step==='flujo'){if(rebuild||!$('#viewport')){el.innerHTML=flujoShell(d);lastKey=''}flujoBar(d);drawStage();return}
   wzInit(d);
   if(S.step==='car')el.innerHTML=carHTML(d);
@@ -396,7 +402,7 @@ function content(){
   else if(S.step==='ops')el.innerHTML=opsHTML(d)}
 function goStep(s){if(S.dirty&&canWrite){if(!S.warned){S.warned=true;toast('Tienes cambios sin guardar. Pulsa Guardar, o vuelve a hacer clic para descartarlos.');return}}S.warned=false;S.dirty=false;S.step=s;S.sel=null;S.selMap=null;S.zonas=false;S.page=1;S.wzFor=null;render(true);window.scrollTo(0,0)}
 function goNode(id,step,selId){if(!D(id))return;if(S.dirty&&canWrite&&!S.warned&&id!==S.cur){S.warned=true;toast('Tienes cambios sin guardar. Pulsa Guardar, o vuelve a hacer clic para descartarlos.');return}
-  S.warned=false;S.dirty=false;S.view='app';S.cur=id;const d=D(id);S.step=step||(d.raiz?'mapa':'flujo');S.sel=selId||null;S.selMap=null;S.zonas=false;S.page=1;S.zoom=1;S.wzFor=null;render(true);window.scrollTo(0,0)}
+  S.warned=false;S.dirty=false;S.view='app';S.cur=id;const d=D(id);S.step=step||(d.raiz?'mapa':isArea(d)?'area':'flujo');S.sel=selId||null;S.selMap=null;S.zonas=false;S.page=1;S.zoom=1;S.wzFor=null;render(true);window.scrollTo(0,0)}
 const footNav=(d,saveBtn)=>{const L=stepsOf(d).map(x=>x[0]),i=L.indexOf(S.step),prev=L[i-1],next=L[i+1],lbl=s=>STEPS.find(x=>x[0]===s)[1];
   return `<div class="foot noprint"><div>${prev?`<button class="btn ghost" data-a="step" data-s="${prev}">‹ ${lbl(prev)}</button>`:''}</div><div class="row">${saveBtn&&canWrite?`<button class="btn" data-a="wz-save">Guardar</button>`:''}${next?`<button class="btn pri" data-a="${saveBtn&&canWrite?'wz-save':'step'}" data-s="${next}" data-next="${next}">${saveBtn&&canWrite?'Guardar y continuar':'Continuar'}: ${lbl(next)} ›</button>`:''}</div></div>`};
 
@@ -404,10 +410,17 @@ const footNav=(d,saveBtn)=>{const L=stepsOf(d).map(x=>x[0]),i=L.indexOf(S.step),
 const cfg=()=>S.items.cfg_mapa||{izq:'Necesidades del cliente',der:'Satisfacción del cliente'};
 const procOrd=c=>mapKids().filter(d=>d.categoria===c).sort((a,b)=>num(a.ordenMapa)-num(b.ordenMapa)||byName(a,b));
 function progSeg(d){const k=stepKeys(d);return `<span class="seg" title="${k.filter(s=>hecho(d,s)).length} de ${k.length} pasos completos">${k.map(s=>`<i class="${hecho(d,s)?'on':''}"></i>`).join('')}</span>`}
+function flowCard(f){const ops=openIn(new Set(subtree(f.id)));return `<div class="subc"><div class="subh"><b>${esc(f.nombre)}</b>${progSeg(f)}</div>${f.dueno?`<p class="mut" style="margin:-4px 2px 6px;font-size:12.5px">${esc(f.dueno)}${ops?` · <span style="color:#b42318">${ops} oportunidades abiertas</span>`:''}</p>`:''}${goBtns(f)}</div>`}
+function areaHTML(d){const fl=flowsOf(d),c=CATS.find(x=>x[0]===d.categoria);
+  return `<div class="sh"><div><h2>${esc(d.nombre)}</h2><p>${c?esc(c[2]):'Proceso sin clasificar'}${d.dueno?' · Responsable: '+esc(d.dueno):''}. ${fl.length?'Estos son sus flujos. Cada uno se caracteriza, se documenta y se analiza por separado.':'Crea el primer flujo de este proceso. Puede tener uno o varios (p. ej. “Cuentas por cobrar” y “Cuentas por pagar”).'}</p></div>
+  ${canWrite?`<div class="row"><button class="btn pri" data-a="flow-new" data-p="${esc(d.id)}">+ ${fl.length?'Agregar flujo':'Crear flujo'}</button><button class="btn sm" data-a="node-edit" data-id="${esc(d.id)}">Editar proceso</button></div>`:''}</div>
+  ${fl.length?`<div class="mgrid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">${fl.map(flowCard).join('')}</div>`:`<div class="card empty"><h3>Sin flujos todavía</h3><p>Un flujo describe paso a paso cómo se hace una parte de este proceso.</p>${canWrite?`<button class="btn pri" data-a="flow-new" data-p="${esc(d.id)}">+ Crear flujo</button>`:''}</div>`}
+  ${(d.actividades||[]).length?`<div class="card pad" style="margin-top:14px"><p class="mut" style="margin:0">Este proceso tenía actividades registradas en su propio flujo (versión anterior). ${canWrite?`<button class="lnk" data-a="area-migrar">Convertirlas en un flujo de este proceso</button>`:''}</p></div>`:''}
+  <div class="foot noprint"><button class="btn ghost" data-a="node" data-id="raiz" data-s="mapa">‹ Mapa de procesos</button><span></span></div>`}
 function isoHTML(){
   const cf=cfg(),unc=mapKids().filter(d=>!CATS.some(c=>c[0]===d.categoria)),root=D('raiz');
-  const band=c=>{const l=procOrd(c[0]);return `<section class="band ${c[3]}"><h3><span>${c[2]}<small>${c[4]}</small></span>${canWrite?`<button class="lnk noprint" data-a="proc-new" data-cat="${c[0]}">+ Agregar</button>`:''}</h3><div class="boxes">${l.length?l.map(d=>{const ops=openIn(new Set(subtree(d.id)));return `<button class="pbox${S.selMap===d.id?' sel':''}" data-a="mapsel" data-id="${esc(d.id)}"><b>${esc(d.nombre)}</b>${d.dueno?`<small>${esc(d.dueno)}</small>`:'<small>&nbsp;</small>'}<span class="meta2">${progSeg(d)}${ops?`<span class="op">${ops} abiertas</span>`:''}</span></button>`}).join(''):`<span class="emptyb">Aún no hay procesos aquí.</span>`}</div></section>`};
-  return `<div class="sh"><div><h2>Mapa de procesos</h2><p>${mapKids().length?'Selecciona un proceso para ver su avance y abrir su flujo, caracterización, procedimiento u oportunidades.':'Empieza por aquí: agrega los procesos de la empresa en su franja. No hace falta que estén completos; luego se detallan.'}</p></div>
+  const band=c=>{const l=procOrd(c[0]);return `<section class="band ${c[3]}"><h3><span>${c[2]}<small>${c[4]}</small></span>${canWrite?`<button class="lnk noprint" data-a="proc-new" data-cat="${c[0]}">+ Agregar</button>`:''}</h3><div class="boxes">${l.length?l.map(d=>{const ops=openIn(new Set(subtree(d.id)));return `<button class="pbox${S.selMap===d.id?' sel':''}" data-a="mapsel" data-id="${esc(d.id)}"><b>${esc(d.nombre)}</b>${d.dueno?`<small>${esc(d.dueno)}</small>`:'<small>&nbsp;</small>'}<span class="meta2"><span>${flowsOf(d).length?flowsOf(d).length+(flowsOf(d).length===1?' flujo':' flujos'):'Sin flujos'}</span>${ops?`<span class="op">${ops} abiertas</span>`:''}</span></button>`}).join(''):`<span class="emptyb">Aún no hay procesos aquí.</span>`}</div></section>`};
+  return `<div class="sh"><div><h2>Mapa de procesos</h2><p>${mapKids().length?'Selecciona un proceso para ver sus flujos o crear uno nuevo. Cada flujo tiene su caracterización, procedimiento y oportunidades.':'Empieza por aquí: agrega los procesos de la empresa en su franja. No hace falta que estén completos; luego se detallan.'}</p></div>
   <div class="row noprint">${canWrite?'<button class="btn sm" data-a="iso-lbl">Editar textos</button>':''}<button class="btn sm" data-a="print" data-t="isoMap">Imprimir / PDF</button></div></div>
   <div class="card ptarget" id="isoMap"><div class="iso"><div class="iso-side"><span>${esc(cf.izq)}</span></div><div class="iso-b">${CATS.map(band).join('')}</div><div class="iso-side r"><span>${esc(cf.der)}</span></div></div></div>
   ${unc.length?`<div class="card pad noprint" style="margin-top:14px"><h4 style="margin:0 0 4px">Procesos sin clasificar (${unc.length})</h4><p class="hint">Selecciónalos y asígnales una franja para que aparezcan en el mapa.</p><div class="row">${unc.map(d=>`<button class="btn sm" data-a="mapsel" data-id="${esc(d.id)}">${esc(d.nombre)}</button>`).join('')}</div></div>`:''}
@@ -416,7 +429,7 @@ function isoHTML(){
 /* ================= paso: flujo ================= */
 function flujoShell(d){
   const n=(d.actividades||[]).length;
-  return `<div class="sh"><div><h2>${d.raiz?'Flujo general de la empresa':'Flujo del proceso'}</h2><p>${n?'Haz clic en una actividad para ver su detalle y sus subprocesos. Para cambiar el orden, arrástrala a la izquierda o a la derecha. Cada responsable es un carril.':'Escribe o dicta las actividades en orden: quién las hace y qué se hace. La herramienta dibuja el diagrama de carriles.'}</p></div></div>
+  return `<div class="sh"><div><h2>${d.raiz?'Flujo general de la empresa':'Flujo del proceso'}</h2><p>${n?'Haz clic en una actividad para ver su detalle y bajar a sus flujos de detalle. Para cambiar el orden, arrástrala a la izquierda o a la derecha. Cada responsable es un carril.':'Escribe o dicta las actividades en orden: quién las hace y qué se hace. La herramienta dibuja el diagrama de carriles.'}</p></div></div>
   <div class="card"><div class="fbar noprint" id="fbar"></div>
   ${n||hasFile(d)?`<div id="viewport"><div id="stage" hidden><canvas id="cv"></canvas><img id="im" alt="Diagrama de ${esc(d.nombre)}" hidden><div id="ov"></div></div><div id="empty"></div></div>`:
   `<div class="empty"><h3>Este flujo aún no tiene actividades</h3><p>Ejemplo: “Recibir solicitud — Comercial”, “Revisar planos — Ingeniería”, “¿Planos completos? — decisión”.</p>${canWrite?'<div class="row" style="justify-content:center"><button class="btn pri" data-a="acts">Escribir actividades</button><button class="btn" data-a="acts" data-dictar="1">Dictar por voz</button></div>':''}</div>`}</div>
@@ -476,8 +489,10 @@ function drawer(){
   const dr=$('#drawer'),wrap=$('#wrap'),d=D(S.cur);let h='';
   if(S.step==='mapa'&&S.selMap&&D(S.selMap)){
     const n=D(S.selMap),c=CATS.find(x=>x[0]===n.categoria),l=c?procOrd(c[0]):[],i=l.indexOf(n);
-    h=`<button class="xclose" data-a="close-dr" aria-label="Cerrar">×</button><p class="eye">${esc(c?c[2]:'Sin clasificar')}</p><h3>${esc(n.nombre)}</h3><dl><dt>Responsable</dt><dd>${esc(n.dueno||'—')}</dd><dt>Avance</dt><dd>${progSeg(n)}</dd></dl>
-    <div class="dsec"><h4>Abrir</h4>${goBtns(n)}</div>
+    const fl=flowsOf(n);
+    h=`<button class="xclose" data-a="close-dr" aria-label="Cerrar">×</button><p class="eye">${esc(c?c[2]:'Sin clasificar')}</p><h3>${esc(n.nombre)}</h3><dl><dt>Responsable</dt><dd>${esc(n.dueno||'—')}</dd></dl>
+    <div class="dsec"><h4>Flujos de este proceso${fl.length?` (${fl.length})`:''}</h4>${fl.length?fl.map(flowCard).join(''):'<p class="hint">Aún no tiene flujos. Crea uno o varios (p. ej. “Cuentas por cobrar” y “Cuentas por pagar”).</p>'}
+    <div class="row">${canWrite?`<button class="btn sm${fl.length?'':' pri'}" data-a="flow-new" data-p="${esc(n.id)}">+ ${fl.length?'Agregar flujo':'Crear flujo'}</button>`:''}<button class="btn sm" data-a="node" data-id="${esc(n.id)}" data-s="area">Abrir proceso ›</button></div></div>
     ${canWrite?`<div class="dsec"><h4>Organizar</h4><label>Franja${sel('cat',[...CATS.map(x=>[x[0],x[2]]),['','Sin clasificar']],n.categoria||'',' data-a="cat"')}</label>
       ${c?`<div class="row"><button class="btn sm" data-a="mv" data-d="-1"${i<=0?' disabled':''}>‹ Mover antes</button><button class="btn sm" data-a="mv" data-d="1"${i>=l.length-1?' disabled':''}>Mover después ›</button></div>`:''}
       <div class="row" style="margin-top:10px"><button class="btn sm" data-a="node-edit" data-id="${esc(n.id)}">Editar nombre y responsable</button><button class="btn sm dang" data-a="node-del" data-id="${esc(n.id)}">Eliminar</button></div></div>`:''}`}
@@ -487,9 +502,9 @@ function drawer(){
     <dl><dt>Responsable</dt><dd>${esc(a.responsable||'—')}</dd>${a.forma==='Decisión'?`<dt>Opciones</dt><dd>${ramasOf(a).map(r=>{const t=actOf(d,r.dest);return esc(r.etiqueta)+' → '+(t?esc(t.nombre):'<i>sin destino</i>')}).join('<br>')}</dd>`:''}</dl>
     ${a.descripcion?`<div class="desc">${esc(a.descripcion)}</div>`:'<p class="mut">Sin descripción.</p>'}
     ${canWrite?`<div class="row"><button class="btn sm" data-a="act-edit">Editar actividad</button><button class="btn sm" data-a="act-mv" data-d="-1"${ord.indexOf(a)===0?' disabled':''} aria-label="Mover antes">‹ Antes</button><button class="btn sm" data-a="act-mv" data-d="1"${ord.indexOf(a)===ord.length-1?' disabled':''} aria-label="Mover después">Después ›</button></div>`:''}
-    <div class="dsec"><h4>Subprocesos de esta actividad${subs.length?` (${subs.length})`:''}</h4>
-    ${subs.length?subs.map(s=>`<div class="subc"><div class="subh"><b>${esc(s.nombre)}</b>${progSeg(s)}</div>${goBtns(s)}</div>`).join(''):`<p class="hint">${canWrite?'Detalla cómo se hace esta actividad. Puede tener uno o varios subprocesos (p. ej. “Cuentas por cobrar” y “Cuentas por pagar”), cada uno con su flujo y sus oportunidades.':'Sin subprocesos.'}</p>`}
-    ${canWrite?`<button class="btn sm${subs.length?'':' pri'}" data-a="sub-new">+ ${subs.length?'Agregar otro subproceso':'Crear subproceso'}</button>`:''}</div>
+    <div class="dsec"><h4>Flujos de detalle de esta actividad${subs.length?` (${subs.length})`:''}</h4>
+    ${subs.length?subs.map(flowCard).join(''):`<p class="hint">${canWrite?'Baja al siguiente nivel: uno o varios flujos que detallan cómo se hace esta actividad.':'Sin flujos de detalle.'}</p>`}
+    ${canWrite?`<button class="btn sm${subs.length?'':' pri'}" data-a="sub-new">+ ${subs.length?'Agregar flujo':'Crear flujo de detalle'}</button>`:''}</div>
     <div class="dsec"><h4>Oportunidades en esta actividad</h4>${opsA.length?opsA.map(o=>`<p class="mut" style="margin:2px 0">• ${esc(o.titulo)} <span class="chip${o.estado==='Cerrada'?' cl':''}">${esc(o.estado||'')}</span></p>`).join(''):'<p class="mut">Ninguna registrada.</p>'}
     ${canWrite?`<button class="btn sm" data-a="op-new" data-act="${esc(a.id)}" style="margin-top:6px">+ Registrar oportunidad</button>`:''}</div>`}
   dr.hidden=!h;wrap.classList.toggle('withd',!!h);if(h)dr.innerHTML=h;
@@ -747,13 +762,19 @@ function nodeDlg(n,cat,parentAct){
   <div class="row end" style="margin-top:12px"><button type="button" class="btn" data-a="dlg-close">Cancelar</button><button class="btn pri">${n?'Guardar':'Crear'}</button></div>`,
   fd=>{const base={...(fd.has('nombre')?{nombre:String(fd.get('nombre')).trim()}:{}),dueno:String(fd.get('dueno')||'').trim()};
     if(n){const upd={...D(n.id),...base};if(fd.has('categoria')&&fd.get('categoria')!==n.categoria){upd.categoria=fd.get('categoria');upd.ordenMapa=Math.max(0,...procOrd(upd.categoria).map(x=>num(x.ordenMapa)))+1}put('diagramas',upd);return}
-    const c=fd.get('categoria'),id=uid();put('diagramas',{id,...base,parentId:'raiz',parentActId:null,categoria:c,ordenMapa:Math.max(0,...procOrd(c).map(x=>num(x.ordenMapa)))+1,actividades:[],creado:new Date().toISOString()});S.selMap=id;toast('Proceso agregado. Ábrelo para dibujar su flujo.')})}
+    const c=fd.get('categoria'),id=uid();S.selMap=id;put('diagramas',{id,...base,parentId:'raiz',parentActId:null,categoria:c,ordenMapa:Math.max(0,...procOrd(c).map(x=>num(x.ordenMapa)))+1,actividades:[],creado:new Date().toISOString()});S.selMap=id;toast('Proceso agregado. Selecciónalo para crear sus flujos.')})}
+function flowDlg(pid){const p=D(pid);if(!p||!canWrite)return;const first=!flowsOf(p).length;
+  openDlg(`<h3>${first?'Crear flujo':'Agregar flujo'}</h3><p class="mut">Proceso: ${esc(p.nombre)}</p>
+  <label>Nombre del flujo<input name="nombre" required value="${first?esc(p.nombre):''}" placeholder="Ej.: Cuentas por cobrar"></label>
+  <label>Responsable<input name="dueno" value="${esc(p.dueno||'')}" list="dlR6"></label><datalist id="dlR6">${responsables().map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
+  <div class="row end" style="margin-top:12px"><button type="button" class="btn" data-a="dlg-close">Cancelar</button><button class="btn pri">Crear y dibujar</button></div>`,
+  fd=>{const f={id:uid(),nombre:String(fd.get('nombre')).trim(),dueno:String(fd.get('dueno')||'').trim(),parentId:p.id,parentActId:null,actividades:[],creado:new Date().toISOString()};put('diagramas',f);toast('Flujo creado.');setTimeout(()=>goNode(f.id,'flujo'),0)})}
 function subDlg(){const d=D(S.cur),a=actOf(d,S.sel);if(!a||!canWrite)return;const first=!subsOf(d,a).length;
-  openDlg(`<h3>${first?'Crear subproceso':'Agregar otro subproceso'}</h3><p class="mut">De la actividad: ${esc(a.nombre)}</p>
-  <label>Nombre del subproceso<input name="nombre" required value="${first?esc(a.nombre):''}" placeholder="Ej.: Cuentas por cobrar"></label>
+  openDlg(`<h3>${first?'Crear flujo de detalle':'Agregar flujo'}</h3><p class="mut">De la actividad: ${esc(a.nombre)}</p>
+  <label>Nombre del flujo<input name="nombre" required value="${first?esc(a.nombre):''}" placeholder="Ej.: Cuentas por cobrar"></label>
   <label>Responsable<input name="dueno" value="${esc(a.responsable||'')}" list="dlR5"></label><datalist id="dlR5">${responsables().map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
   <div class="row end" style="margin-top:12px"><button type="button" class="btn" data-a="dlg-close">Cancelar</button><button class="btn pri">Crear y dibujar su flujo</button></div>`,
-  fd=>{const sub={id:uid(),nombre:String(fd.get('nombre')).trim(),dueno:String(fd.get('dueno')||'').trim(),parentId:d.id,parentActId:a.id,actividades:[],creado:new Date().toISOString()};put('diagramas',sub);toast('Subproceso creado.');setTimeout(()=>goNode(sub.id,'flujo'),0)})}
+  fd=>{const sub={id:uid(),nombre:String(fd.get('nombre')).trim(),dueno:String(fd.get('dueno')||'').trim(),parentId:d.id,parentActId:a.id,actividades:[],creado:new Date().toISOString()};put('diagramas',sub);toast('Flujo creado.');setTimeout(()=>goNode(sub.id,'flujo'),0)})}
 
 /* ================= eventos ================= */
 document.addEventListener('click',async e=>{
@@ -779,6 +800,10 @@ document.addEventListener('click',async e=>{
   case 'act-del':{if(!armed(b))break;const aid=S.sel;closeDlg(false);S.sel=null;opsOf(d.id).filter(i=>i.actividadId===aid).forEach(it=>put('items',{...it,actividadId:null}));
     put('diagramas',{...D(d.id),actividades:(D(d.id).actividades||[]).filter(x=>x.id!==aid).map(x=>({...x,sig:(x.sig||[]).filter(s=>s!==aid),ramas:(x.ramas||[]).map(r=>r.dest===aid?{...r,dest:''}:r)}))});break}
   case 'sub-new':subDlg();break;
+  case 'flow-new':flowDlg(b.dataset.p);break;
+  case 'area-migrar':{if(!d||!isArea(d))break;const f={id:uid(),nombre:d.nombre,dueno:d.dueno||'',parentId:d.id,parentActId:null,actividades:d.actividades||[],macro:d.macro,proc:d.proc,chk:d.chk,assetId:d.assetId,kind:d.kind,vista:d.vista,revisado:d.revisado,creado:new Date().toISOString()};
+    put('diagramas',JSON.parse(JSON.stringify(f)));kids(d.id).filter(k=>k.parentActId).forEach(k=>put('diagramas',{...k,parentId:f.id}));Object.values(S.items).filter(i=>i.diagramaId===d.id).forEach(i=>put('items',{...i,diagramaId:f.id}));
+    const n={...d,actividades:[]};['macro','proc','chk','assetId','kind','vista','revisado'].forEach(k=>delete n[k]);put('diagramas',n);toast('Convertido en flujo del proceso.');break}
   case 'docs':{if(!d||d.raiz)break;const on=!!b.dataset.v;put('diagramas',{...d,docs:on});ck='';toast(on?'Se agregaron Caracterización y Procedimiento a este proceso.':'Caracterización y Procedimiento ocultos (lo ya registrado se conserva).');render(true);break}
   case 'vista':{if(!d)break;const v=b.dataset.v;S.page=1;S.zonas=false;if(canWrite)put('diagramas',{...d,vista:v});else{S.diag[d.id]={...d,vista:v};render(true)}break}
   case 'pg':S.page=Math.min(S.pages,Math.max(1,S.page+(+b.dataset.d)));S.sel=null;drawer();drawStage();break;
