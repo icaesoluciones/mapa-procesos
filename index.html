@@ -133,7 +133,7 @@ td button.lnk{text-align:left}
 .st{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel);border-radius:20px;padding:5px 12px 5px 5px;min-height:38px;font-size:14px}
 .st b{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--soft);font-size:13px}
 .st.ok b{background:var(--ok);color:#fff}.st.on{border-color:var(--ink);background:var(--ink);color:#fff}.st.on b{background:var(--acc);color:#fff}.st-s{color:var(--mut)}
-#wiz{padding:14px max(2vw,14px)}.wz{max-width:1240px;margin:0 auto}.wz-h h2{font-size:28px;line-height:1.1;margin:2px 0 4px}.wz-nav{border-top:1px solid var(--line);padding-top:12px;margin-top:16px}
+#wiz,#inicio{padding:14px max(2vw,14px)}.wz{max-width:1240px;margin:0 auto}.wz-h h2{font-size:28px;line-height:1.1;margin:2px 0 4px}.wz-nav{border-top:1px solid var(--line);padding-top:12px;margin-top:16px}
 .chev{display:flex;gap:0;margin:14px 0 8px;overflow-x:auto;padding-bottom:4px}
 .cv{flex:1 1 0;min-width:140px;background:var(--ink);color:#fff;padding:12px 26px 12px 30px;clip-path:polygon(0 0,calc(100% - 18px) 0,100% 50%,calc(100% - 18px) 100%,0 100%,18px 50%);font-weight:700;font-size:14px;line-height:1.25;margin-right:-10px}
 .cv:first-child{clip-path:polygon(0 0,calc(100% - 18px) 0,100% 50%,calc(100% - 18px) 100%,0 100%);padding-left:16px}.cv:nth-child(even){background:var(--acc)}
@@ -159,6 +159,33 @@ td button.lnk{text-align:left}
 .libre{margin-top:14px;border:1px solid var(--line);border-radius:10px;padding:10px 12px}.libre summary{cursor:pointer}
 @media(max-width:900px){.pgrid{grid-template-columns:minmax(0,1fr)}}
 @media print{body.printing *{visibility:hidden!important}body.printing #procDoc,body.printing #procDoc *{visibility:visible!important}body.printing #procDoc{position:absolute;left:0;top:0;width:100%;padding:0}body.printing .pprev{border:0;max-height:none;overflow:visible}body.printing{background:#fff}@page{margin:16mm}}
+.iso-wrap{max-width:1240px;margin:0 auto}
+.iso-top{display:flex;flex-wrap:wrap;gap:10px;align-items:end;justify-content:space-between;margin-bottom:12px}
+.iso-top h2{font-size:32px;line-height:1.05;margin:0}.iso-top p{margin:4px 0 0;color:var(--mut)}
+.iso{display:grid;grid-template-columns:78px minmax(0,1fr) 78px;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+.iso-side{display:flex;align-items:center;justify-content:center;background:var(--ink);color:#fff;border-radius:8px;position:relative}
+.iso-side span{writing-mode:vertical-rl;transform:rotate(180deg);font-weight:700;font-size:15px;letter-spacing:.02em;padding:12px 0;text-align:center}
+.iso-side.r{background:var(--acc)}.iso-side.r span{transform:none}
+.iso-side input{writing-mode:horizontal-tb;width:100%;font-size:13px;border:0;border-radius:6px;padding:6px;text-align:center}
+.iso-b{display:grid;gap:10px}
+.band{border-radius:10px;padding:10px 12px 12px;border:1px solid var(--line)}
+.band h3{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px;color:var(--ink);font-size:14px;font-weight:700}
+.band.est{background:#f4f2ee}.band.ope{background:#fbeae6;border-color:#e9b9ad}.band.apo{background:#eef2ef}
+.boxes{display:flex;flex-wrap:wrap;gap:8px}
+.pbox{position:relative;flex:1 1 170px;max-width:280px;min-height:96px;text-align:left;border:1.5px solid var(--ink);background:#fff;border-radius:8px;padding:9px 11px;display:flex;flex-direction:column;gap:3px}
+.pbox:hover{box-shadow:0 2px 8px #0002}.pbox b{font-size:15px;line-height:1.2}.pbox small{color:var(--mut);font-size:12px}
+.pbox .meta2{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;font-size:12px}
+.pbox .pg2{display:flex;gap:2px}.pbox .pg2 i{width:12px;height:6px;border-radius:2px;background:var(--line)}.pbox .pg2 i.on{background:var(--ok)}
+.pbox .op{color:var(--acc);font-weight:700}
+.ope .boxes{flex-wrap:nowrap;overflow-x:auto;gap:0;padding-bottom:4px}
+.ope .pbox{flex:1 0 170px;max-width:none;border:0;border-radius:0;background:var(--ink);color:#fff;padding:10px 28px 10px 30px;clip-path:polygon(0 0,calc(100% - 18px) 0,100% 50%,calc(100% - 18px) 100%,0 100%,18px 50%);margin-right:-8px}
+.ope .pbox:first-child{clip-path:polygon(0 0,calc(100% - 18px) 0,100% 50%,calc(100% - 18px) 100%,0 100%);padding-left:14px}
+.ope .pbox:nth-child(even){background:var(--acc)}.ope .pbox small{color:#fff;opacity:.8}.ope .pbox .op{color:#fff;background:#0004;border-radius:8px;padding:0 6px}.ope .pbox .pg2 i{background:#fff5}.ope .pbox .pg2 i.on{background:#7fe0a0}
+.pedit{display:flex;gap:4px;align-items:center;margin-top:6px}.pedit button{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:6px;width:30px;height:30px;padding:0}.pedit select{font-size:13px;min-height:30px;border:1px solid var(--line);border-radius:6px;max-width:130px;color:var(--ink)}
+.emptyb{color:var(--mut);font-size:14px;padding:8px 2px}
+.unc{margin-top:14px}.unc li{margin:6px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.unc ul{list-style:none;padding:0;margin:0}
+@media(max-width:760px){.iso{grid-template-columns:minmax(0,1fr)}.iso-side span{writing-mode:horizontal-tb;transform:none;padding:8px}.ope .boxes{flex-wrap:wrap;gap:6px}.ope .pbox{clip-path:none;border-radius:8px;margin:0;padding:10px}}
+@media print{body.printmap *{visibility:hidden!important}body.printmap #isoMap,body.printmap #isoMap *{visibility:visible!important}body.printmap #isoMap{position:absolute;left:0;top:0;width:100%}body.printmap .pedit,body.printmap .noprint{display:none!important}body.printmap .ope .boxes{flex-wrap:wrap}@page{size:landscape;margin:12mm}}
 @media(prefers-reduced-motion:reduce){#toast{transition:none}}
 </style>
 <script>window.__errs=[];window.addEventListener('error',function(e){var m=(e.message||'Error')+(e.lineno?' (línea '+e.lineno+':'+e.colno+')':'')+(e.filename?' '+String(e.filename).slice(-60):'');window.__errs.push(m);var b=document.getElementById('jsErr');if(!b){b=document.createElement('pre');b.id='jsErr';b.style.cssText='position:fixed;left:8px;right:8px;bottom:8px;z-index:99;background:#7a1d0e;color:#fff;padding:10px 12px;border-radius:8px;font:12px/1.4 monospace;white-space:pre-wrap;max-height:40vh;overflow:auto';(document.body||document.documentElement).appendChild(b)}b.textContent='Error de la aplicación (envía una captura a soporte):\n'+window.__errs.join('\n')});</script>
@@ -167,13 +194,14 @@ td button.lnk{text-align:left}
 <body>
 <header class="top" id="top">
   <div class="brand"><h1>Mapa de procesos<span class="mode" id="modeTag"></span></h1><small id="cliName"></small></div>
-  <nav class="views" id="views"><button data-v="mapa" class="on">Mapa</button><button data-v="port">Portafolio de mejora</button></nav>
+  <nav class="views" id="views"><button data-v="inicio" class="on">Mapa de procesos</button><button data-v="mapa">Flujos</button><button data-v="port">Portafolio de mejora</button></nav>
   <button class="btn" id="btnRefresh" title="Traer los cambios de otras personas">Actualizar</button>
   <button id="btnNew" class="btn pri" hidden>+ Diagrama general</button>
 </header>
 <div id="banner"></div>
 <nav id="steps" class="steps" hidden aria-label="Pasos del asistente"></nav>
-<main id="mapa" class="grid">
+<main id="inicio"></main>
+<main id="mapa" class="grid" hidden>
   <aside id="tree" class="col"></aside>
   <section class="col center">
     <div id="crumbs"></div>
@@ -236,7 +264,7 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,9);
 const clone=o=>JSON.parse(JSON.stringify(o));
 const norm=s=>String(s||'').toLowerCase().replace(/\s+/g,' ').trim();
 const num=v=>{const n=+v;return isFinite(n)?n:0};
-const S={diag:{},items:{},cur:null,act:null,page:1,pages:1,zoom:1,edit:false,view:'mapa',tab:'oportunidad',form:null,auto:false,scope:null};
+const S={diag:{},items:{},cur:null,act:null,page:1,pages:1,zoom:1,edit:false,view:'inicio',tab:'oportunidad',isoEdit:false,form:null,auto:false,scope:null};
 let BOOT={mode:'cargando'},C='',K='',canWrite=false;
 const mem={},urls={},pdfCache={},fileReq={},queue={};
 let dlgOk=null,dlgCancel=null,pending=0;
@@ -411,8 +439,10 @@ ${canWrite?'<button class="btn pri" data-a="new-root">+ Crear diagrama general</
 function render(force){
   if(S.cur&&!D(S.cur))S.cur=null;if(!S.cur){const r=roots()[0];if(r){S.cur=r.id;S.page=1}}
   const d=D(S.cur);if(S.act&&!actOf(d,S.act))S.act=null;
-  $('#mapa').hidden=S.view!=='mapa';$('#port').hidden=S.view!=='port';
-  document.querySelectorAll('#views button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.view));
+  $('#mapa').hidden=S.view!=='mapa';$('#port').hidden=S.view!=='port';$('#inicio').hidden=S.view!=='inicio';
+  document.querySelectorAll('#views button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.view||(b.dataset.v==='mapa'&&S.view==='wiz')));
+  $('#btnNew').textContent=S.view==='inicio'?'+ Proceso':'+ Diagrama general';
+  if(S.view==='inicio'){$('#wiz').hidden=true;steps();isoRender();return}
   $('#wiz').hidden=S.view!=='wiz';steps();
   if(S.view==='wiz'){if(D(S.cur)){if(force||!S.wzDirty)wzRender();return}S.view='mapa';$('#wiz').hidden=true}
   if(S.view==='port'){portfolio();return}
@@ -429,7 +459,7 @@ function tree(){const r=roots();
   const li=d=>{const ch=kids(d.id),pa=actOf(D(d.parentId),d.parentActId);return `<li><button class="tn${d.id===S.cur?' on':''}" data-a="open-diag" data-id="${esc(d.id)}"><span>${esc(d.nombre)}</span><small>${esc(d.tipo||'')}${pa?' · desde '+esc(pa.nombre):''}</small></button>${ch.length?`<ul>${ch.map(li).join('')}</ul>`:''}</li>`};
   $('#tree').innerHTML='<h3>Estructura</h3>'+(r.length?`<ul class="tree">${r.map(li).join('')}</ul>`:'<p class="mut">Aún no hay diagramas.</p>')}
 function crumbs(){const d=D(S.cur);if(!d){$('#crumbs').innerHTML='';return}
-  $('#crumbs').innerHTML=ancestors(d.id).map(x=>{const a=actOf(x.d,x.act);return `<button data-a="open-diag" data-id="${esc(x.d.id)}" data-act="${esc(x.act||'')}">${esc(x.d.nombre)}</button><span class="via">› ${a?esc(a.nombre)+' ›':''}</span>`}).join('')+`<strong>${esc(d.nombre)}</strong>`}
+  $('#crumbs').innerHTML='<button data-a="go-inicio">Mapa de procesos</button><span class="via">›</span>'+ancestors(d.id).map(x=>{const a=actOf(x.d,x.act);return `<button data-a="open-diag" data-id="${esc(x.d.id)}" data-act="${esc(x.act||'')}">${esc(x.d.nombre)}</button><span class="via">› ${a?esc(a.nombre)+' ›':''}</span>`}).join('')+`<strong>${esc(d.nombre)}</strong>`}
 function actSel(){const d=D(S.cur),sel=$('#actSel');if(!d){sel.innerHTML='<option>Sin diagrama</option>';return}
   const acts=orderActs(d),opt=(a,i)=>`<option value="${esc(a.id)}">${i+1}. ${esc(a.nombre)}${kids(d.id,a.id).length?' ▸':''}</option>`;
   sel.innerHTML=`<option value="">— Todo el diagrama (${acts.length} actividades) —</option>`+acts.map(opt).join('');sel.value=S.act||''}
@@ -745,9 +775,40 @@ function wzInput(e){const t=e.target;if(!t.closest('#wiz'))return;
   else if(t.id==='wzK'){S.wz=proponer(D(S.cur),+t.value);S.wzDirty=true;wzRender()}}
 document.addEventListener('input',wzInput);
 
+/* ---------- mapa de procesos (ISO) ---------- */
+const CATS=[['estrategico','Estratégico','Procesos estratégicos','est'],['operativo','Operativo (clave)','Procesos operativos','ope'],['apoyo','De apoyo','Procesos de apoyo','apo']];
+const cfg=()=>S.items.cfg_mapa||{izq:'Necesidades del cliente',der:'Satisfacción del cliente'};
+const procOrd=c=>roots().filter(d=>d.categoria===c).sort((a,b)=>num(a.ordenMapa)-num(b.ordenMapa)||byName(a,b));
+function pbox(d,c,i,n){
+  const pasos=[1,2,3,4,5].map(k=>pasoHecho(d,k)),ids=new Set(subtree(d.id)),ops=Object.values(S.items).filter(x=>ids.has(x.diagramaId)&&x.tipo==='oportunidad'&&isOpen(x)).length;
+  const ed=S.isoEdit&&canWrite;
+  return `<${ed?'div':'button'} class="pbox"${ed?'':` data-a="open-diag" data-id="${esc(d.id)}" title="Abrir el flujo de ${esc(d.nombre)}"`}><b>${esc(d.nombre)}</b>${d.dueno?`<small>${esc(d.dueno)}</small>`:''}
+  <span class="meta2"><span class="pg2" title="Asistente: ${pasos.filter(Boolean).length} de 5 pasos">${pasos.map(x=>`<i class="${x?'on':''}"></i>`).join('')}</span>${ops?`<span class="op">${ops} oport.</span>`:''}</span>
+  ${ed?`<span class="pedit"><button data-a="iso-mv" data-id="${esc(d.id)}" data-dir="-1" aria-label="Mover antes"${i===0?' disabled':''}>‹</button><button data-a="iso-mv" data-id="${esc(d.id)}" data-dir="1" aria-label="Mover después"${i===n-1?' disabled':''}>›</button><select data-iso-cat="${esc(d.id)}" aria-label="Tipo de proceso">${CATS.map(x=>`<option value="${x[0]}"${x[0]===c?' selected':''}>${x[1]}</option>`).join('')}<option value="">Sin clasificar</option></select></span>`:''}</${ed?'div':'button'}>`}
+function isoRender(){
+  const el=$('#inicio'),cf=cfg(),ed=S.isoEdit&&canWrite,unc=roots().filter(d=>!CATS.some(c=>c[0]===d.categoria));
+  const band=c=>{const l=procOrd(c[0]);return `<section class="band ${c[3]}"><h3>${c[2]}${canWrite?`<button class="lnk noprint" data-a="iso-new" data-cat="${c[0]}">+ proceso</button>`:''}</h3><div class="boxes">${l.length?l.map((d,i)=>pbox(d,c[0],i,l.length)).join(''):`<span class="emptyb">Sin procesos ${c[0]==='estrategico'?'estratégicos':c[0]==='operativo'?'operativos':'de apoyo'} todavía.</span>`}</div></section>`};
+  el.innerHTML=`<div class="iso-wrap"><div class="iso-top"><div><h2>Mapa de procesos</h2><p>${roots().length?'Haz clic en un proceso para abrir su flujo. La barra verde indica cuántos de los 5 pasos están completos.':'Agrega los procesos de la empresa en su franja: estratégicos (dirección), operativos (los que generan el producto o servicio) y de apoyo.'}</p></div>
+  <div class="row noprint">${canWrite?`<button class="btn sm${ed?' pri':''}" data-a="iso-edit">${ed?'Terminar edición':'Editar mapa'}</button>`:''}<button class="btn sm" data-a="iso-print">Imprimir / PDF</button></div></div>
+  <div id="isoMap"><div class="iso"><div class="iso-side">${ed?`<input data-iso-lbl="izq" value="${esc(cf.izq)}" aria-label="Texto de entrada">`:`<span>${esc(cf.izq)}</span>`}</div>
+  <div class="iso-b">${CATS.map(band).join('')}</div>
+  <div class="iso-side r">${ed?`<input data-iso-lbl="der" value="${esc(cf.der)}" aria-label="Texto de salida">`:`<span>${esc(cf.der)}</span>`}</div></div></div>
+  ${unc.length?`<div class="col unc noprint"><h4 style="margin:0 0 6px">Procesos sin clasificar (${unc.length})</h4><p class="hint">Asigna su tipo para que aparezcan en el mapa.</p><ul>${unc.map(d=>`<li><button class="lnk" data-a="open-diag" data-id="${esc(d.id)}">${esc(d.nombre)}</button>${canWrite?`<select data-iso-cat="${esc(d.id)}" aria-label="Tipo de proceso"><option value="">Elegir tipo…</option>${CATS.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('')}</select>`:''}</li>`).join('')}</ul></div>`:''}</div>`}
+function isoClick(b){const a=b.dataset.a;
+  if(a==='go-inicio'){S.view='inicio';render(true);return true}
+  if(a==='iso-edit'){S.isoEdit=!S.isoEdit;isoRender();return true}
+  if(a==='iso-new'){S.preCat=b.dataset.cat;diagDlg(null,null);return true}
+  if(a==='iso-print'){document.body.classList.add('printmap');setTimeout(()=>{try{window.print()}catch(e){toast('El navegador no permitió imprimir.')}document.body.classList.remove('printmap')},50);return true}
+  if(a==='iso-mv'){const d=D(b.dataset.id),l=procOrd(d.categoria),i=l.indexOf(d),j=i+(+b.dataset.dir);if(j<0||j>=l.length)return true;
+    l.splice(j,0,l.splice(i,1)[0]);l.forEach((x,k)=>{if(num(x.ordenMapa)!==k+1)put('diagramas',{...x,ordenMapa:k+1})});return true}
+  return false}
+document.addEventListener('change',e=>{const t=e.target;
+  if(t.dataset.isoCat!==undefined){const d=D(t.dataset.isoCat);if(!d)return;const c=t.value;setTimeout(()=>put('diagramas',{...d,categoria:c,ordenMapa:c?Math.max(0,...roots().filter(r=>r.categoria===c&&r.id!==d.id).map(r=>num(r.ordenMapa)))+1:0}),0)}
+  else if(t.dataset.isoLbl){const v=t.value.trim(),k=t.dataset.isoLbl;if(v)setTimeout(()=>put('items',{...cfg(),id:'cfg_mapa',tipo:'config',[k]:v}),0)}});
+
 /* ---------- portafolio ---------- */
 function portRows(){
-  let rows=Object.values(S.items);
+  let rows=Object.values(S.items).filter(i=>IT[i.tipo]);
   if(S.scope){const ids=S.scope.a?scopeIds(S.scope.d,S.scope.a):new Set(subtree(S.scope.d));rows=rows.filter(i=>ids.has(i.diagramaId)||(i.diagramaId===S.scope.d&&(!S.scope.a||i.actividadId===S.scope.a)))}
   const t=$('#fTipo').value,e=$('#fEst').value,q=norm($('#fQ').value);
   if(t)rows=rows.filter(i=>i.tipo===t);if(e)rows=rows.filter(isOpen);
@@ -769,15 +830,18 @@ function diagDlg(ex,parent){
   const e=ex||{},pd=parent&&D(parent.d),pa=parent&&actOf(pd,parent.a);
   openDlg(`<h3>${ex?'Datos del diagrama':parent?'Flujo de detalle':'Diagrama general'}</h3>${pa?`<p class="mut">Se vinculará a: ${esc(pd.nombre)} › ${esc(pa.nombre)}</p>`:''}
   <label>Nombre<input name="nombre" required value="${esc(e.nombre||(pa?pa.nombre:''))}"></label>
+  ${parent||(ex&&ex.parentId)?'':`<label>Tipo de proceso (mapa de procesos)${sel('categoria',CATS.map(c=>[c[0],c[1]]),e.categoria||S.preCat||'operativo')}</label>`}
   <div class="two"><label>Tipo de diagrama${sel('tipo',TIPOS,e.tipo||(parent?'Flujograma':'Funciones cruzadas'))}</label><label>Responsable del proceso<input name="dueno" value="${esc(e.dueno||'')}"></label></div>
   ${ex?'':`<div class="radio" role="radiogroup" aria-label="Origen"><label><input type="radio" name="origen" value="form" checked> Construir con formulario</label><label><input type="radio" name="origen" value="file"> Subir archivo (PDF o imagen)</label></div>
   <div id="fileBox" hidden><div class="two"><label>Hecho en${sel('formato',FORMATOS.filter(x=>x!=='Formulario'),'Visio')}</label><label>Enlace al original (opcional)<input name="enlace" type="url" placeholder="https:\/\/"></label></div>
   <label>Archivo<input name="file" type="file" accept="application/pdf,image/png,image/jpeg,image/svg+xml,image/webp"></label><p class="hint">PDF recomendado (Archivo › Exportar › PDF). Si conserva el texto, las actividades se detectan solas y luego las completas con el formulario.</p></div>`}
   ${ex&&ex.kind!=='form'?`<label>Enlace al original (opcional)<input name="enlace" type="url" placeholder="https:\/\/" value="${esc(e.enlace||'')}"></label>`:''}
   <div class="row end"><button type="button" class="btn" data-a="dlg-close">Cancelar</button><button class="btn pri">${ex?'Guardar':'Crear'}</button></div>`,
-  async fd=>{const base={nombre:String(fd.get('nombre')).trim(),tipo:fd.get('tipo'),dueno:String(fd.get('dueno')||'').trim()};
+  async fd=>{S.preCat='';const base={nombre:String(fd.get('nombre')).trim(),tipo:fd.get('tipo'),dueno:String(fd.get('dueno')||'').trim(),...(fd.has('categoria')?{categoria:fd.get('categoria')}:{})};
+    if(!ex&&base.categoria)base.ordenMapa=Math.max(0,...roots().filter(r=>r.categoria===base.categoria).map(r=>num(r.ordenMapa)))+1;
     if(ex){put('diagramas',{...D(ex.id),...base,...(fd.has('enlace')?{enlace:String(fd.get('enlace')||'').trim()}:{})});return}
     const id=uid(),common={id,...base,parentId:parent?parent.d:null,parentActId:parent?parent.a:null,actividades:[],creado:new Date().toISOString()};
+    S.view='mapa';
     if(fd.get('origen')==='form'){S.cur=id;S.act=null;S.page=1;S.edit=false;await put('diagramas',{...common,kind:'form',formato:'Formulario',revisado:true});setTimeout(actsDlg,50);return}
     const f=fd.get('file');if(!f||!f.size){toast('Selecciona un archivo.');return false}
     let up;try{up=await uploadFile(f)}catch(err){toast(err.message);return false}
@@ -792,7 +856,7 @@ function selAct(id){const d=D(S.cur),a=actOf(d,id);S.act=a?a.id:null;S.form=null
 function armed(b){if(b.dataset.armed)return true;b.dataset.armed=1;const t=b.textContent;b.textContent='¿Confirmar?';setTimeout(()=>{if(b.isConnected){delete b.dataset.armed;b.textContent=t}},3000);return false}
 document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,id=b.dataset.id;
-  if(wzClick(b))return;
+  if(wzClick(b)||isoClick(b))return;
   if(a==='sel-act'){const now=Date.now();if(id&&lastClk.id===id&&now-lastClk.t<450&&!S.edit){lastClk={};const ch=kids(S.cur,id);if(ch.length){openDiag(ch[0].id);return}}lastClk={id,t:now};selAct(id)}
   else if(a==='open-diag')openDiag(id,b.dataset.act||null);
   else if(a==='new-root')diagDlg(null,null);
@@ -834,7 +898,7 @@ $('#autoOpen').addEventListener('change',e=>{S.auto=e.target.checked});
 document.querySelectorAll('#views button').forEach(b=>b.addEventListener('click',()=>{S.view=b.dataset.v;render(true)}));
 document.querySelectorAll('#vistaSeg button').forEach(b=>b.addEventListener('click',()=>{const d=D(S.cur);if(!d)return;const v=b.dataset.vista;if((d.vista||'archivo')===v)return;S.page=1;
   if(canWrite)put('diagramas',{...d,vista:v});else{S.diag[d.id]={...d,vista:v};render(true)}}));
-$('#btnNew').addEventListener('click',()=>diagDlg(null,null));
+$('#btnNew').addEventListener('click',()=>{S.preCat='';diagDlg(null,null)});
 $('#btnRefresh').addEventListener('click',()=>{if(!pending)load()});
 $('#btnActs').addEventListener('click',actsDlg);
 $('#pPrev').addEventListener('click',()=>{if(S.page>1){S.page--;S.act=null;render(true)}});
