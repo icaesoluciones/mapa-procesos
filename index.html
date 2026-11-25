@@ -210,6 +210,15 @@ tr.dragging{opacity:.45;background:var(--pri2)}.aed .t{width:120px}.aed .s{width
 .pbox .obj{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:12px;line-height:1.35;opacity:.85;margin:4px 0 2px;font-weight:400;text-align:left}
 .objb{display:flex;gap:12px;align-items:flex-start;background:var(--pri2);border-left:4px solid var(--pri);border-radius:10px;padding:10px 14px;margin:0 0 14px;font-size:14.5px;color:var(--ink)}.objb b{color:var(--pri);white-space:nowrap}.objb .tx{flex:1}.objb.vac{background:var(--soft);border-left-color:var(--line2);color:var(--mut)}
 .subc .obj2{font-size:12.5px;color:var(--ink);margin:-2px 2px 6px;opacity:.85}
+.srch{position:relative;flex:1 1 220px;max-width:420px;margin-left:auto}
+.srch input{width:100%;min-height:38px;border:1px solid var(--line2);border-radius:10px;padding:6px 12px 6px 34px;font-size:14px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Ccircle cx='7' cy='7' r='5'/%3E%3Cpath d='m11 11 4 4'/%3E%3C/svg%3E") no-repeat 11px center}
+.srch input:focus{outline:2px solid var(--pri);outline-offset:0;border-color:var(--pri)}
+#qres{position:absolute;top:calc(100% + 6px);right:0;width:min(580px,94vw);max-height:72vh;overflow:auto;background:#fff;border:1px solid var(--line2);border-radius:12px;box-shadow:0 14px 36px rgba(0,0,0,.16);z-index:60;padding:6px}
+.qr{display:block;width:100%;text-align:left;border:0;background:none;padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--ink);font:inherit}.qr:hover,.qr.on{background:var(--soft)}
+.qr .ty{font-size:11px;font-weight:600;color:var(--pri);text-transform:uppercase;letter-spacing:.04em}.qr b{display:block;font-size:14.5px;font-weight:600}.qr small{color:var(--mut);font-size:12.5px;display:block;margin-top:1px}.qr .ex{color:#374151}
+.qnone{padding:12px;color:var(--mut);font-size:14px}.qhead{padding:4px 10px 6px;font-size:12px;color:var(--mut);border-bottom:1px solid var(--line);margin-bottom:4px}
+mark{background:#fde68a;color:inherit;padding:0 1px;border-radius:2px}
+.views{margin-left:0!important}
 .demo{background:#eef4ff!important;border-color:#c7d7fe!important;color:#1d3a8a}
 </style>
 </head>
@@ -217,6 +226,7 @@ tr.dragging{opacity:.45;background:var(--pri2)}.aed .t{width:120px}.aed .s{width
 <header class="top">
   <div class="brand"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><rect width="30" height="30" rx="8" fill="#0b5d4b"/><rect x="6" y="7" width="18" height="4" rx="2" fill="#fff" opacity=".55"/><path d="M6 13.5h13l3.5 2.5-3.5 2.5H6z" fill="#fff"/><rect x="6" y="21" width="18" height="3" rx="1.5" fill="#fff" opacity=".55"/></svg>
     <div><h1>Mapa de procesos</h1><small id="cliName"></small></div></div>
+  <div class="srch" role="search"><input id="q" type="search" autocomplete="off" placeholder="Buscar flujo, actividad, responsable…  (Ctrl+K)" aria-label="Buscar en todos los procesos"><div id="qres" hidden></div></div>
   <nav class="views" id="views"><button data-v="app" class="on" title="Pulsa de nuevo para ir al Mapa de procesos">Procesos</button><button data-v="port">Portafolio de mejora</button></nav>
   <div class="hr"><span class="mode" id="modeTag"></span><button class="who" id="who" hidden></button><button class="btn ghost sm" id="btnRefresh" title="Traer los cambios de otras personas">Actualizar</button></div>
 </header>
@@ -851,6 +861,42 @@ function portfolio(){
   <div class="card scroll"><table class="t stack"><thead><tr><th>Oportunidad</th><th>Flujo</th><th>Prioridad</th><th>Impacto</th><th>Esfuerzo</th><th>Estado</th><th>Responsable</th></tr></thead><tbody>
   ${rows.length?rows.map(i=>{const[im,ef]=ie(i);return `<tr><td><b>${esc(i.titulo)}</b></td><td><button class="lnk" data-a="node" data-id="${esc(i.diagramaId)}" data-s="ops">${esc(pathOf(i.diagramaId))}</button></td><td><span class="chip ${prioCls(prio(i))}">${prio(i)}</span></td><td>${nivTxt(im)}</td><td>${nivTxt(ef)}</td><td>${esc(i.estado||'Identificada')}</td><td>${esc(i.responsable||'')}</td></tr>`}).join(''):'<tr><td colspan="7" class="mut">Sin oportunidades con estos filtros.</td></tr>'}
   </tbody></table></div></div>`}
+
+/* ================= buscador ================= */
+const fold=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const ACC={a:'aáàäâ',e:'eéèëê',i:'iíìïî',o:'oóòöô',u:'uúùüû',n:'nñ',c:'cç'};
+function hl(s,terms){s=String(s||'');if(!terms.length)return esc(s);
+  const rx=new RegExp('('+terms.map(t=>t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&').replace(/[aeioun c]/g,ch=>ACC[ch]?'['+ACC[ch]+ACC[ch].toUpperCase()+']':ch)).join('|')+')','gi');
+  return s.split(rx).map((p,i)=>i%2?'<mark>'+esc(p)+'</mark>':esc(p)).join('')}
+function donde(id){const d=D(id);if(!d)return'';if(d.raiz)return'Flujo general de la empresa';return [...ancestors(id).filter(x=>!x.d.raiz).map(x=>x.d.nombre),d.nombre].join(' › ')||d.nombre}
+const recorte=(s,terms)=>{s=String(s||'').replace(/\s+/g,' ');const f=fold(s),i=Math.min(...terms.map(t=>{const k=f.indexOf(t);return k<0?1e9:k}));if(i===1e9||s.length<=110)return s.slice(0,110);const a=Math.max(0,i-40);return(a?'…':'')+s.slice(a,a+110)+(a+110<s.length?'…':'')};
+function buscar(q){const terms=fold(q).trim().split(/\s+/).filter(t=>t.length>1);if(!terms.length)return{terms,R:[]};
+  const hit=(...x)=>{const f=fold(x.join(' '));return terms.every(t=>f.includes(t))},R=[];
+  const add=(o)=>R.push(o);
+  Object.values(S.diag).forEach(d=>{
+    if(d.raiz){if(hit(d.objetivo))add({t:'Objetivo de la empresa',n:d.nombre||'Empresa',w:'Mapa de procesos',ex:recorte(d.objetivo,terms),go:['raiz','mapa'],sc:1})}
+    else if(hit(d.nombre,d.dueno,d.objetivo)){const area=isArea(d),c=CATS.find(x=>x[0]===d.categoria);
+      add({t:area?'Proceso':'Flujo',n:d.nombre,w:area?(c?c[2]:'Mapa de procesos'):'En: '+donde(par(d)),ex:hit(d.nombre)?(d.dueno?'Responsable: '+d.dueno:''):(hit(d.dueno)&&!hit(d.objetivo)?'Responsable: '+d.dueno:'Objetivo: '+recorte(d.objetivo,terms)),go:[d.id,area?'area':'flujo'],sc:hit(d.nombre)?6:3})}
+    (d.actividades||[]).forEach(a=>{if(hit(a.nombre,a.responsable,a.descripcion))add({t:a.forma==='Decisión'?'Decisión':'Actividad',n:a.nombre,w:'Flujo: '+donde(d.id),ex:hit(a.nombre)?(a.responsable||''):(hit(a.responsable)&&!hit(a.descripcion)?'Responsable: '+a.responsable:recorte(a.descripcion,terms)),go:[d.id,'flujo',a.id],sc:hit(a.nombre)?5:2})});
+    (d.macro||[]).forEach(m=>{const s=m.sipoc||{};if(hit(s.p,s.e,s.s,s.c)&&!hit(m.nombre))add({t:'Caracterización (SIPOC)',n:m.nombre,w:'Flujo: '+donde(d.id),ex:recorte([s.p,s.e,s.s,s.c].filter(Boolean).join(' · '),terms),go:[d.id,'car'],sc:1})});
+    const X=d.carx||{};(X.ind||[]).forEach(r=>{if(hit(r.n,r.f,r.m))add({t:'Indicador',n:r.n||'Indicador',w:'Flujo: '+donde(d.id),ex:[r.m&&'Meta: '+r.m,r.q].filter(Boolean).join(' · '),go:[d.id,'car'],sc:2})});
+    (X.rie||[]).forEach(r=>{if(hit(r.r,r.c,r.k))add({t:'Riesgo',n:r.r||'Riesgo',w:'Flujo: '+donde(d.id),ex:r.k?'Control: '+r.k:'',go:[d.id,'car'],sc:2})});
+    const p=d.proc||{};const pt=[p.codigo,p.objetivo,p.alcance,p.definiciones,p.referencias].join(' ');if(pt.trim()&&hit(pt))add({t:'Procedimiento',n:(p.codigo?p.codigo+' · ':'')+d.nombre,w:'Flujo: '+donde(d.id),ex:recorte(pt,terms),go:[d.id,'proc'],sc:2})});
+  Object.values(S.items).filter(i=>i.tipo==='oportunidad').forEach(o=>{if(hit(o.titulo,o.descripcion,o.responsable))add({t:'Oportunidad',n:o.titulo,w:'Flujo: '+donde(o.diagramaId),ex:'Prioridad '+prio(o).toLowerCase()+' · '+(o.estado||'Identificada'),go:[o.diagramaId,'ops'],sc:hit(o.titulo)?4:2})});
+  R.sort((a,b)=>b.sc-a.sc||String(a.n).localeCompare(String(b.n),'es'));return{terms,R}}
+let qSel=0,qList=[];
+function qRender(){const box=$('#qres'),v=$('#q').value;if(fold(v).trim().length<2){box.hidden=true;return}
+  const{terms,R}=buscar(v);qList=R.slice(0,40);qSel=0;box.hidden=false;
+  box.innerHTML=qList.length?`<div class="qhead">${R.length} resultado${R.length===1?'':'s'}${R.length>40?' (se muestran 40)':''}</div>`+qList.map((r,i)=>`<button type="button" class="qr${i===0?' on':''}" data-qi="${i}"><span class="ty">${esc(r.t)}</span><b>${hl(r.n,terms)}</b><small>${esc(r.w)}</small>${r.ex?`<small class="ex">${hl(r.ex,terms)}</small>`:''}</button>`).join(''):`<div class="qnone">No se encontró “${esc(v)}”. Prueba con otra palabra.</div>`}
+function qGo(i){const r=qList[i];if(!r)return;$('#qres').hidden=true;$('#q').blur();const[id,step,sel]=r.go;if(!D(id)){toast('Ya no existe.');return}goNode(id,step,sel);if(sel)setTimeout(()=>{const h=document.querySelector(`.hs[data-id="${CSS.escape(sel)}"]`);if(h)h.scrollIntoView({block:'center',inline:'center',behavior:'smooth'})},400)}
+$('#q').addEventListener('input',qRender);
+$('#q').addEventListener('focus',qRender);
+$('#q').addEventListener('keydown',e=>{const bs=[...document.querySelectorAll('#qres .qr')];
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(!bs.length)return;qSel=(qSel+(e.key==='ArrowDown'?1:-1)+bs.length)%bs.length;bs.forEach((b,i)=>b.classList.toggle('on',i===qSel));bs[qSel].scrollIntoView({block:'nearest'})}
+  else if(e.key==='Enter'){e.preventDefault();qGo(qSel)}else if(e.key==='Escape'){$('#qres').hidden=true;$('#q').blur()}});
+$('#qres').addEventListener('mousedown',e=>{const b=e.target.closest('.qr');if(b){e.preventDefault();qGo(+b.dataset.qi)}});
+document.addEventListener('mousedown',e=>{if(!e.target.closest('.srch'))$('#qres').hidden=true});
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('#q').focus();$('#q').select()}});
 
 /* ================= diálogos ================= */
 function openDlg(html,ok,cancel,wide){const f=$('#dlgForm'),dg=$('#dlg');dg.classList.toggle('wide',!!wide);f.innerHTML=html;dlgOk=ok;dlgCancel=cancel||null;try{dg.showModal()}catch(e){dg.setAttribute('open','')}const x=f.querySelector('input:not([type=checkbox]):not([type=file]):not([type=hidden]),textarea');if(x)x.focus()}
