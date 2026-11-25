@@ -280,7 +280,7 @@ const inisOf=opId=>Object.values(S.items).filter(i=>i.tipo==='iniciativa'&&i.opo
 const openIn=ids=>Object.values(S.items).filter(i=>ids.has(i.diagramaId)&&isOpenOp(i)).length;
 const hasFile=d=>!!(d&&d.assetId);
 const isGen=d=>!hasFile(d)||d.vista==='generado';
-function responsables(){return [...new Set(Object.values(S.diag).flatMap(d=>[(d.dueno||'').trim(),...(d.actividades||[]).map(a=>String(a.responsable||'').trim())]).filter(Boolean))].sort()}
+function responsables(){const m={};Object.values(S.diag).flatMap(d=>[(d.dueno||'').trim(),...(d.actividades||[]).map(a=>String(a.responsable||'').trim())]).filter(Boolean).forEach(r=>{const k=norm(r);if(!m[k])m[k]=r});return Object.values(m).sort((a,b)=>a.localeCompare(b,'es'))}
 const STEPS=[['mapa','Mapa de procesos'],['flujo','Flujo'],['car','Caracterización'],['proc','Procedimiento'],['ops','Oportunidades'],['area','Flujos del proceso']];
 const isArea=d=>!!d&&!d.raiz&&par(d)==='raiz'&&!d.parentActId;
 const nivel2=d=>{const p=D(par(d));return !!p&&(p.raiz||isArea(p))};
@@ -304,13 +304,14 @@ function ramasOf(a){if(Array.isArray(a.ramas)&&a.ramas.length)return a.ramas;con
 function layoutFlow(d){
   const acts=orderActs(d),key=JSON.stringify([d.nombre,acts,kids(d.id).map(k=>k.parentActId)]);
   if(genCache.key===key)return genCache.L;
-  const lanes=[...new Set(acts.map(a=>String(a.responsable||'').trim()||'Sin responsable'))];
+  const lk=a=>norm(a.responsable)||'sin responsable',disp={};acts.forEach(a=>{const k=lk(a);if(!disp[k])disp[k]=String(a.responsable||'').trim()||'Sin responsable'});
+  const lanes=[...new Set(acts.map(lk))];
   const lw=160,cw=200,LH=142,top=20,bw=158,bh=70,W=Math.max(900,lw+30+Math.max(1,acts.length)*cw),H=top+Math.max(1,lanes.length)*LH+20;
   const pos={},P={};
-  acts.forEach((a,i)=>{const lane=lanes.indexOf(String(a.responsable||'').trim()||'Sin responsable');const x=lw+24+i*cw+(cw-bw)/2,y=top+lane*LH+(LH-bh)/2;P[a.id]={x,y,lane,i};pos[a.id]={x:x/W,y:y/H,w:bw/W,h:bh/H}});
+  acts.forEach((a,i)=>{const lane=lanes.indexOf(lk(a));const x=lw+24+i*cw+(cw-bw)/2,y=top+lane*LH+(LH-bh)/2;P[a.id]={x,y,lane,i};pos[a.id]={x:x/W,y:y/H,w:bw/W,h:bh/H}});
   let g=`<rect width="${W}" height="${H}" fill="#ffffff"/>`;
   if(!acts.length)g+=`<text x="${W/2}" y="${H/2}" text-anchor="middle" font-size="16" fill="#6b7280">Sin actividades todavía</text>`;
-  lanes.forEach((l,i)=>{const y=top+i*LH;g+=`<rect x="10" y="${y}" width="${W-20}" height="${LH}" fill="${i%2?'#f8faf9':'#ffffff'}" stroke="#e5e7eb"/><rect x="10" y="${y}" width="${lw}" height="${LH}" fill="#e7f2ee" stroke="#e5e7eb"/>`;
+  lanes.forEach((lkey,i)=>{const l=disp[lkey],y=top+i*LH;g+=`<rect x="10" y="${y}" width="${W-20}" height="${LH}" fill="${i%2?'#f8faf9':'#ffffff'}" stroke="#e5e7eb"/><rect x="10" y="${y}" width="${lw}" height="${LH}" fill="#e7f2ee" stroke="#e5e7eb"/>`;
     wrapTxt(l,17).forEach((t,j,a)=>{g+=`<text x="${10+lw/2}" y="${y+LH/2+(j-(a.length-1)/2)*18+5}" text-anchor="middle" font-size="14" font-weight="700" fill="#0b5d4b">${esc(t)}</text>`})});
   acts.forEach((a,i)=>{
     const p=P[a.id],dec=a.forma==='Decisión';let tg;
@@ -620,24 +621,26 @@ function happyPath(d){
     const c=cur.forma==='Decisión'&&(cur.ramas||[]).length?cur.ramas.map(r=>r.dest).filter(id=>id in idx):(cur.sig||[]).filter(id=>id in idx);
     const fw=c.filter(id=>idx[id]>idx[cur.id]&&!seen.has(id)),nx=fw.length?fw[0]:(acts[idx[cur.id]+1]?acts[idx[cur.id]+1].id:null);cur=nx?acts[idx[nx]]:null}
   return path}
-function core(d){const p=happyPath(d),c=p.filter(a=>a.forma!=='Inicio'&&a.forma!=='Fin');return c.length?c:p}
+function core(d){return happyPath(d)}
+/* unidades: cada actividad del camino principal; una decisión se une a la actividad anterior */
+function unidades(d){const u=[];core(d).forEach(a=>{if(a.forma==='Decisión'&&u.length)u[u.length-1].push(a);else u.push([a])});return u}
 function moda(arr){const m={};let b='',n=0;arr.filter(Boolean).forEach(x=>{m[x]=(m[x]||0)+1;if(m[x]>n){n=m[x];b=x}});return b}
-function proponer(d,k){const c=core(d);if(!c.length)return[];k=Math.max(1,Math.min(k,c.length));const base=Math.floor(c.length/k),extra=c.length%k,out=[];let i=0;
-  for(let g=0;g<k;g++){const n=base+(g<extra?1:0),grp=c.slice(i,i+n);i+=n;out.push({id:uid(),nombre:(grp.find(a=>a.forma!=='Decisión')||grp[0]).nombre,responsable:moda(grp.map(a=>a.responsable)),acts:grp.map(a=>a.id),sipoc:{p:'',e:'',s:'',c:''}})}return out}
-const defK=d=>{const n=core(d).length;return n<=6?n:(n<=10?5:6)};
+function proponer(d,k){const U=unidades(d);if(!U.length)return[];k=Math.max(1,Math.min(k,U.length));const base=Math.floor(U.length/k),extra=U.length%k,out=[];let i=0;
+  for(let g=0;g<k;g++){const n=base+(g<extra?1:0),grp=U.slice(i,i+n).flat();i+=n;out.push({id:uid(),nombre:(grp.find(a=>a.forma!=='Decisión')||grp[0]).nombre,responsable:moda(grp.map(a=>a.responsable)),acts:grp.map(a=>a.id),sipoc:{p:'',e:'',s:'',c:''}})}return out}
+const defK=d=>{const n=unidades(d).length;return n<=6?n:(n<=10?5:6)};
 function wzInit(d){if(S.wzFor===d.id)return;S.wzFor=d.id;S.dirty=false;S.wz=clone(Array.isArray(d.macro)&&d.macro.length?d.macro:proponer(d,defK(d)));S.wp=clone(d.proc||{});S.wc=clone(d.chk||{})}
 const ro=()=>canWrite?'':' disabled';
 const needFlow=d=>`<div class="card empty"><h3>Primero el flujo</h3><p>La caracterización se arma a partir de las actividades del flujo. Agrega al menos dos.</p><button class="btn pri" data-a="step" data-s="flujo">Ir al flujo</button></div>`;
 function carHTML(d){
   if(core(d).length<2)return `<div class="sh"><div><h2>Caracterización</h2></div></div>${needFlow(d)}`;
-  const W=S.wz,k=W.length,c=core(d),inP=new Set(W.flatMap(m=>m.acts)),fuera=orderActs(d).filter(a=>!inP.has(a.id)&&a.forma!=='Inicio'&&a.forma!=='Fin');
+  const W=S.wz,k=W.length,nU=unidades(d).length,inP=new Set(W.flatMap(m=>m.acts)),fuera=orderActs(d).filter(a=>!inP.has(a.id));
   const chip=(a,mi,first,last)=>`<span class="chip2">${first&&mi>0&&canWrite?`<button data-a="mv-act" data-m="${mi}" data-d="-1" title="Pasar a la anterior" aria-label="Pasar a la anterior">‹</button>`:''}${esc(a.nombre)}${last&&mi<k-1&&canWrite?`<button data-a="mv-act" data-m="${mi}" data-d="1" title="Pasar a la siguiente" aria-label="Pasar a la siguiente">›</button>`:''}</span>`;
   const ta=(i,f,ph)=>`<textarea data-s="${f}" data-m="${i}" rows="4" placeholder="${ph}"${ro()}>${esc((W[i].sipoc||{})[f]||'')}</textarea>`;
   return `<div class="sh"><div><h2>Caracterización</h2><p>El proceso resumido en sus grandes actividades y, para cada una, quién entrega, qué entra, qué sale y quién lo recibe (SIPOC).</p></div></div>
   <div class="card pad"><h3 style="margin:0 0 4px;font-size:16px">1. Grandes actividades</h3>
-  <p class="hint">Se siguió el camino normal del flujo (la primera opción de cada decisión, sin retrocesos). Renombra cada bloque con <b>verbo + objeto</b> y usa ‹ › para mover actividades entre bloques.</p>
+  <p class="hint">Se siguió el camino normal del flujo (la primera opción de cada decisión, sin retrocesos); cada decisión queda dentro de la actividad que la precede. Si el flujo es corto, cada actividad es una gran actividad; si es largo, se agrupan en 5 o 6. Renombra cada bloque con <b>verbo + objeto</b> y usa ‹ › para mover actividades entre bloques.</p>
   <div class="chev">${W.map((m,i)=>`<div class="cv"><small>${i+1}</small>${esc(m.nombre||'Sin nombre')}<i>${esc(m.responsable||'')}</i></div>`).join('')}</div>
-  ${canWrite?`<div class="row" style="margin-bottom:10px"><label style="display:flex;gap:6px;align-items:center;margin:0;color:var(--ink)">Cantidad <select id="wzK" style="width:auto;min-height:36px;margin:0">${[3,4,5,6,7].filter(x=>x<=c.length).map(x=>`<option${x===k?' selected':''}>${x}</option>`).join('')}</select></label><button class="btn sm" data-a="wz-propose">Volver a proponer</button></div>`:''}
+  ${canWrite?`<div class="row" style="margin-bottom:10px"><label style="display:flex;gap:6px;align-items:center;margin:0;color:var(--ink)">Cantidad <select id="wzK" style="width:auto;min-height:36px;margin:0">${Array.from({length:Math.min(7,nU)},(_,i)=>i+1).map(x=>`<option${x===k?' selected':''}>${x}</option>`).join('')}</select></label><button class="btn sm" data-a="wz-propose">Volver a proponer</button></div>`:''}
   <div class="mgrid">${W.map((m,i)=>`<div class="mcard"><div class="mh"><span class="mn">${i+1}</span><input data-f="nombre" data-m="${i}" value="${esc(m.nombre)}" aria-label="Nombre"${ro()}></div>
     <label style="margin:6px 0">Responsable<input data-f="responsable" data-m="${i}" value="${esc(m.responsable||'')}" list="dlRespW"${ro()}></label>
     <div class="chips">${m.acts.map((id,j)=>{const a=actOf(d,id);return a?chip(a,i,j===0,j===m.acts.length-1):''}).join('')}</div></div>`).join('')}</div>
@@ -664,7 +667,7 @@ const ulOf=t=>{const l=lines(t);return l.length?'<ul>'+l.map(x=>`<li>${esc(x)}</
 function procDoc(d,p,W){
   const acts=orderActs(d),nm=Object.fromEntries(acts.map((a,i)=>[a.id,i+1])),inP=new Set(W.flatMap(m=>m.acts));
   const resp={};acts.forEach(a=>{const r=(a.responsable||'').trim()||'Sin responsable';(resp[r]=resp[r]||[]).push(a)});
-  const fuera=acts.filter(a=>!inP.has(a.id)&&a.forma!=='Inicio'&&a.forma!=='Fin');
+  const fuera=acts.filter(a=>!inP.has(a.id));
   const fila=a=>{const sb=subsOf(d,a);return `<tr><td>${nm[a.id]}</td><td><b>${esc(a.nombre)}</b>${a.forma==='Decisión'?'<br><small>'+ramasOf(a).map(r=>{const t=actOf(d,r.dest);return esc(r.etiqueta)+' → '+(t?nm[t.id]+'. '+esc(t.nombre):'—')}).join('; ')+'</small>':''}${sb.length?`<br><small>Ver ${sb.length>1?'subprocesos':'subproceso'}: ${sb.map(s=>esc(s.nombre)).join(', ')}</small>`:''}</td><td>${esc(a.responsable||'')}</td><td>${esc(a.descripcion||'')}</td></tr>`};
   const img='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(layoutFlow(d).svg);
   const titulo=d.raiz?'Flujo general de '+(d.nombre||'la empresa'):d.nombre;
@@ -693,7 +696,7 @@ function opCard(o,d){const a=actOf(d,o.actividadId),ins=inisOf(o.id);
 function opsHTML(d){
   const W=S.wz,acts=orderActs(d),inP=new Set(W.flatMap(m=>m.acts)),C=S.wc;
   const groups=W.length?W.map((m,i)=>({t:`${i+1}. ${m.nombre}`,l:m.acts.map(id=>actOf(d,id)).filter(Boolean)})):[];
-  const otros=acts.filter(a=>!inP.has(a.id)&&a.forma!=='Inicio'&&a.forma!=='Fin');
+  const otros=acts.filter(a=>!inP.has(a.id));
   if(!W.length)groups.push({t:'Actividades',l:otros.splice(0)});else if(otros.length)groups.push({t:'Excepciones y variantes',l:otros});
   const reg=new Set(opsOf(d.id).filter(i=>i.origen).map(i=>i.origen)),ops=opsOf(d.id).sort((a,b)=>Number(isOpenOp(b))-Number(isOpenOp(a))||['Alta','Media','Baja'].indexOf(a.prioridad)-['Alta','Media','Baja'].indexOf(b.prioridad));
   return `<div class="sh"><div><h2>Oportunidades de mejora</h2><p>Responde unas preguntas sencillas por actividad. Cada “sí” se convierte en una oportunidad; a cada oportunidad puedes asignarle iniciativas.</p></div>${canWrite?'<button class="btn sm" data-a="op-new">+ Registrar oportunidad</button>':''}</div>
