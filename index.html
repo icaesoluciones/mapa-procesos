@@ -279,7 +279,9 @@ const hasFile=d=>!!(d&&d.assetId);
 const isGen=d=>!hasFile(d)||d.vista==='generado';
 function responsables(){return [...new Set(Object.values(S.diag).flatMap(d=>[(d.dueno||'').trim(),...(d.actividades||[]).map(a=>String(a.responsable||'').trim())]).filter(Boolean))].sort()}
 const STEPS=[['mapa','Mapa de procesos'],['flujo','Flujo'],['car','Caracterización'],['proc','Procedimiento'],['ops','Oportunidades']];
-const stepsOf=d=>d.raiz?STEPS:STEPS.slice(1);
+const docsOn=d=>d.raiz||(d.docs!==undefined?!!d.docs:!d.parentActId);
+const stepsOf=d=>d.raiz?STEPS:STEPS.slice(1).filter(s=>docsOn(d)||s[0]==='flujo'||s[0]==='ops');
+const stepKeys=d=>stepsOf(d).map(s=>s[0]).filter(s=>s!=='mapa');
 function hecho(d,s){if(!d)return false;
   if(s==='mapa')return mapKids().length>0;
   if(s==='flujo')return(d.actividades||[]).length>=2;
@@ -379,7 +381,7 @@ function crumbs(){const d=D(S.cur),an=ancestors(d.id);
   const nm=(i)=>i+1<an.length?an[i+1].d.nombre:d.nombre;
   $('#crumbs').innerHTML=an.map((x,i)=>{const a0=actOf(x.d,x.act),a=a0&&norm(a0.nombre)!==norm(nm(i))?a0:null;return `<button data-a="node" data-id="${esc(x.d.id)}"${a?` data-sel="${esc(a.id)}"`:''}>${esc(x.d.raiz?'Empresa':x.d.nombre)}</button><span aria-hidden="true">›</span>${a?`<span class="via">${esc(a.nombre)}</span><span aria-hidden="true">›</span>`:''}`}).join('')+`<span class="cur">${esc(d.raiz?(d.nombre||'Empresa'):d.nombre)}</span>${d.raiz?'':`<span class="via">${esc(CATS.find(c=>c[0]===d.categoria)?.[1]||(d.parentActId?'Subproceso':'Proceso'))}</span>`}`}
 function steps(){const d=D(S.cur),L=stepsOf(d);
-  $('#steps').innerHTML=L.map(([k,l],i)=>`<button class="st${S.step===k?' on':''}${hecho(d,k)?' ok':''}" role="tab" aria-selected="${S.step===k}" data-a="step" data-s="${k}"><b>${hecho(d,k)&&S.step!==k?'✓':i+1}</b>${l}</button>`).join('')}
+  $('#steps').innerHTML=L.map(([k,l],i)=>`<button class="st${S.step===k?' on':''}${hecho(d,k)?' ok':''}" role="tab" aria-selected="${S.step===k}" data-a="step" data-s="${k}"><b>${hecho(d,k)&&S.step!==k?'✓':i+1}</b>${l}</button>`).join('')+(!d.raiz&&!docsOn(d)&&canWrite?'<button class="st" data-a="docs" data-v="1" style="border-style:dashed;color:var(--mut)"><b>+</b>Agregar caracterización y procedimiento</button>':'')}
 let ck='';
 function content(){
   const d=D(S.cur),key=d.id+'|'+S.step,el=$('#content');
@@ -399,7 +401,7 @@ const footNav=(d,saveBtn)=>{const L=stepsOf(d).map(x=>x[0]),i=L.indexOf(S.step),
 /* ================= paso: mapa ISO ================= */
 const cfg=()=>S.items.cfg_mapa||{izq:'Necesidades del cliente',der:'Satisfacción del cliente'};
 const procOrd=c=>mapKids().filter(d=>d.categoria===c).sort((a,b)=>num(a.ordenMapa)-num(b.ordenMapa)||byName(a,b));
-function progSeg(d){return `<span class="seg" title="${['flujo','car','proc','ops'].filter(s=>hecho(d,s)).length} de 4 pasos completos">${['flujo','car','proc','ops'].map(s=>`<i class="${hecho(d,s)?'on':''}"></i>`).join('')}</span>`}
+function progSeg(d){const k=stepKeys(d);return `<span class="seg" title="${k.filter(s=>hecho(d,s)).length} de ${k.length} pasos completos">${k.map(s=>`<i class="${hecho(d,s)?'on':''}"></i>`).join('')}</span>`}
 function isoHTML(){
   const cf=cfg(),unc=mapKids().filter(d=>!CATS.some(c=>c[0]===d.categoria)),root=D('raiz');
   const band=c=>{const l=procOrd(c[0]);return `<section class="band ${c[3]}"><h3><span>${c[2]}<small>${c[4]}</small></span>${canWrite?`<button class="lnk noprint" data-a="proc-new" data-cat="${c[0]}">+ Agregar</button>`:''}</h3><div class="boxes">${l.length?l.map(d=>{const ops=openIn(new Set(subtree(d.id)));return `<button class="pbox${S.selMap===d.id?' sel':''}" data-a="mapsel" data-id="${esc(d.id)}"><b>${esc(d.nombre)}</b>${d.dueno?`<small>${esc(d.dueno)}</small>`:'<small>&nbsp;</small>'}<span class="meta2">${progSeg(d)}${ops?`<span class="op">${ops} abiertas</span>`:''}</span></button>`}).join(''):`<span class="emptyb">Aún no hay procesos aquí.</span>`}</div></section>`};
@@ -428,6 +430,7 @@ function flujoBar(d){const b=$('#fbar');if(!b)return;const n=(d.actividades||[])
     <button data-a="imp">${hasFile(d)?'Reemplazar PDF o imagen':'Importar PDF o imagen (Visio, Lucidchart)'}</button>
     ${hasFile(d)&&d.kind==='pdf'?'<button data-a="detect">Leer actividades del PDF</button>':''}
     ${hasFile(d)?'<button data-a="unimp">Quitar el PDF (quedarse con el diagrama)</button>':''}
+    ${d.raiz?'':`<button data-a="docs" data-v="${docsOn(d)?'':'1'}">${docsOn(d)?'Quitar caracterización y procedimiento':'Agregar caracterización y procedimiento'}</button>`}
     ${d.raiz?'':'<button class="dang" data-a="node-del">Eliminar proceso</button>'}</div></details>`:''}`}
 let lastKey='',tok=0,task=null,lastClk={};
 async function drawStage(){
@@ -466,7 +469,7 @@ function overlay(){
     return `<button class="hs${a.id===S.sel?' sel':''}" data-a="act" data-id="${esc(a.id)}" style="left:${num(z.x)*100}%;top:${num(z.y)*100}%;width:${num(z.w)*100}%;height:${num(z.h)*100}%" aria-label="${esc(a.nombre)}">${n?`<span class="bdg">${n}</span>`:''}</button>`}).join('')}
 
 /* ================= panel lateral ================= */
-function goBtns(n,pref){return `<div class="go">${STEPS.slice(1).map(([k,l],i)=>`<button class="${n&&hecho(n,k)?'ok':''}" data-a="${n?'node':'sub-make'}" ${n?`data-id="${esc(n.id)}"`:''} data-s="${k}"${pref||''}><b>${n&&hecho(n,k)?'✓':i+1}</b><span>${l}</span>${k==='ops'&&n?`<em>${opsOf(n.id).filter(isOpenOp).length} abiertas</em>`:''}</button>`).join('')}</div>`}
+function goBtns(n,pref){const L=n?stepsOf(n).filter(s=>s[0]!=='mapa'):STEPS.filter(s=>s[0]==='flujo'||s[0]==='ops');return `<div class="go">${L.map(([k,l],i)=>`<button class="${n&&hecho(n,k)?'ok':''}" data-a="${n?'node':'sub-make'}" ${n?`data-id="${esc(n.id)}"`:''} data-s="${k}"${pref||''}><b>${n&&hecho(n,k)?'✓':i+1}</b><span>${l}</span>${k==='ops'&&n?`<em>${opsOf(n.id).filter(isOpenOp).length} abiertas</em>`:''}</button>`).join('')}</div>`}
 function drawer(){
   const dr=$('#drawer'),wrap=$('#wrap'),d=D(S.cur);let h='';
   if(S.step==='mapa'&&S.selMap&&D(S.selMap)){
@@ -482,7 +485,7 @@ function drawer(){
     <dl><dt>Responsable</dt><dd>${esc(a.responsable||'—')}</dd>${a.forma==='Decisión'?`<dt>Opciones</dt><dd>${ramasOf(a).map(r=>{const t=actOf(d,r.dest);return esc(r.etiqueta)+' → '+(t?esc(t.nombre):'<i>sin destino</i>')}).join('<br>')}</dd>`:''}</dl>
     ${a.descripcion?`<div class="desc">${esc(a.descripcion)}</div>`:'<p class="mut">Sin descripción.</p>'}
     ${canWrite?'<button class="btn sm" data-a="act-edit">Editar actividad</button>':''}
-    <div class="dsec"><h4>Subproceso de esta actividad</h4>${sub?`<p class="mut" style="margin-top:0">${esc(sub.nombre)} ${progSeg(sub)}</p>${goBtns(sub)}`:(canWrite?`<p class="hint">Detalla cómo se hace esta actividad: su propio flujo, caracterización, procedimiento y oportunidades.</p>${goBtns(null)}`:'<p class="mut">Sin subproceso.</p>')}</div>
+    <div class="dsec"><h4>Subproceso de esta actividad</h4>${sub?`<p class="mut" style="margin-top:0">${esc(sub.nombre)} ${progSeg(sub)}</p>${goBtns(sub)}`:(canWrite?`<p class="hint">Detalla cómo se hace esta actividad con su propio flujo y sus oportunidades. Si lo necesita, luego le agregas caracterización y procedimiento.</p>${goBtns(null)}`:'<p class="mut">Sin subproceso.</p>')}</div>
     <div class="dsec"><h4>Oportunidades en esta actividad</h4>${opsA.length?opsA.map(o=>`<p class="mut" style="margin:2px 0">• ${esc(o.titulo)} <span class="chip${o.estado==='Cerrada'?' cl':''}">${esc(o.estado||'')}</span></p>`).join(''):'<p class="mut">Ninguna registrada.</p>'}
     ${canWrite?`<button class="btn sm" data-a="op-new" data-act="${esc(a.id)}" style="margin-top:6px">+ Registrar oportunidad</button>`:''}</div>`}
   dr.hidden=!h;wrap.classList.toggle('withd',!!h);if(h)dr.innerHTML=h;
@@ -739,7 +742,7 @@ document.addEventListener('click',async e=>{
   switch(a){
   case 'step':goStep(b.dataset.s);break;
   case 'node':goNode(id,b.dataset.s,b.dataset.sel);break;
-  case 'mapsel':S.selMap=S.selMap===id?null:id;content();drawer();break;
+  case 'mapsel':S.selMap=id;content();drawer();break;
   case 'close-dr':S.sel=null;S.selMap=null;if(S.step==='mapa')content();else overlay();drawer();break;
   case 'proc-new':nodeDlg(null,b.dataset.cat);break;
   case 'node-edit':nodeDlg(D(id)||d);break;
@@ -749,12 +752,13 @@ document.addEventListener('click',async e=>{
   case 'mv':{const n=D(S.selMap),l=procOrd(n.categoria),i=l.indexOf(n),j=i+(+b.dataset.d);if(j<0||j>=l.length)break;l.splice(j,0,l.splice(i,1)[0]);l.forEach((x,k)=>{if(num(x.ordenMapa)!==k+1)put('diagramas',{...x,ordenMapa:k+1})});break}
   case 'iso-lbl':{const cf=cfg();openDlg(`<h3>Textos del mapa</h3><label>Entrada (izquierda)<input name="izq" value="${esc(cf.izq)}"></label><label>Salida (derecha)<input name="der" value="${esc(cf.der)}"></label><div class="row end" style="margin-top:12px"><button type="button" class="btn" data-a="dlg-close">Cancelar</button><button class="btn pri">Guardar</button></div>`,fd=>{put('items',{id:'cfg_mapa',tipo:'config',izq:String(fd.get('izq')).trim()||cf.izq,der:String(fd.get('der')).trim()||cf.der})});break}
   case 'print':{const t=document.getElementById(b.dataset.t);if(!t)break;if(b.dataset.t==='procDoc')procPreview();document.body.classList.add('pr');setTimeout(()=>{try{window.print()}catch(err){toast('El navegador no permitió imprimir.')}document.body.classList.remove('pr')},60);break}
-  case 'act':{const now=Date.now();if(S.zonas)break;if(lastClk.id===id&&now-lastClk.t<450){lastClk={};const a2=actOf(d,id),sb=a2&&subOf(d,a2);if(sb){goNode(sb.id,'flujo');break}}lastClk={id,t:now};S.sel=S.sel===id?null:id;overlay();drawer();break}
+  case 'act':{const now=Date.now();if(S.zonas)break;if(lastClk.id===id&&now-lastClk.t<450){lastClk={};const a2=actOf(d,id),sb=a2&&subOf(d,a2);if(sb){goNode(sb.id,'flujo');break}}lastClk={id,t:now};S.sel=id;overlay();drawer();break}
   case 'acts':actsDlg(!!b.dataset.dictar);break;
   case 'act-edit':{const x=actOf(d,S.sel);if(x)actDlg(x);break}
   case 'act-del':{if(!armed(b))break;const aid=S.sel;closeDlg(false);S.sel=null;opsOf(d.id).filter(i=>i.actividadId===aid).forEach(it=>put('items',{...it,actividadId:null}));
     put('diagramas',{...D(d.id),actividades:(D(d.id).actividades||[]).filter(x=>x.id!==aid).map(x=>({...x,sig:(x.sig||[]).filter(s=>s!==aid),ramas:(x.ramas||[]).map(r=>r.dest===aid?{...r,dest:''}:r)}))});break}
   case 'sub-make':makeSub(b.dataset.s);break;
+  case 'docs':{if(!d||d.raiz)break;const on=!!b.dataset.v;put('diagramas',{...d,docs:on});ck='';toast(on?'Se agregaron Caracterización y Procedimiento a este proceso.':'Caracterización y Procedimiento ocultos (lo ya registrado se conserva).');render(true);break}
   case 'vista':{if(!d)break;const v=b.dataset.v;S.page=1;S.zonas=false;if(canWrite)put('diagramas',{...d,vista:v});else{S.diag[d.id]={...d,vista:v};render(true)}break}
   case 'pg':S.page=Math.min(S.pages,Math.max(1,S.page+(+b.dataset.d)));S.sel=null;drawer();drawStage();break;
   case 'zonas':S.zonas=!S.zonas;S.sel=null;flujoBar(d);overlay();drawer();if(S.zonas)toast('Arrastra sobre el PDF para marcar cada actividad.');break;
