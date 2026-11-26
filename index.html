@@ -233,6 +233,22 @@ mark{background:#fde68a;color:inherit;padding:0 1px;border-radius:2px}
 @media (max-width:900px){.srch{order:5;flex-basis:100%;max-width:none}.top{gap:8px 10px}}
 @media (max-width:700px){#steps .edit-by{display:none}.objb{flex-wrap:wrap}.objb .tx{flex-basis:100%}.top .brand{order:1}.top .hr{order:2;margin-left:auto}.top .views{order:3}.top .srch{order:4}}
 .pgrid.one{grid-template-columns:1fr!important}
+
+.hlpb{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:0 12px;border:1px solid var(--line);background:#fff;border-radius:10px;color:var(--pri);font-family:inherit;font-weight:600;font-size:14px;cursor:pointer}.hlpb:hover{background:var(--pri2)}
+#help{width:min(1080px,96vw);max-width:none;padding:0;border:0;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.3)}#help::backdrop{background:rgba(15,23,42,.55)}
+#help .hh{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}#help h3{margin:0;font-size:18px}
+#help .x{border:0;background:none;font-size:26px;line-height:1;width:40px;height:40px;border-radius:10px;cursor:pointer;color:var(--mut)}#help .x:hover{background:var(--soft)}
+#help .hb{display:grid;grid-template-columns:230px minmax(0,1fr);gap:16px;padding:16px 18px 18px}
+#help .hc{display:flex;flex-direction:column;gap:6px}
+#help .hc button{display:grid;grid-template-columns:28px minmax(0,1fr);gap:9px;align-items:center;text-align:left;min-height:48px;padding:7px 10px;border:1px solid var(--line);background:#fff;border-radius:10px;cursor:pointer;font:inherit;color:var(--ink)}
+#help .hc button b{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--pri2);color:var(--pri);font-size:13px}
+#help .hc button span{font-weight:600;font-size:14px;line-height:1.2}#help .hc small{display:block;font-weight:400;color:var(--mut);font-size:12px}
+#help .hc button.on{background:var(--pri);border-color:var(--pri);color:#fff}#help .hc button.on b{background:#ffffff2e;color:#fff}#help .hc button.on small{color:#ffffffcc}
+#help video{display:block;width:100%;aspect-ratio:16/9;background:#0b1512;border-radius:10px}
+#help .hi{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-top:10px}#help .hi p{margin:0;color:var(--mut);font-size:14px}
+.tipc{position:fixed;left:18px;bottom:18px;z-index:40;width:min(330px,calc(100vw - 36px));background:#fff;border:1px solid var(--line);border-left:4px solid var(--pri);border-radius:12px;padding:12px 14px;box-shadow:0 12px 30px rgba(0,0,0,.15);display:flex;flex-direction:column;gap:4px;font-size:14px}.tipc[hidden]{display:none}.tipc .row{margin-top:6px}
+.vcomo{color:var(--pri)!important}
+@media (max-width:760px){#help .hb{grid-template-columns:minmax(0,1fr)}#help .hc{flex-direction:row;overflow-x:auto}#help .hc button{flex:0 0 170px}.hlpb{padding:0 9px}}
 .demo{background:#eef4ff!important;border-color:#c7d7fe!important;color:#1d3a8a}
 </style>
 </head>
@@ -242,7 +258,7 @@ mark{background:#fde68a;color:inherit;padding:0 1px;border-radius:2px}
     <div><h1>Mapa de procesos</h1><small id="cliName"></small></div></div>
   <div class="srch" role="search"><input id="q" type="search" autocomplete="off" placeholder="Buscar flujo, actividad, responsable…  (Ctrl+K)" aria-label="Buscar en todos los procesos"><div id="qres" hidden></div></div>
   <nav class="views" id="views"><button data-v="app" class="on" title="Pulsa de nuevo para ir al Mapa de procesos">Procesos</button><button data-v="port">Portafolio de mejora</button></nav>
-  <div class="hr"><span class="mode" id="modeTag"></span><button class="who" id="who" hidden></button><button class="icb" id="btnRefresh" title="Actualizar: traer los cambios de otras personas" aria-label="Actualizar"><svg viewBox="0 0 16 16" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3v3.5H9.5M3 13V9.5h3.5"/><path d="M12.6 6.5A5 5 0 0 0 3.8 5M3.4 9.5a5 5 0 0 0 8.8 1.5"/></svg></button></div>
+  <div class="hr"><span class="mode" id="modeTag"></span><button class="who" id="who" hidden></button><button class="hlpb" id="btnHelp" type="button" title="Ver los videos de ayuda"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6.5"/><path d="M6.6 5.6l3.6 2.4-3.6 2.4z" fill="currentColor"/></svg>Ayuda</button><button class="icb" id="btnRefresh" title="Actualizar: traer los cambios de otras personas" aria-label="Actualizar"><svg viewBox="0 0 16 16" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3v3.5H9.5M3 13V9.5h3.5"/><path d="M12.6 6.5A5 5 0 0 0 3.8 5M3.4 9.5a5 5 0 0 0 8.8 1.5"/></svg></button></div>
 </header>
 <div id="banner"></div>
 <main id="app" hidden>
@@ -250,6 +266,8 @@ mark{background:#fde68a;color:inherit;padding:0 1px;border-radius:2px}
   <div class="wrap" id="wrap"><section id="content"></section><aside id="drawer" class="card pad dr" hidden></aside></div>
 </main>
 <main id="port" class="wrap" hidden></main>
+<dialog id="help" aria-label="Ayuda en video"><div class="hh"><h3 id="hT">Ayuda en video</h3><button type="button" class="x" id="hX" aria-label="Cerrar">×</button></div><div class="hb"><nav class="hc" id="hC" aria-label="Temas"></nav><div class="hv"><video id="hV" controls playsinline preload="metadata"></video><div class="hi"><p id="hD"></p><button type="button" class="btn pri sm" id="hN"></button></div><p class="hint" style="margin:6px 0 0">Videos sin sonido: los textos en pantalla explican cada paso.</p></div></div></dialog>
+<div class="tipc" id="tipc" hidden><b>¿Primera vez aquí?</b><span>Mira cómo funciona en menos de un minuto.</span><div class="row"><button type="button" class="btn pri sm" data-a="help" data-v="0">▶ Ver video (37 s)</button><button type="button" class="btn ghost sm" data-a="tip-x">Ahora no</button></div></div>
 <dialog id="dlg"><form id="dlgForm"></form></dialog>
 <div id="tip" hidden></div>
 <div id="toast" role="status"></div>
@@ -445,7 +463,7 @@ function crumbs(){const d=D(S.cur),an=ancestors(d.id);
   $('#crumbs').innerHTML=an.map((x,i)=>{const a0=actOf(x.d,x.act),a=a0&&norm(a0.nombre)!==norm(nm(i))?a0:null;return `<button data-a="node" data-id="${esc(x.d.id)}"${a?` data-sel="${esc(a.id)}"`:''}>${esc(x.d.raiz?'Empresa':x.d.nombre)}</button><span aria-hidden="true">›</span>${a?`<span class="via">${esc(a.nombre)}</span><span aria-hidden="true">›</span>`:''}`}).join('')+`<span class="cur">${esc(d.raiz?(d.nombre||'Empresa'):d.nombre)}</span>${d.raiz?'':`<span class="via">${isArea(d)?'Proceso '+esc((CATS.find(c=>c[0]===d.categoria)||[,'sin clasificar'])[1].toLowerCase()):'Flujo'}</span>`}`}
 function steps(){const d=D(S.cur),L=stepsOf(d),hasHist=!isArea(d);
   $('#steps').innerHTML=L.map(([k,l],i)=>`<button class="st${S.step===k?' on':''}${hecho(d,k)?' ok':''}" role="tab" aria-selected="${S.step===k}" data-a="step" data-s="${k}"><b>${hecho(d,k)&&S.step!==k?'✓':i+1}</b>${l}</button>`).join('')+
-  `<span style="flex:1"></span>${hasHist&&d.editado?`<span class="edit-by" style="align-self:center">Última edición: ${esc(d.editadoPor||'—')} · ${esc(fmtF(d.editado))}</span>`:''}${hasHist&&canWrite?`<button class="btn ghost sm" data-a="hist" style="align-self:center">${ic('hist')}Historial</button>`:''}`}
+  `<span style="flex:1"></span>${hasHist&&d.editado?`<span class="edit-by" style="align-self:center">Última edición: ${esc(d.editadoPor||'—')} · ${esc(fmtF(d.editado))}</span>`:''}${HV[S.step]!==undefined?`<button class="btn ghost sm vcomo" data-a="help" data-v="${HV[S.step]}" style="align-self:center" title="Video de este paso">▶ Ver cómo</button>`:''}${hasHist&&canWrite?`<button class="btn ghost sm" data-a="hist" style="align-self:center">${ic('hist')}Historial</button>`:''}`}
 let ck='';
 function content(){
   const d=D(S.cur),key=d.id+'|'+S.step,el=$('#content');
@@ -990,6 +1008,30 @@ function portfolio(){
   ${rows.length?rows.map(i=>{const[im,ef]=ie(i);return `<tr><td><b>${esc(i.titulo)}</b></td><td><button class="lnk" data-a="node" data-id="${esc(i.diagramaId)}" data-s="ops">${esc(pathOf(i.diagramaId))}</button></td><td><span class="chip ${prioCls(prio(i))}">${prio(i)}</span></td><td>${nivTxt(im)}</td><td>${nivTxt(ef)}</td><td>${esc(i.estado||'Identificada')}</td><td>${esc(i.responsable||'')}</td></tr>`}).join(''):'<tr><td colspan="7" class="mut">Sin oportunidades con estos filtros.</td></tr>'}
   </tbody></table></div></div>`}
 
+/* ================= ayuda en video ================= */
+const HVID=[{f:'ayuda-1.mp4',t:'Primeros pasos',c:'Cómo se maneja',d:'Tu nombre, la barra superior, el guardado automático y la empresa de ejemplo.',s:37},
+ {f:'ayuda-2.mp4',t:'Mapa de procesos',c:'Paso 1',d:'Objetivo de la empresa y cómo agregar y ordenar procesos.',s:45},
+ {f:'ayuda-3.mp4',t:'Flujo',c:'Paso 2',d:'Crear un flujo, cargar una plantilla, decisiones y el diagrama.',s:40},
+ {f:'ayuda-4.mp4',t:'Caracterización',c:'Paso 3',d:'Grandes actividades, SIPOC e indicadores.',s:29},
+ {f:'ayuda-5.mp4',t:'Procedimiento',c:'Paso 4',d:'Completar el documento, aprobar la versión y descargarlo.',s:32},
+ {f:'ayuda-6.mp4',t:'Oportunidades',c:'Paso 5',d:'Registrar mejoras, el portafolio y el buscador.',s:30}];
+const HV={mapa:1,area:2,flujo:2,car:3,proc:4,ops:5};
+let hCur=0;
+function helpGo(i,play){hCur=i;const x=HVID[i],v=$('#hV');$('#hT').textContent=(i?x.c+' · ':'')+x.t;$('#hD').textContent=x.d;
+  $('#hC').innerHTML=HVID.map((y,k)=>`<button type="button" class="${k===i?'on':''}" data-hv="${k}"><b>${k?k:'▶'}</b><span>${esc(y.t)}<small>${y.s} s</small></span></button>`).join('');
+  const n=$('#hN');n.hidden=i>=HVID.length-1;n.textContent=i<HVID.length-1?'Siguiente: '+HVID[i+1].t+' ›':'';
+  v.src=x.f;if(play){const p=v.play();if(p&&p.catch)p.catch(()=>{})}}
+function helpOpen(i){$('#tipc').hidden=true;const h=$('#help');try{h.showModal()}catch(e){h.setAttribute('open','')}helpGo(i||0,true)}
+function helpClose(){const v=$('#hV');v.pause();const h=$('#help');try{h.close()}catch(e){h.removeAttribute('open')}}
+$('#btnHelp').addEventListener('click',()=>helpOpen(HV[S.step]!==undefined&&S.view==='app'?HV[S.step]:0));
+$('#hX').addEventListener('click',helpClose);
+$('#help').addEventListener('close',()=>$('#hV').pause());
+$('#help').addEventListener('click',e=>{if(e.target.id==='help')helpClose();const b=e.target.closest('[data-hv]');if(b)helpGo(+b.dataset.hv,true)});
+$('#hN').addEventListener('click',()=>{if(hCur<HVID.length-1)helpGo(hCur+1,true)});
+$('#hV').addEventListener('error',()=>{$('#hD').textContent='No se encontró el video “'+HVID[hCur].f+'”. Debe estar en la misma carpeta que index.html.'});
+$('#hV').addEventListener('ended',()=>{if(hCur<HVID.length-1)$('#hN').focus()});
+function tipCheck(){if(!S.demo)$('#tipc').hidden=false}
+
 /* ================= buscador ================= */
 const fold=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const ACC={a:'aáàäâ',e:'eéèëê',i:'iíìïî',o:'oóòöô',u:'uúùüû',n:'nñ',c:'cç'};
@@ -1139,6 +1181,8 @@ document.addEventListener('click',async e=>{
   case 'hist':histDlg();break;
   case 'hist-rest':{const h=S.items[id];if(!h)break;let o;try{o=JSON.parse(h.datos)}catch(err){toast('Copia dañada.');break}const cur=D(o.id);if(!cur){toast('El flujo ya no existe.');break}
     closeDlg(false);put('diagramas',{...cur,actividades:o.actividades,macro:o.macro,carx:o.carx,proc:o.proc,nombre:o.nombre,dueno:o.dueno},{force:true,nota:'Antes de restaurar'});S.wzFor=null;ck='';render(true);toast('Versión restaurada.');break}
+  case 'help':helpOpen(+b.dataset.v||0);break;
+  case 'tip-x':$('#tipc').hidden=true;break;
   case 'demo':entrarDemo();break;
   case 'demo-exit':salirDemo();break;
   case 'csv':{const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"',rows=portRows();
@@ -1215,6 +1259,7 @@ let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{if(S.view==='
   $('#cliName').textContent=BOOT.cliente.nombre;$('#modeTag').textContent=canWrite?'Edición':'Solo consulta';$('#modeTag').classList.toggle('g',canWrite);whoBtn();
   $('#app').hidden=false;await load();
   if(canWrite&&!yo())nombreDlg(true);
+  setTimeout(tipCheck,1200);
   setInterval(()=>{if(!pending&&!S.dirty&&!S.demo&&!$('#dlg').open&&document.visibilityState==='visible')load()},120000);
 })();
 }
