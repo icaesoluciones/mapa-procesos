@@ -314,6 +314,20 @@ body{font-size:14px;letter-spacing:-.003em}
 .chev .cv{font-size:13px}
 #toast{border-radius:6px}
 dialog{border-radius:10px}
+
+/* separación clara entre franjas */
+.iso{gap:12px}
+.iso-b{display:flex;flex-direction:column;gap:12px}
+.iso-side{background:#e9eef4;border-color:#cfd8e3;color:#1e293b}.iso-side.r{background:#e9eef4;color:#1e293b}
+.band{background:#fff!important;padding:0 0 12px;overflow:hidden;border-width:1px;border-left-width:4px}
+.band h3{margin:0 0 12px;padding:9px 14px;border-bottom:1px solid var(--line)}
+.band .boxes{padding:0 12px}
+.est{border-color:#cdd8e8;border-left-color:#3b5b8c!important}.est h3{background:#f1f5fb;border-bottom-color:#dbe4f0}
+.ope{border-color:#cfe3da;border-left-color:#0b5d4b!important}.ope h3{background:#eef6f2;border-bottom-color:#d6e8e0}
+.apo{border-color:#e2ddd3;border-left-color:#8a7a5c!important}.apo h3{background:#f7f5f0;border-bottom-color:#ebe6dc}
+.ope .boxes{padding:0 12px;row-gap:12px}
+.band h3 .lnk{white-space:nowrap}@media(max-width:700px){.ope .pbox:first-child{clip-path:none;padding-left:12px}}
+.ope .pbox{background:#dcece5}@media(min-width:701px){.ope .pbox{margin-right:-8px}.ope .boxes{padding-right:20px}}.ope .pbox:nth-child(even){background:#c7e0d5}
 .chev .cv{background:#e2efea;color:#0b3d31;font-size:13px}.chev .cv:nth-child(even){background:#d3e7df}.chev .cv small{color:#3d6b5e;opacity:1}.chev .cv i{color:#3d6b5e;opacity:1}
 .filters select,.filters input{min-height:34px;border-radius:6px;font-size:13.5px;padding:4px 10px}
 .kpi{padding:12px 16px}.kpi b{font-size:28px;font-weight:650;letter-spacing:-.02em}.kpi span{font-size:12.5px}
@@ -605,7 +619,7 @@ function areaHTML(d){const fl=flowsOf(d),c=CATS.find(x=>x[0]===d.categoria);
   <div class="foot noprint"><button class="btn ghost" data-a="node" data-id="raiz" data-s="mapa">‹ Mapa de procesos</button><span></span></div>`}
 function objBox(d,lbl,ph){if(!d.objetivo&&!canWrite)return'';return `<div class="objb${d.objetivo?'':' vac noprint'}"><b>${lbl}</b><span class="tx">${d.objetivo?esc(d.objetivo):esc(ph)}</span>${canWrite?`<button class="lnk noprint" data-a="obj-edit" data-id="${esc(d.id)}">${d.objetivo?'Editar':'+ Escribir'}</button>`:''}</div>`}
 /* reparte las cajas de cada franja en filas parejas y centradas */
-function fitBands(){document.querySelectorAll('.band:not(.ope) .boxes').forEach(bx=>{const it=[...bx.querySelectorAll('.pbox')],n=it.length;if(!n)return;const W=bx.clientWidth,g=10,min=Math.min(180,W);
+function fitBands(){document.querySelectorAll('.band:not(.ope) .boxes').forEach(bx=>{const it=[...bx.querySelectorAll('.pbox')],n=it.length;if(!n)return;const cs=getComputedStyle(bx),W=bx.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight),g=10,min=Math.min(180,W);
   let cols=Math.min(n,Math.max(1,Math.floor((W+g)/(min+g))));const rows=Math.ceil(n/cols);cols=Math.ceil(n/rows);
   const w=Math.min(300,Math.floor((W-(cols-1)*g)/cols));bx.style.setProperty('--bw',w+'px')})}
 function isoHTML(){
