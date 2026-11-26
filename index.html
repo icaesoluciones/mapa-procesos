@@ -255,6 +255,7 @@ mark{background:#fde68a;color:inherit;padding:0 1px;border-radius:2px}
 .dparts{margin:6px 0 0 34px;display:flex;flex-direction:column;gap:4px}.dparts .chk{display:flex;gap:8px;align-items:flex-start;font-size:14px;color:var(--ink);margin:0;font-weight:400}.dparts input{width:auto;min-height:0;margin-top:3px}
 .btn.dangb{background:#b42318;border-color:#b42318;color:#fff}
 .sigs{display:flex;flex-direction:column;gap:4px;align-items:flex-start}.sigs .sg{display:flex;gap:4px;width:100%}.sigs .sg select{flex:1}
+.iaq{display:flex;gap:10px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0;font-size:14px}.iaq span{flex:1}
 .demo{background:#eef4ff!important;border-color:#c7d7fe!important;color:#1d3a8a}
 </style>
 </head>
@@ -290,7 +291,7 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,9);
 const clone=o=>JSON.parse(JSON.stringify(o));
 const norm=s=>String(s||'').toLowerCase().replace(/\s+/g,' ').trim();
 const num=v=>{const n=+v;return isFinite(n)?n:0};
-const hoy=()=>new Date().toISOString().slice(0,10);
+const hoy=()=>new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
 const fmtD=iso=>{if(!iso)return'';const d=new Date(iso);return isNaN(d)?String(iso):d.toLocaleDateString('es-DO',{day:'numeric',month:'short',year:'numeric'})};
 const fmtF=iso=>{if(!iso)return'';const d=new Date(iso);return isNaN(d)?String(iso):d.toLocaleDateString('es-DO',{day:'numeric',month:'short',year:'numeric'})+(String(iso).length>10?' '+d.toLocaleTimeString('es-DO',{hour:'2-digit',minute:'2-digit'}):'')};
 const FORMAS=['Inicio','Actividad','Decisión','Fin'];
@@ -546,7 +547,7 @@ function isoHTML(){
   const cf=cfg(),unc=mapKids().filter(d=>!CATS.some(c=>c[0]===d.categoria)),root=D('raiz');
   const band=c=>{const l=procOrd(c[0]);return `<section class="band ${c[3]}"><h3><span>${c[2]}<small>${c[4]}</small></span>${canWrite?`<button class="lnk noprint" data-a="proc-new" data-cat="${c[0]}">+ Agregar</button>`:''}</h3><div class="boxes">${l.length?l.map(d=>{const ops=openIn(new Set(subtree(d.id))),nf=flowsOf(d).length;return `<button class="pbox${S.selMap===d.id?' sel':''}" data-a="mapsel" data-id="${esc(d.id)}"${d.objetivo?` title="${esc(d.objetivo)}"`:''}><b>${esc(d.nombre)}</b>${d.dueno?`<small>${esc(d.dueno)}</small>`:'<small>&nbsp;</small>'}${d.objetivo?`<span class="obj">${esc(d.objetivo)}</span>`:''}<span class="meta2"><span>${nf?nf+(nf===1?' flujo':' flujos'):'Sin flujos'}</span>${ops?`<span class="op">${ops} abiertas</span>`:''}</span></button>`}).join(''):`<span class="emptyb">Aún no hay procesos aquí.</span>`}</div></section>`};
   return `<div class="sh"><div><h2>Mapa de procesos</h2><p>${mapKids().length?'Selecciona un proceso para ver sus flujos o crear uno nuevo. Cada flujo tiene su caracterización, procedimiento y oportunidades.':'Empieza por aquí: agrega los procesos de la empresa en su franja. No hace falta que estén completos; luego se detallan.'}</p></div>
-  <div class="row noprint">${S.demo?'':`<button class="btn sm" data-a="demo">${ic('eye')}Ver un ejemplo</button>`}<button class="btn sm" data-a="pdf" data-t="isoMap">${ic('dl')}Descargar PDF</button></div></div>
+  <div class="row noprint">${S.demo?'':`<button class="btn sm" data-a="demo">${ic('eye')}Ver un ejemplo</button>`}<button class="btn sm" data-a="pdf" data-t="isoMap">${ic('dl')}Descargar PDF</button><button class="btn sm" data-a="ia-export" title="Descarga un archivo con toda la información para usarlo en ChatGPT, Claude, Copilot o Gemini">${ic('doc')}Exportar para IA</button></div></div>
   <div class="card ptarget" id="isoMap">${root.objetivo||canWrite?`<div style="padding:14px 14px 0">${objBox(root,'Objetivo de la empresa','Escribe el objetivo general o propósito de la empresa (su razón de ser).')}</div>`:''}<div class="iso"><div class="iso-side"><span>${esc(cf.izq)}</span></div><div class="iso-b">${CATS.map(band).join('')}</div><div class="iso-side r"><span>${esc(cf.der)}</span></div></div></div>
   ${unc.length?`<div class="card pad noprint" style="margin-top:14px"><h4 style="margin:0 0 4px">Procesos sin clasificar (${unc.length})</h4><p class="hint">Selecciónalos y asígnales una franja para que aparezcan en el mapa.</p><div class="row">${unc.map(d=>`<button class="btn sm" data-a="mapsel" data-id="${esc(d.id)}">${esc(d.nombre)}</button>`).join('')}</div></div>`:''}
   ${footNav(root)}`}
@@ -1046,7 +1047,7 @@ function portfolio(){
   const ops=Object.values(S.items).filter(i=>i.tipo==='oportunidad');
   const k=[[ops.filter(isOpenOp).length,'Oportunidades abiertas',''],[ops.filter(o=>isOpenOp(o)&&prio(o)==='Alta').length,'Abiertas de prioridad alta','al'],[ops.filter(o=>o.estado==='En implementación').length,'En implementación',''],[ops.filter(o=>o.estado==='Cerrada').length,'Cerradas','']];
   const f=S.pf||(S.pf={e:'open',p:'',q:''}),rows=portRows();
-  $('#port').innerHTML=`<div><div class="sh"><div><h2>Portafolio de mejora</h2><p>Todas las oportunidades de la empresa, ordenadas por prioridad (impacto alto y esfuerzo bajo primero).</p></div><button class="btn sm" data-a="csv">Copiar CSV</button></div>
+  $('#port').innerHTML=`<div><div class="sh"><div><h2>Portafolio de mejora</h2><p>Todas las oportunidades de la empresa, ordenadas por prioridad (impacto alto y esfuerzo bajo primero).</p></div><div class="row"><button class="btn sm" data-a="ia-export">${ic('doc')}Exportar para IA</button><button class="btn sm" data-a="csv">Copiar CSV</button></div></div>
   <div class="kpis">${k.map(([n,l,c])=>`<div class="card kpi ${n&&c?c:''}"><b>${n}</b><span>${l}</span></div>`).join('')}</div>
   <div class="filters"><select id="pfE" aria-label="Estado"><option value="open"${f.e==='open'?' selected':''}>Solo abiertas</option><option value=""${f.e===''?' selected':''}>Todas</option>${EST_OP.map(x=>`<option${f.e===x?' selected':''}>${x}</option>`).join('')}</select>
   <select id="pfP" aria-label="Prioridad"><option value="">Todas las prioridades</option>${['Alta','Media','Baja'].map(x=>`<option${f.p===x?' selected':''}>${x}</option>`).join('')}</select>
@@ -1093,6 +1094,62 @@ function delDlg(n){
     put('diagramas',upd,{force:true,nota:'Antes de eliminar'});S.wzFor=null;ck='';render(true);
     undoToast('Eliminado.',()=>restaurar(snapD,snapI))})
   const f=$('#dlgForm');f.querySelectorAll('[name=p]').forEach(c=>c.addEventListener('change',()=>{const r=f.querySelector('[name=modo][value=parte]');if(r&&c.checked)r.checked=true}))}
+
+/* ================= exportar para IA (solo lectura: genera un archivo, no conecta nada) ================= */
+function iaMarkdown(){
+  const root=D('raiz')||{},emp=(S.demo?root.nombre:(BOOT.cliente&&BOOT.cliente.nombre))||root.nombre||'Empresa',out=[],P=s=>out.push(s);
+  const cel=s=>String(s??'').replace(/\|/g,'/').replace(/\s*\n\s*/g,'; ').trim()||'—';
+  const tabla=(h,rows)=>{if(!rows.length)return;P('| '+h.join(' | ')+' |');P('|'+h.map(()=>'---').join('|')+'|');rows.forEach(r=>P('| '+r.map(cel).join(' | ')+' |'));P('')};
+  const lst=t=>lines(t).map(x=>'- '+x).join('\n');
+  P(`# Procesos de ${emp}`);P('');
+  P(`Exportado el ${fmtF(new Date().toISOString())} desde la herramienta Mapa de procesos. Es una copia de solo lectura: cambiar este archivo no cambia la herramienta.`);P('');
+  P('Cómo está organizado: Mapa de procesos (franjas estratégica, operativa y de apoyo) → cada proceso tiene uno o varios flujos → cada flujo tiene actividades, caracterización (SIPOC, indicadores y riesgos), procedimiento y oportunidades de mejora. Una actividad puede tener flujos de detalle. Prioridad de oportunidades = impacto × (4 − esfuerzo): 6 o más Alta, 3 a 5 Media, menos Baja.');P('');
+  if(root.objetivo){P(`**Objetivo de la empresa:** ${root.objetivo}`);P('')}
+  const ops=Object.values(S.items).filter(i=>i.tipo==='oportunidad'),nf=nodes().filter(n=>!isArea(n)).length;
+  P(`**Resumen:** ${mapKids().length} procesos, ${nf} flujos, ${Object.values(S.diag).reduce((a,d)=>a+(d.actividades||[]).length,0)} actividades, ${ops.length} oportunidades (${ops.filter(isOpenOp).length} abiertas).`);P('');
+  P('## 1. Mapa de procesos');P('');
+  CATS.forEach(c=>{const l=procOrd(c[0]);P(`### ${c[2]}`);P('');if(!l.length){P('Sin procesos.');P('');return}
+    tabla(['Proceso','Responsable','Objetivo','Flujos'],l.map(d=>[d.nombre,d.dueno||'',d.objetivo||'',flowsOf(d).map(f=>f.nombre).join(', ')||'Sin flujos']))});
+  const unc=mapKids().filter(d=>!CATS.some(c=>c[0]===d.categoria));if(unc.length){P('### Sin clasificar');P('');tabla(['Proceso','Responsable'],unc.map(d=>[d.nombre,d.dueno||'']))}
+  const flujo=(d,nivel,num)=>{const h='#'.repeat(Math.min(6,nivel)),acts=orderActs(d),nm=Object.fromEntries(acts.map((a,i)=>[a.id,i+1]));
+    P(`${h} ${num} ${d.raiz?'Flujo general de la empresa':'Flujo: '+d.nombre}`);P('');
+    P(`- Ubicación: ${d.raiz?'Empresa':donde(d.id)}`);if(d.dueno)P(`- Responsable: ${d.dueno}`);if(d.objetivo&&!d.raiz)P(`- Objetivo: ${d.objetivo}`);
+    if(d.editado)P(`- Última edición: ${fmtF(d.editado)}${d.editadoPor?' por '+d.editadoPor:''}`);P('');
+    if(!acts.length){P('Sin actividades.');P('');return}
+    P('**Actividades**');P('');
+    tabla(['#','Tipo','Actividad','Responsable','Descripción','Pasa a','Flujos de detalle'],acts.map((a,i)=>{const sb=subsOf(d,a);
+      const nx=a.forma==='Decisión'?ramasOf(a).map(r=>`${r.etiqueta} → ${nm[r.dest]?nm[r.dest]+'. '+actOf(d,r.dest).nombre:'sin destino'}`).join('; '):a.forma==='Fin'?'Termina':(a.sig||[]).length?a.sig.filter(x=>nm[x]).map(x=>nm[x]+'. '+actOf(d,x).nombre).join(' y '):(acts[i+1]?(i+2)+'. '+acts[i+1].nombre:'—');
+      return[String(i+1),a.forma||'Actividad',a.nombre,a.responsable||'',a.descripcion||'',nx,sb.map(s=>s.nombre).join(', ')]}));
+    const W=Array.isArray(d.macro)&&d.macro.length?d.macro:null,X=d.carx||{};
+    if(W){P('**Caracterización (SIPOC)**');P('');tabla(['Gran actividad','Responsable','Proveedores','Entradas','Salidas','Clientes'],W.map((m,i)=>{const q=m.sipoc||{};return[(i+1)+'. '+m.nombre,m.responsable||'',q.p,q.e,q.s,q.c]}))}
+    if((X.ind||[]).length){P('**Indicadores**');P('');tabla(['Indicador','Cómo se calcula','Meta','Frecuencia'],X.ind.map(r=>[r.n,r.f,r.m,r.q]))}
+    if((X.rie||[]).length){P('**Riesgos y controles**');P('');tabla(['Riesgo','Consecuencia','Control'],X.rie.map(r=>[r.r,r.c,r.k]))}
+    const p=d.proc||{},vs=versOf(d.id);
+    if(Object.values(p).some(Boolean)||vs.length){P('**Procedimiento**');P('');
+      const E=(()=>{const last=vs[vs.length-1];return last?`versión ${last.version} aprobada el ${fmtD(last.fecha)} por ${last.aprobo||'—'}`:'borrador, sin versión aprobada'})();
+      P(`- Estado: ${E}`);if(p.codigo)P(`- Código: ${p.codigo}`);if(p.elaboro)P(`- Elaborado por: ${p.elaboro}`);
+      if(p.objetivo||d.objetivo)P(`- Objetivo: ${p.objetivo||d.objetivo}`);if(p.alcance)P(`- Alcance: ${p.alcance}`);
+      if(lines(p.definiciones).length){P('- Definiciones:');P(lst(p.definiciones).replace(/^- /gm,'  - '))}
+      if(lines(p.referencias).length){P('- Documentos y registros:');P(lst(p.referencias).replace(/^- /gm,'  - '))}
+      if(vs.length)P('- Control de cambios: '+vs.map(v=>`v${v.version} (${fmtD(v.fecha)}): ${v.cambio||''}`).join('; '));P('')}
+    const oo=opsOf(d.id).sort((a,b)=>Number(isOpenOp(b))-Number(isOpenOp(a))||score(b)-score(a));
+    if(oo.length){P('**Oportunidades de mejora**');P('');tabla(['Oportunidad','Actividad','Prioridad','Impacto','Esfuerzo','Estado','Responsable','Detalle'],oo.map(o=>{const[i,e]=ie(o),a=actOf(d,o.actividadId);return[o.titulo,a?a.nombre:'Todo el flujo',prio(o),nivTxt(i),nivTxt(e),o.estado||'Identificada',o.responsable||'',o.descripcion||'']}))}
+    acts.forEach(a=>subsOf(d,a).forEach((s,j)=>flujo(s,nivel+1,`${num}${nm[a.id]}.${j+1}`)))};
+  P('## 2. Flujo general de la empresa');P('');flujo(root,3,'2.1');
+  P('## 3. Procesos y sus flujos');P('');
+  let n=0;[...CATS.map(c=>procOrd(c[0])).flat(),...unc].forEach(a=>{n++;P(`### 3.${n} Proceso: ${a.nombre}`);P('');if(a.objetivo){P(`Objetivo: ${a.objetivo}`);P('')}
+    const fl=flowsOf(a);if(!fl.length){P('Sin flujos documentados.');P('');return}fl.forEach((f,j)=>flujo(f,4,`3.${n}.${j+1}`))});
+  P('## 4. Portafolio de mejora (todas las oportunidades)');P('');
+  tabla(['Oportunidad','Flujo','Prioridad','Estado','Responsable'],ops.sort((a,b)=>Number(isOpenOp(b))-Number(isOpenOp(a))||score(b)-score(a)).map(o=>[o.titulo,donde(o.diagramaId),prio(o),o.estado||'Identificada',o.responsable||'']));
+  if(!ops.length){P('Sin oportunidades registradas.');P('')}
+  return out.join('\n')}
+const IAQ=['Resume los procesos de la empresa y dime cuáles están menos documentados.','¿Qué actividades se repiten en varios flujos o tienen el mismo responsable sobrecargado?','Prioriza las oportunidades abiertas y propón un plan de 90 días.','Revisa el flujo de [nombre] y sugiere cómo simplificarlo.','¿Qué indicadores faltan para medir los procesos operativos?'];
+function iaExport(){const emp=(S.demo?(D('raiz')||{}).nombre:(BOOT.cliente&&BOOT.cliente.nombre))||'Empresa';
+  bajar(new Blob(['﻿'+iaMarkdown()],{type:'text/markdown;charset=utf-8'}),`Procesos ${emp} - para IA ${hoy()}.md`);
+  openDlg(`<h3>Archivo para IA descargado</h3><p class="mut">Súbelo a ChatGPT, Claude, Copilot o Gemini (botón de adjuntar archivo) y pregunta lo que necesites. Es una copia de solo lectura: la IA no se conecta a la herramienta ni puede cambiar nada. Si haces cambios, vuelve a exportarlo.</p>
+  <p style="margin:12px 0 6px;font-weight:600">Preguntas para empezar</p>${IAQ.map(q=>`<div class="iaq"><span>${esc(q)}</span><button type="button" class="btn sm" data-a="ia-copy">Copiar</button></div>`).join('')}
+  <p class="hint" style="margin-top:10px">El archivo incluye nombres, responsables y oportunidades de mejora. Compártelo solo con herramientas de IA aprobadas por la empresa.</p>
+  <div class="row end" style="margin-top:12px"><button type="button" class="btn pri" data-a="dlg-close">Listo</button></div>`,()=>{})}
 
 /* ================= ayuda en video ================= */
 const HVID=[{f:'ayuda-1.mp4',t:'Primeros pasos',c:'Cómo se maneja',d:'Tu nombre, la barra superior, el guardado automático y la empresa de ejemplo.',s:36},
@@ -1273,6 +1330,8 @@ document.addEventListener('click',async e=>{
   case 'tip-x':$('#tipc').hidden=true;break;
   case 'demo':entrarDemo();break;
   case 'demo-exit':salirDemo();break;
+  case 'ia-export':iaExport();break;
+  case 'ia-copy':{const x=b.closest('.iaq').querySelector('span').textContent;try{await navigator.clipboard.writeText(x);b.textContent='Copiado';setTimeout(()=>{if(b.isConnected)b.textContent='Copiar'},1500)}catch(err){toast('El navegador no permitió copiar.')}break}
   case 'csv':{const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"',rows=portRows();
     const csv=[['Oportunidad','Flujo','Prioridad','Impacto','Esfuerzo','Estado','Responsable','Descripción'].map(q).join(','),...rows.map(i=>{const[im,ef]=ie(i);return[i.titulo,pathOf(i.diagramaId),prio(i),nivTxt(im),nivTxt(ef),i.estado||'Identificada',i.responsable,i.descripcion].map(q).join(',')})].join('\n');
     try{await navigator.clipboard.writeText(csv);toast('CSV copiado. Pégalo en Google Sheets.')}catch(err){toast('El navegador no permitió copiar.')}break}
