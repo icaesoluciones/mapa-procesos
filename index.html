@@ -256,6 +256,8 @@ mark{background:#fde68a;color:inherit;padding:0 1px;border-radius:2px}
 .btn.dangb{background:#b42318;border-color:#b42318;color:#fff}
 .sigs{display:flex;flex-direction:column;gap:4px;align-items:flex-start}.sigs .sg{display:flex;gap:4px;width:100%}.sigs .sg select{flex:1}
 .iaq{display:flex;gap:10px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0;font-size:14px}.iaq span{flex:1}
+.sip table{min-width:1080px}.sip td{min-width:130px}
+.doc table.sipd{font-size:11px}.doc table.sipd td,.doc table.sipd th{padding:4px 5px}
 .demo{background:#eef4ff!important;border-color:#c7d7fe!important;color:#1d3a8a}
 </style>
 </head>
@@ -729,8 +731,12 @@ const PLANT=[
  {n:'Cuentas por pagar',f:[['Inicio','Recibir factura del suplidor','Finanzas',''],['Decisión','¿Coincide con la orden y la recepción?','Finanzas','',[['Sí',4],['No',3]]],['Actividad','Aclarar diferencias con el suplidor','Compras','',2],['Actividad','Programar el pago','Finanzas','Según condiciones y flujo de caja.'],['Actividad','Aprobar el pago','Gerencia',''],['Actividad','Pagar','Finanzas',''],['Fin','Registrar y archivar','Contabilidad','']]},
  {n:'Reclutamiento y selección',f:[['Inicio','Recibir requisición de personal','RR. HH.','El área indica el puesto y el perfil.'],['Actividad','Publicar la vacante','RR. HH.',''],['Actividad','Filtrar candidatos','RR. HH.',''],['Actividad','Entrevistar','Área solicitante',''],['Decisión','¿Hay candidato idóneo?','Área solicitante','',[['Sí',6],['No',2]]],['Actividad','Verificar referencias','RR. HH.',''],['Actividad','Hacer la oferta','RR. HH.',''],['Fin','Ingresar e inducir','RR. HH.','']]},
  {n:'Quejas y reclamaciones',f:[['Inicio','Recibir la queja','Servicio al cliente','Por cualquier canal.'],['Actividad','Registrar la queja','Servicio al cliente','Fecha, cliente, motivo y evidencia.'],['Actividad','Analizar la causa','Responsable del área',''],['Actividad','Definir la solución','Responsable del área',''],['Actividad','Responder al cliente','Servicio al cliente','En el plazo comprometido.'],['Decisión','¿El cliente queda conforme?','Servicio al cliente','',[['Sí',7],['No',3]]],['Fin','Cerrar y registrar','Servicio al cliente','']]}];
-function tplActs(t){const ids=t.f.map(()=>uid());return t.f.map((r,i)=>{const[forma,nombre,resp,desc,nx]=r,a={id:ids[i],orden:i+1,forma,nombre,responsable:resp,descripcion:desc,sig:[],ramas:[]};
-  if(forma==='Decisión'&&Array.isArray(nx))a.ramas=nx.map(([e,n])=>({etiqueta:e,dest:ids[n-1]||''}));else if(typeof nx==='number')a.sig=[ids[nx-1]];return a})}
+function tplActs(t){/* Inicio y Fin son marcadores; las filas de la plantilla son actividades reales */
+  const n=t.f.length,ids=t.f.map(()=>uid()),ini=uid(),fin=uid();
+  const acts=[{id:ini,orden:1,forma:'Inicio',nombre:'Inicio',responsable:t.f[0][2],descripcion:'',sig:[ids[0]],ramas:[]}];
+  t.f.forEach((r,i)=>{const[forma,nombre,resp,desc,nx]=r,a={id:ids[i],orden:i+2,forma:forma==='Decisión'?'Decisión':'Actividad',nombre,responsable:resp,descripcion:desc,sig:[],ramas:[]};
+    if(forma==='Decisión'&&Array.isArray(nx))a.ramas=nx.map(([e,k])=>({etiqueta:e,dest:ids[k-1]||''}));else if(typeof nx==='number')a.sig=[ids[nx-1]];else if(forma==='Fin'||i===n-1)a.sig=[fin];acts.push(a)});
+  acts.push({id:fin,orden:n+2,forma:'Fin',nombre:'Fin',responsable:t.f[n-1][2],descripcion:'',sig:[],ramas:[]});return acts}
 function applyTpl(i){const t=PLANT[i],tb=$('#aedBody');if(!t||!tb)return;tb.innerHTML='';const acts=tplActs(t);
   acts.forEach((a,k)=>{tb.insertAdjacentHTML('beforeend',actRow(a,k))});
   [...tb.rows].forEach((tr,k)=>{const a=acts[k];const s=tr.querySelector('select[name=sig]');if(s)s.dataset.v=(a.sig||[])[0]||'';tr.querySelectorAll('select[name=rn]').forEach((x,j)=>x.dataset.v=(a.ramas[j]||{}).dest||'')});
@@ -741,29 +747,34 @@ function happyPath(d){
   const acts=orderActs(d);if(!acts.length)return[];const idx=Object.fromEntries(acts.map((a,i)=>[a.id,i]));
   let cur=acts.find(a=>a.forma==='Inicio')||acts[0];const seen=new Set(),path=[];
   while(cur&&!seen.has(cur.id)&&path.length<500){seen.add(cur.id);path.push(cur);if(cur.forma==='Fin')break;
-    const c=cur.forma==='Decisión'&&(cur.ramas||[]).length?cur.ramas.map(r=>r.dest).filter(id=>id in idx):(cur.sig||[]).filter(id=>id in idx);
+    const pos=r=>/^(s[ií]\b|s[ií]$|yes|ok|aprob|acept|cumple|correct|complet|v[aá]lid)/i.test(String(r.etiqueta||'').trim())?0:1;
+    const c=cur.forma==='Decisión'&&(cur.ramas||[]).length?cur.ramas.slice().sort((x,y)=>pos(x)-pos(y)).map(r=>r.dest).filter(id=>id in idx):(cur.sig||[]).filter(id=>id in idx);
     const fw=c.filter(id=>idx[id]>idx[cur.id]&&!seen.has(id)),nx=fw.length?fw[0]:(acts[idx[cur.id]+1]?acts[idx[cur.id]+1].id:null);cur=nx?acts[idx[nx]]:null}
   return path}
 function core(d){return happyPath(d)}
+const isMark=a=>!!a&&(a.forma==='Inicio'||a.forma==='Fin');
 /* unidades: cada actividad del camino principal; una decisión se une a la actividad anterior */
-function unidades(d){const u=[];core(d).forEach(a=>{if(a.forma==='Decisión'&&u.length)u[u.length-1].push(a);else u.push([a])});return u}
+function unidades(d){const u=[];core(d).filter(a=>!isMark(a)).forEach(a=>{if(a.forma==='Decisión'&&u.length)u[u.length-1].push(a);else u.push([a])});return u}
 function moda(arr){const m={};let b='',n=0;arr.filter(Boolean).forEach(x=>{m[x]=(m[x]||0)+1;if(m[x]>n){n=m[x];b=x}});return b}
 function proponer(d,k){const U=unidades(d);if(!U.length)return[];k=Math.max(1,Math.min(k,U.length));const base=Math.floor(U.length/k),extra=U.length%k,out=[];let i=0;
-  for(let g=0;g<k;g++){const n=base+(g<extra?1:0),grp=U.slice(i,i+n).flat();i+=n;out.push({id:uid(),nombre:(grp.find(a=>a.forma!=='Decisión')||grp[0]).nombre,responsable:moda(grp.map(a=>a.responsable)),acts:grp.map(a=>a.id),sipoc:{p:'',e:'',s:'',c:''}})}return out}
+  for(let g=0;g<k;g++){const n=base+(g<extra?1:0),grp=U.slice(i,i+n).flat();i+=n;out.push({id:uid(),nombre:(grp.find(a=>a.forma!=='Decisión')||grp[0]).nombre,responsable:moda(grp.map(a=>a.responsable)),acts:grp.map(a=>a.id),sipoc:{p:'',e:'',re:'',s:'',rs:'',c:''}})}return out}
 const defK=d=>{const n=unidades(d).length;return n<=6?n:(n<=10?5:6)};
 
-function wzInit(d){if(S.wzFor===d.id)return;S.wzFor=d.id;S.dirty=false;S.wz=clone(Array.isArray(d.macro)&&d.macro.length?d.macro:proponer(d,defK(d)));S.wp=clone(d.proc||{});S.wc=clone(d.chk||{});S.wx=clone(d.carx||{ind:[],rie:[]});S.wx.ind=S.wx.ind||[];S.wx.rie=S.wx.rie||[]}
+function limpiarMacro(d,M){/* Inicio y Fin no son actividades: se quitan de las grandes actividades guardadas */
+  const out=[];(M||[]).forEach(m=>{const ids=(m.acts||[]).filter(id=>{const a=actOf(d,id);return a&&!isMark(a)});if(!ids.length)return;
+    const quit=(m.acts||[]).map(id=>actOf(d,id)).filter(a=>a&&isMark(a));const nm=quit.some(a=>norm(a.nombre)===norm(m.nombre))?actOf(d,ids[0]).nombre:m.nombre;out.push({...m,nombre:nm,acts:ids})});return out}
+function wzInit(d){if(S.wzFor===d.id)return;S.wzFor=d.id;S.dirty=false;const mc=limpiarMacro(d,d.macro);S.wz=clone(mc.length?mc:proponer(d,defK(d)));if(canWrite&&!S.demo&&Array.isArray(d.macro)&&d.macro.length&&JSON.stringify(mc)!==JSON.stringify(d.macro)){const id=d.id;setTimeout(()=>{const x=D(id);if(x)put('diagramas',{...x,macro:clone(mc)},{raw:true})},0)}S.wp=clone(d.proc||{});S.wc=clone(d.chk||{});S.wx=clone(d.carx||{ind:[],rie:[]});S.wx.ind=S.wx.ind||[];S.wx.rie=S.wx.rie||[]}
 const ro=()=>canWrite?'':' disabled';
 const needFlow=()=>`<div class="card empty"><h3>Primero el flujo</h3><p>Esta parte se arma a partir de las actividades del flujo. Agrega al menos dos.</p><button class="btn pri" data-a="step" data-s="flujo">Ir al flujo</button></div>`;
 function carHTML(d){
-  if(core(d).length<2)return `<div class="sh"><div><h2>Caracterización</h2></div></div>${needFlow()}`;
-  const W=S.wz,k=W.length,nU=unidades(d).length,inP=new Set(W.flatMap(m=>m.acts)),fuera=orderActs(d).filter(a=>!inP.has(a.id)),X=S.wx;
+  if(core(d).length<2||!unidades(d).length)return `<div class="sh"><div><h2>Caracterización</h2></div></div>${needFlow()}`;
+  const W=S.wz,k=W.length,nU=unidades(d).length,inP=new Set(W.flatMap(m=>m.acts)),fuera=orderActs(d).filter(a=>!inP.has(a.id)&&!isMark(a)),X=S.wx;
   const chip=(a,mi,first,last)=>`<span class="chip2">${first&&mi>0&&canWrite?`<button data-a="mv-act" data-m="${mi}" data-d="-1" title="Pasar a la anterior" aria-label="Pasar a la anterior">‹</button>`:''}${esc(a.nombre)}${last&&mi<k-1&&canWrite?`<button data-a="mv-act" data-m="${mi}" data-d="1" title="Pasar a la siguiente" aria-label="Pasar a la siguiente">›</button>`:''}</span>`;
   const ta=(i,f,ph)=>{const v=(W[i].sipoc||{})[f]||'';return canWrite?`<textarea class="ag" data-s="${f}" data-m="${i}" rows="1" placeholder="${ph}">${esc(v)}</textarea>`:`<div class="ro${v?'':' vac'}">${v?esc(v):'—'}</div>`};
   const xin=(t,i,f,ph,area)=>!canWrite?`<div class="ro">${esc(X[t][i][f]||'—')}</div>`:area?`<textarea class="ag" data-x="${t}" data-i="${i}" data-f="${f}" rows="2" placeholder="${ph}"${ro()}>${esc(X[t][i][f]||'')}</textarea>`:`<input data-x="${t}" data-i="${i}" data-f="${f}" value="${esc(X[t][i][f]||'')}" placeholder="${ph}"${ro()}>`;
-  return `<div class="sh"><div><h2>Caracterización</h2><p>El proceso resumido en sus grandes actividades; para cada una, quién entrega, qué entra, qué sale y quién lo recibe (SIPOC). Además, cómo se mide y qué riesgos tiene.</p></div>${svBadge()}</div>${d.objetivo?objBox(d,'Objetivo del flujo',''):''}
-  <div class="card pad"><h3 style="margin:0 0 4px;font-size:16px">1. Grandes actividades</h3>
-  <p class="hint">Se siguió el camino normal del flujo (la primera opción de cada decisión, sin retrocesos); cada decisión queda dentro de la actividad que la precede. Si el flujo es corto, cada actividad es una gran actividad; si es largo, se agrupan en 5 o 6. Renombra cada bloque con <b>verbo + objeto</b> y usa ‹ › para mover actividades entre bloques.</p>
+  return `<div class="sh"><div><h2>Caracterización</h2><p>El proceso resumido en sus procesos macro; para cada uno, quién entrega, qué entra, qué sale y quién lo recibe (SIPOC). Además, cómo se mide y qué riesgos tiene.</p></div>${svBadge()}</div>${d.objetivo?objBox(d,'Objetivo del flujo',''):''}
+  <div class="card pad"><h3 style="margin:0 0 4px;font-size:16px">1. Procesos macro</h3>
+  <p class="hint">Se siguió el camino normal del flujo (el “Sí” de cada decisión, sin retrocesos); cada decisión queda dentro de la actividad que la precede. Inicio y Fin no cuentan: son solo marcas. Si el flujo es corto, cada actividad es un proceso macro; si es largo, se agrupan en 5 o 6. Renombra cada bloque con <b>verbo + objeto</b> y usa ‹ › para mover actividades entre bloques.</p>
   <div class="chev">${W.map((m,i)=>`<div class="cv"><small>${i+1}</small>${esc(m.nombre||'Sin nombre')}<i>${esc(m.responsable||'')}</i></div>`).join('')}</div>
   ${canWrite?`<div class="row" style="margin-bottom:10px"><label style="display:flex;gap:6px;align-items:center;margin:0;color:var(--ink)">Cantidad <select id="wzK" style="width:auto;min-height:36px;margin:0">${Array.from({length:Math.min(7,nU)},(_,i)=>i+1).map(x=>`<option${x===k?' selected':''}>${x}</option>`).join('')}</select></label><button class="btn sm" data-a="wz-propose">Volver a proponer</button></div>`:''}
   <div class="mgrid">${W.map((m,i)=>`<div class="mcard"><div class="mh"><span class="mn">${i+1}</span>${canWrite?`<textarea class="mnm ag" rows="1" data-f="nombre" data-m="${i}" aria-label="Nombre">${esc(m.nombre)}</textarea>`:`<span class="mnt">${esc(m.nombre)}</span>`}</div>
@@ -772,8 +783,8 @@ function carHTML(d){
   <datalist id="dlRespW">${responsables().map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
   ${fuera.length?`<p class="hint" style="margin-top:10px">Fuera del camino principal (excepciones): ${fuera.map(a=>esc(a.nombre)).join(' · ')}</p>`:''}</div>
   <div class="card pad" style="margin-top:14px"><div class="sh" style="margin-bottom:8px"><div><h3 style="margin:0;font-size:16px">2. SIPOC</h3><p class="hint" style="margin:2px 0 0">Un elemento por línea. Los clientes y proveedores pueden ser áreas internas.</p></div>${canWrite?'<button class="btn sm" data-a="wz-sug">Conectar actividades automáticamente</button>':''}</div>
-  <div class="scroll sip"><table><thead><tr><th>Proveedores<br><small>quién entrega</small></th><th>Entradas<br><small>qué se recibe</small></th><th>Gran actividad</th><th>Salidas<br><small>qué se entrega</small></th><th>Clientes<br><small>quién lo recibe</small></th></tr></thead><tbody>
-  ${W.map((m,i)=>`<tr><td>${ta(i,'p','Ej.: Cliente')}</td><td>${ta(i,'e','Ej.: Planos y alcance')}</td><td><div class="sp"><b>${i+1}. ${esc(m.nombre)}</b><br><small>${esc(m.responsable||'')}</small></div></td><td>${ta(i,'s','Ej.: Presupuesto aprobado')}</td><td>${ta(i,'c','Ej.: Gerencia')}</td></tr>`).join('')}
+  <div class="scroll sip"><table><thead><tr><th>Proveedores<br><small>quién entrega</small></th><th>Entradas<br><small>qué se recibe</small></th><th>Requerimientos de entrada<br><small>cómo debe llegar</small></th><th>Proceso macro</th><th>Salidas<br><small>qué se entrega</small></th><th>Requerimientos de salida<br><small>cómo debe salir</small></th><th>Clientes<br><small>quién lo recibe</small></th></tr></thead><tbody>
+  ${W.map((m,i)=>`<tr><td>${ta(i,'p','Ej.: Cliente')}</td><td>${ta(i,'e','Ej.: Planos y alcance')}</td><td>${ta(i,'re','Ej.: Planos firmados y completos')}</td><td><div class="sp"><b>${i+1}. ${esc(m.nombre)}</b><br><small>${esc(m.responsable||'')}</small></div></td><td>${ta(i,'s','Ej.: Presupuesto aprobado')}</td><td>${ta(i,'rs','Ej.: En 5 días, sin errores')}</td><td>${ta(i,'c','Ej.: Gerencia')}</td></tr>`).join('')}
   </tbody></table></div></div>
   <div class="card pad" style="margin-top:14px"><h3 style="margin:0;font-size:16px">3. Indicadores <span class="mut" style="font-weight:400">(opcional, 2 o 3 bastan)</span></h3><p class="hint">Cómo se sabe si el proceso funciona bien. Ej.: “Días para entregar un presupuesto”, meta “≤ 5”, mensual.</p>
   ${X.ind.length?`<div class="scroll xt"><table><thead><tr><th>Indicador</th><th>Cómo se calcula</th><th style="width:110px">Meta</th><th style="width:130px">Frecuencia</th><th style="width:44px"></th></tr></thead><tbody>${X.ind.map((r,i)=>`<tr><td>${xin('ind',i,'n','Qué se mide')}</td><td>${xin('ind',i,'f','Fórmula o fuente',1)}</td><td>${xin('ind',i,'m','Ej.: ≤ 5 días')}</td><td>${xin('ind',i,'q','Ej.: Mensual')}</td><td>${canWrite?`<button class="x" data-a="x-del" data-t="ind" data-i="${i}" aria-label="Quitar">×</button>`:''}</td></tr>`).join('')}</tbody></table></div>`:''}
@@ -792,7 +803,7 @@ function estadoVer(d){const v=versOf(d.id),last=v[v.length-1],cur=firma(d,S.wp,S
   if(!last)return{n:1,borr:true,last:null,v};return{n:last.datos===cur?num(last.version):num(last.version)+1,borr:last.datos!==cur,last,v}}
 function procShell(d){
   if(core(d).length<2)return `<div class="sh"><div><h2>Procedimiento</h2></div></div>${needFlow()}`;
-  if(!(Array.isArray(d.macro)&&d.macro.length))return `<div class="sh"><div><h2>Procedimiento</h2></div></div><div class="card empty"><h3>Primero la caracterización</h3><p>El procedimiento se organiza por las grandes actividades. Revísalas en la caracterización.</p><button class="btn pri" data-a="step" data-s="car">Ir a caracterización</button></div>`;
+  if(!(Array.isArray(d.macro)&&d.macro.length))return `<div class="sh"><div><h2>Procedimiento</h2></div></div><div class="card empty"><h3>Primero la caracterización</h3><p>El procedimiento se organiza por los procesos macro. Revísalas en la caracterización.</p><button class="btn pri" data-a="step" data-s="car">Ir a caracterización</button></div>`;
   const p=S.wp,E=estadoVer(d);
   return `<div class="sh"><div><h2>Procedimiento</h2><p>Completa los datos de la izquierda; el documento se arma solo con el flujo y la caracterización. Cuando esté listo, apruébalo para fijar la versión.</p></div><div class="row noprint">${svBadge()}<button class="btn sm" data-a="pdf" data-t="procDoc">${ic('dl')}PDF</button><button class="btn sm" data-a="docx">${ic('doc')}Word</button></div></div>
   <div id="vstat">${vstatHTML(d,E)}</div>
@@ -805,10 +816,10 @@ function vstatHTML(d,E){return E.last&&!E.borr?`<div class="vstat ok"><b>Versió
 const lines=t=>String(t||'').split(/\n+/).map(x=>x.trim()).filter(Boolean);
 const ulOf=t=>{const l=lines(t);return l.length?'<ul>'+l.map(x=>`<li>${esc(x)}</li>`).join('')+'</ul>':'<p class="pend">Pendiente.</p>'};
 function procDoc(d,p,W,X,ver,vers){
-  X=X||{ind:[],rie:[]};const acts=orderActs(d),nm=Object.fromEntries(acts.map((a,i)=>[a.id,i+1])),inP=new Set(W.flatMap(m=>m.acts));
-  const resp={};acts.forEach(a=>{const r=(a.responsable||'').trim()||'Sin responsable';const k=norm(r);(resp[k]=resp[k]||{n:r,l:[]}).l.push(a)});
-  const fuera=acts.filter(a=>!inP.has(a.id));
-  const fila=a=>{const sb=subsOf(d,a);return `<tr><td>${nm[a.id]}</td><td><b>${esc(a.nombre)}</b>${a.forma!=='Decisión'&&(a.sig||[]).length>1?'<br><small>Pasa a: '+a.sig.map(x=>{const t=actOf(d,x);return t?nm[t.id]+'. '+esc(t.nombre):''}).filter(Boolean).join(' y ')+'</small>':''}${a.forma==='Decisión'?'<br><small>'+ramasOf(a).map(r=>{const t=actOf(d,r.dest);return esc(r.etiqueta)+' → '+(t?nm[t.id]+'. '+esc(t.nombre):'—')}).join('; ')+'</small>':''}${sb.length?`<br><small>Flujos de detalle: ${sb.map(s=>esc(s.nombre)).join(', ')}</small>`:''}</td><td>${esc(a.responsable||'')}</td><td>${esc(a.descripcion||'')}</td></tr>`};
+  X=X||{ind:[],rie:[]};const acts=orderActs(d),nm=Object.fromEntries(acts.filter(a=>!isMark(a)).map((a,i)=>[a.id,i+1])),inP=new Set(W.flatMap(m=>m.acts));
+  const resp={};acts.filter(a=>!isMark(a)).forEach(a=>{const r=(a.responsable||'').trim()||'Sin responsable';const k=norm(r);(resp[k]=resp[k]||{n:r,l:[]}).l.push(a)});
+  const fuera=acts.filter(a=>!inP.has(a.id)&&!isMark(a));
+  const fila=a=>{const sb=subsOf(d,a);return `<tr><td>${nm[a.id]}</td><td><b>${esc(a.nombre)}</b>${a.forma!=='Decisión'&&(a.sig||[]).length>1?'<br><small>Pasa a: '+a.sig.map(x=>{const t=actOf(d,x);return t?(nm[t.id]?nm[t.id]+'. ':'')+esc(t.nombre):''}).filter(Boolean).join(' y ')+'</small>':''}${a.forma==='Decisión'?'<br><small>'+ramasOf(a).map(r=>{const t=actOf(d,r.dest);return esc(r.etiqueta)+' → '+(t?(nm[t.id]?nm[t.id]+'. ':'')+esc(t.nombre):'—')}).join('; ')+'</small>':''}${sb.length?`<br><small>Flujos de detalle: ${sb.map(s=>esc(s.nombre)).join(', ')}</small>`:''}</td><td>${esc(a.responsable||'')}</td><td>${esc(a.descripcion||'')}</td></tr>`};
   const img='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(layoutFlow(d).svg);
   const titulo=d.raiz?'Flujo general de '+(d.nombre||'la empresa'):d.nombre;let s=6;
   return `<table class="dh"><tr><td rowspan="2" class="dt"><small style="color:#6b7280;font-size:11px">PROCEDIMIENTO</small><br>${esc(titulo)}</td><td>Código<br><b>${esc(p.codigo||'—')}</b></td><td>Versión<br><b>${esc(ver)}</b></td></tr><tr><td>Elaborado por<br><b>${esc(p.elaboro||'—')}</b></td><td>Responsable<br><b>${esc(d.dueno||'—')}</b></td></tr></table>
@@ -817,7 +828,7 @@ function procDoc(d,p,W,X,ver,vers){
   <h3>3. Responsabilidades</h3><ul>${Object.values(resp).map(r=>`<li><b>${esc(r.n)}:</b> ${r.l.map(a=>esc(a.nombre)).join('; ')}.</li>`).join('')}</ul>
   <h3>4. Definiciones</h3>${ulOf(p.definiciones)}
   <h3>5. Documentos y registros</h3>${ulOf(p.referencias)}
-  <h3>6. Caracterización (SIPOC)</h3><table><thead><tr><th>Proveedores</th><th>Entradas</th><th>Actividad</th><th>Salidas</th><th>Clientes</th></tr></thead><tbody>${W.map((m,i)=>{const q=m.sipoc||{},c=t=>lines(t).map(esc).join('<br>')||'—';return `<tr><td>${c(q.p)}</td><td>${c(q.e)}</td><td><b>${i+1}. ${esc(m.nombre)}</b></td><td>${c(q.s)}</td><td>${c(q.c)}</td></tr>`}).join('')}</tbody></table>
+  <h3>6. Caracterización (SIPOC)</h3><table class="sipd"><thead><tr><th>Proveedores</th><th>Entradas</th><th>Req. de entrada</th><th>Proceso macro</th><th>Salidas</th><th>Req. de salida</th><th>Clientes</th></tr></thead><tbody>${W.map((m,i)=>{const q=m.sipoc||{},c=t=>lines(t).map(esc).join('<br>')||'—';return `<tr><td>${c(q.p)}</td><td>${c(q.e)}</td><td>${c(q.re)}</td><td><b>${i+1}. ${esc(m.nombre)}</b></td><td>${c(q.s)}</td><td>${c(q.rs)}</td><td>${c(q.c)}</td></tr>`}).join('')}</tbody></table>
   <h3>7. Descripción de actividades</h3>${W.map((m,i)=>`<h4>7.${i+1} ${esc(m.nombre)}${m.responsable?` · <span style="font-weight:400">${esc(m.responsable)}</span>`:''}</h4><table><thead><tr><th>#</th><th>Actividad</th><th>Responsable</th><th>Descripción</th></tr></thead><tbody>${m.acts.map(id=>actOf(d,id)).filter(Boolean).map(fila).join('')}</tbody></table>`).join('')}
   ${fuera.length?`<h4>7.${W.length+1} Excepciones y variantes</h4><table><thead><tr><th>#</th><th>Actividad</th><th>Responsable</th><th>Descripción</th></tr></thead><tbody>${fuera.map(fila).join('')}</tbody></table>`:''}
   ${X.ind.length?`<h3>${++s+1}. Indicadores</h3><table><thead><tr><th>Indicador</th><th>Cómo se calcula</th><th>Meta</th><th>Frecuencia</th></tr></thead><tbody>${X.ind.map(r=>`<tr><td>${esc(r.n||'')}</td><td>${esc(r.f||'')}</td><td>${esc(r.m||'')}</td><td>${esc(r.q||'')}</td></tr>`).join('')}</tbody></table>`:''}
@@ -838,7 +849,7 @@ function opCard(o,d){const a=actOf(d,o.actividadId),[i,e]=ie(o);
 function opsHTML(d){
   const W=S.wz,acts=orderActs(d),inP=new Set(W.flatMap(m=>m.acts)),C=S.wc;
   const groups=W.length?W.map((m,i)=>({t:`${i+1}. ${m.nombre}`,l:m.acts.map(id=>actOf(d,id)).filter(Boolean)})):[];
-  const otros=acts.filter(a=>!inP.has(a.id));
+  const otros=acts.filter(a=>!inP.has(a.id)&&!isMark(a));
   if(!W.length)groups.push({t:'Actividades',l:otros.splice(0)});else if(otros.length)groups.push({t:'Excepciones y variantes',l:otros});
   const reg=new Set(opsOf(d.id).filter(i=>i.origen).map(i=>i.origen)),ops=opsOf(d.id).sort((a,b)=>Number(isOpenOp(b))-Number(isOpenOp(a))||score(b)-score(a));
   return `<div class="sh"><div><h2>Oportunidades de mejora</h2><p>Responde unas preguntas sencillas por actividad. Cada “sí” se convierte en una oportunidad. La prioridad se calcula sola con el impacto y el esfuerzo.</p></div>${canWrite?'<button class="btn sm" data-a="op-new">+ Registrar oportunidad</button>':''}</div>${d.objetivo?objBox(d,'Objetivo del flujo',''):''}
@@ -982,8 +993,8 @@ function PDFDoc(meta){
   api.page(false);return api}
 async function procPdf(d,p,W,X,ver,vers){
   X=X||{ind:[],rie:[]};const titulo=d.raiz?'Flujo general de '+(d.nombre||'la empresa'):d.nombre;
-  const acts=orderActs(d),nm=Object.fromEntries(acts.map((a,i)=>[a.id,i+1])),inP=new Set(W.flatMap(m=>m.acts)),fuera=acts.filter(a=>!inP.has(a.id));
-  const resp={};acts.forEach(a=>{const r=(a.responsable||'').trim()||'Sin responsable';const k=norm(r);(resp[k]=resp[k]||{n:r,l:[]}).l.push(a)});
+  const acts=orderActs(d),nm=Object.fromEntries(acts.filter(a=>!isMark(a)).map((a,i)=>[a.id,i+1])),inP=new Set(W.flatMap(m=>m.acts)),fuera=acts.filter(a=>!inP.has(a.id)&&!isMark(a));
+  const resp={};acts.filter(a=>!isMark(a)).forEach(a=>{const r=(a.responsable||'').trim()||'Sin responsable';const k=norm(r);(resp[k]=resp[k]||{n:r,l:[]}).l.push(a)});
   const P=PDFDoc({title:'Procedimiento '+titulo,left:titulo,right:[p.codigo,'Versión '+ver].filter(Boolean).join('  ·  '),foot:(BOOT.cliente?BOOT.cliente.nombre+'  ·  ':'')+'Generado el '+fmtD(new Date().toISOString())});
   const g=(t,c)=>({t,sz:7.5,c:c||'#6b7280'}),v=t=>({t:t||'—',st:'b',sz:9.5});
   P.table(null,[[[g('PROCEDIMIENTO'),{t:titulo,st:'b',sz:14,c:'#0b5d4b'}],[g('Código'),v(p.codigo)],[g('Versión'),v(ver)]],[[g('Objetivo del flujo'),{t:d.objetivo||'—',sz:9}],[g('Elaborado por'),v(p.elaboro)],[g('Responsable'),v(d.dueno)]]],[52,24,24]);
@@ -991,8 +1002,8 @@ async function procPdf(d,p,W,X,ver,vers){
   P.h1('1. Objetivo');pend(p.objetivo||d.objetivo);P.h1('2. Alcance');pend(p.alcance);
   P.h1('3. Responsabilidades');P.bullets(Object.values(resp).map(r=>[{t:r.n+': ',st:'b'},{t:r.l.map(a=>a.nombre).join('; ')+'.'}]));
   P.h1('4. Definiciones');lst(p.definiciones);P.h1('5. Documentos y registros');lst(p.referencias);
-  P.h1('6. Caracterización (SIPOC)');P.table(['Proveedores','Entradas','Actividad','Salidas','Clientes'],W.map((m,i)=>{const q=m.sipoc||{},c=t=>lines(t).join('\n')||'—';return[c(q.p),c(q.e),[{t:(i+1)+'. '+m.nombre,st:'b'},{t:m.responsable||'',sz:8,c:'#6b7280'}],c(q.s),c(q.c)]}),[19,20,22,20,19],{fill:[null,null,'#f1f7f5']});
-  const fila=a=>{const sb=subsOf(d,a),cel=[{t:a.nombre,st:'b'}];if(a.forma!=='Decisión'&&(a.sig||[]).length>1)cel.push({t:'Pasa a: '+a.sig.map(x=>{const t=actOf(d,x);return t?nm[t.id]+'. '+t.nombre:''}).filter(Boolean).join(' y '),sz:8,c:'#6b7280'});if(a.forma==='Decisión')cel.push({t:ramasOf(a).map(r=>{const t=actOf(d,r.dest);return r.etiqueta+' → '+(t?nm[t.id]+'. '+t.nombre:'—')}).join('; '),sz:8,c:'#6b7280'});if(sb.length)cel.push({t:'Flujos de detalle: '+sb.map(s=>s.nombre).join(', '),sz:8,c:'#0b5d4b'});return[String(nm[a.id]),cel,a.responsable||'',a.descripcion||'']};
+  P.h1('6. Caracterización (SIPOC)');P.table(['Proveedores','Entradas','Req. de entrada','Proceso macro','Salidas','Req. de salida','Clientes'],W.map((m,i)=>{const q=m.sipoc||{},c=t=>[{t:lines(t).join('\n')||'—',sz:8}];return[c(q.p),c(q.e),c(q.re),[{t:(i+1)+'. '+m.nombre,st:'b',sz:8.5},{t:m.responsable||'',sz:7.5,c:'#6b7280'}],c(q.s),c(q.rs),c(q.c)]}),[13,14,15,16,14,15,13],{fill:[null,null,null,'#f1f7f5']});
+  const fila=a=>{const sb=subsOf(d,a),cel=[{t:a.nombre,st:'b'}];if(a.forma!=='Decisión'&&(a.sig||[]).length>1)cel.push({t:'Pasa a: '+a.sig.map(x=>{const t=actOf(d,x);return t?(nm[t.id]?nm[t.id]+'. ':'')+t.nombre:''}).filter(Boolean).join(' y '),sz:8,c:'#6b7280'});if(a.forma==='Decisión')cel.push({t:ramasOf(a).map(r=>{const t=actOf(d,r.dest);return r.etiqueta+' → '+(t?(nm[t.id]?nm[t.id]+'. ':'')+t.nombre:'—')}).join('; '),sz:8,c:'#6b7280'});if(sb.length)cel.push({t:'Flujos de detalle: '+sb.map(s=>s.nombre).join(', '),sz:8,c:'#0b5d4b'});return[String(nm[a.id]),cel,a.responsable||'',a.descripcion||'']};
   P.h1('7. Descripción de actividades');W.forEach((m,i)=>{P.h2(`7.${i+1} ${m.nombre}${m.responsable?'  ·  '+m.responsable:''}`);P.table(['#','Actividad','Responsable','Descripción'],m.acts.map(id=>actOf(d,id)).filter(Boolean).map(fila),[5,33,20,42])});
   if(fuera.length){P.h2(`7.${W.length+1} Excepciones y variantes`);P.table(['#','Actividad','Responsable','Descripción'],fuera.map(fila),[5,33,20,42])}
   let s=7;
@@ -1012,16 +1023,16 @@ async function procDocx(d,p,W,X,ver,vers){
   const tbl=(head,rows,ws)=>`<w:tbl><w:tblPr><w:tblStyle w:val="Tabla"/><w:tblW w:w="5000" w:type="pct"/></w:tblPr><w:tblGrid>${ws.map(w=>`<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>${head?`<w:tr><w:trPr><w:tblHeader/></w:trPr>${head.map((h,i)=>cell(h,{b:1,fill:'E7F2EE',w:ws[i]})).join('')}</w:tr>`:''}${rows.map(r=>`<w:tr><w:trPr><w:cantSplit/></w:trPr>${r.map((c,i)=>cell(c,{w:ws[i]})).join('')}</w:tr>`).join('')}</w:tbl>${P('',{after:60})}`;
   const H1=t=>P(t,{st:'Titulo1'}),H2=t=>P(t,{st:'Titulo2'}),pend=t=>t?P(t):P('Pendiente.',{i:1,c:'B42318'});
   const lst=t=>{const l=lines(t);return l.length?l.map(x=>P('• '+x,{list:1,after:40})).join(''):P('Pendiente.',{i:1,c:'B42318'})};
-  const acts=orderActs(d),nm=Object.fromEntries(acts.map((a,i)=>[a.id,i+1])),inP=new Set(W.flatMap(m=>m.acts)),fuera=acts.filter(a=>!inP.has(a.id));
-  const resp={};acts.forEach(a=>{const r=(a.responsable||'').trim()||'Sin responsable';const k=norm(r);(resp[k]=resp[k]||{n:r,l:[]}).l.push(a)});
-  const fila=a=>{const sb=subsOf(d,a),extra=[];if(a.forma!=='Decisión'&&(a.sig||[]).length>1)extra.push('Pasa a: '+a.sig.map(x=>{const t=actOf(d,x);return t?nm[t.id]+'. '+t.nombre:''}).filter(Boolean).join(' y '));if(a.forma==='Decisión')extra.push(ramasOf(a).map(r=>{const t=actOf(d,r.dest);return r.etiqueta+' → '+(t?nm[t.id]+'. '+t.nombre:'—')}).join('; '));if(sb.length)extra.push('Flujos de detalle: '+sb.map(s=>s.nombre).join(', '));
+  const acts=orderActs(d),nm=Object.fromEntries(acts.filter(a=>!isMark(a)).map((a,i)=>[a.id,i+1])),inP=new Set(W.flatMap(m=>m.acts)),fuera=acts.filter(a=>!inP.has(a.id)&&!isMark(a));
+  const resp={};acts.filter(a=>!isMark(a)).forEach(a=>{const r=(a.responsable||'').trim()||'Sin responsable';const k=norm(r);(resp[k]=resp[k]||{n:r,l:[]}).l.push(a)});
+  const fila=a=>{const sb=subsOf(d,a),extra=[];if(a.forma!=='Decisión'&&(a.sig||[]).length>1)extra.push('Pasa a: '+a.sig.map(x=>{const t=actOf(d,x);return t?(nm[t.id]?nm[t.id]+'. ':'')+t.nombre:''}).filter(Boolean).join(' y '));if(a.forma==='Decisión')extra.push(ramasOf(a).map(r=>{const t=actOf(d,r.dest);return r.etiqueta+' → '+(t?(nm[t.id]?nm[t.id]+'. ':'')+t.nombre:'—')}).join('; '));if(sb.length)extra.push('Flujos de detalle: '+sb.map(s=>s.nombre).join(', '));
     return[String(nm[a.id]),[P(a.nombre,{b:1,after:0,sz:20}),...extra.map(x=>P(x,{after:0,sz:18,c:'6B7280'}))],a.responsable||'',a.descripcion||'']};
   const titulo=d.raiz?'Flujo general de '+(d.nombre||'la empresa'):d.nombre;let s=6;
   let b=tbl(null,[[[P('PROCEDIMIENTO',{sz:16,c:'6B7280',after:0}),P(titulo,{b:1,sz:30,c:'0B5D4B',after:0})],[P('Código',{sz:16,c:'6B7280',after:0}),P(p.codigo||'—',{b:1,after:0})],[P('Versión',{sz:16,c:'6B7280',after:0}),P(ver,{b:1,after:0})]],
     ['',[P('Elaborado por',{sz:16,c:'6B7280',after:0}),P(p.elaboro||'—',{b:1,after:0})],[P('Responsable',{sz:16,c:'6B7280',after:0}),P(d.dueno||'—',{b:1,after:0})]]],[4800,2300,2300]);
   b+=H1('1. Objetivo')+pend(p.objetivo||d.objetivo)+H1('2. Alcance')+pend(p.alcance)+H1('3. Responsabilidades')+Object.values(resp).map(r=>P([run(r.n+': ',{b:1}),run(r.l.map(a=>a.nombre).join('; ')+'.')],{list:1,after:40})).join('');
   b+=H1('4. Definiciones')+lst(p.definiciones)+H1('5. Documentos y registros')+lst(p.referencias);
-  b+=H1('6. Caracterización (SIPOC)')+tbl(['Proveedores','Entradas','Actividad','Salidas','Clientes'],W.map((m,i)=>{const q=m.sipoc||{},c=t=>lines(t).map(x=>P(x,{after:0,sz:20}));return[c(q.p),c(q.e),[P((i+1)+'. '+m.nombre,{b:1,after:0,sz:20})],c(q.s),c(q.c)]}),[1800,1900,1900,1900,1800]);
+  b+=H1('6. Caracterización (SIPOC)')+tbl(['Proveedores','Entradas','Req. de entrada','Proceso macro','Salidas','Req. de salida','Clientes'],W.map((m,i)=>{const q=m.sipoc||{},c=t=>lines(t).map(x=>P(x,{after:0,sz:17}));return[c(q.p),c(q.e),c(q.re),[P((i+1)+'. '+m.nombre,{b:1,after:0,sz:17})],c(q.s),c(q.rs),c(q.c)]}),[1250,1350,1400,1500,1350,1400,1250]);
   b+=H1('7. Descripción de actividades');W.forEach((m,i)=>{b+=H2(`7.${i+1} ${m.nombre}${m.responsable?' · '+m.responsable:''}`)+tbl(['#','Actividad','Responsable','Descripción'],m.acts.map(id=>actOf(d,id)).filter(Boolean).map(fila),[500,3200,1900,3800])});
   if(fuera.length)b+=H2(`7.${W.length+1} Excepciones y variantes`)+tbl(['#','Actividad','Responsable','Descripción'],fuera.map(fila),[500,3200,1900,3800]);
   if(X.ind.length)b+=H1(`${++s+1}. Indicadores`)+tbl(['Indicador','Cómo se calcula','Meta','Frecuencia'],X.ind.map(r=>[r.n||'',r.f||'',r.m||'',r.q||'']),[2600,3600,1600,1600]);
@@ -1074,7 +1085,7 @@ function delDlg(n){
   const P=[];
   if(R.sub.length)P.push(['subs',area?`Sus flujos (${R.sub.length}), con todo lo que tienen dentro`:`Sus flujos de detalle (${R.sub.length}), con todo lo que tienen dentro`]);
   if(!area&&na)P.push(['acts',`Las actividades (${na}); también se borra la caracterización${R.sub.length?' y los flujos de detalle':''}`]);
-  if(!area&&hasCar)P.push(['car','La caracterización: grandes actividades, SIPOC, indicadores y riesgos']);
+  if(!area&&hasCar)P.push(['car','La caracterización: procesos macro, SIPOC, indicadores y riesgos']);
   if(!area&&hasProc)P.push(['proc',`El procedimiento${nv?` y sus versiones aprobadas (${nv})`:''}`]);
   if(no)P.push(['ops',`Las oportunidades registradas aquí (${no})`]);
   const todo=!n.raiz,cnt=[R.sub.length&&plural(R.sub.length,area?'flujo':'flujo de detalle',area?'flujos':'flujos de detalle'),R.acts&&plural(R.acts,'actividad','actividades'),R.ops&&plural(R.ops,'oportunidad','oportunidades'),R.vers&&plural(R.vers,'versión aprobada','versiones aprobadas')].filter(Boolean);
@@ -1126,7 +1137,7 @@ function iaMarkdown(){
       const nx=a.forma==='Decisión'?ramasOf(a).map(r=>`${r.etiqueta} → ${nm[r.dest]?nm[r.dest]+'. '+actOf(d,r.dest).nombre:'sin destino'}`).join('; '):a.forma==='Fin'?'Termina':(a.sig||[]).length?a.sig.filter(x=>nm[x]).map(x=>nm[x]+'. '+actOf(d,x).nombre).join(' y '):(acts[i+1]?(i+2)+'. '+acts[i+1].nombre:'—');
       return[String(i+1),a.forma||'Actividad',a.nombre,a.responsable||'',a.descripcion||'',nx,sb.map(s=>s.nombre).join(', ')]}));
     const W=Array.isArray(d.macro)&&d.macro.length?d.macro:null,X=d.carx||{};
-    if(W){P('**Caracterización (SIPOC)**');P('');tabla(['Gran actividad','Responsable','Proveedores','Entradas','Salidas','Clientes'],W.map((m,i)=>{const q=m.sipoc||{};return[(i+1)+'. '+m.nombre,m.responsable||'',q.p,q.e,q.s,q.c]}))}
+    if(W){P('**Caracterización (SIPOC)**');P('');tabla(['Proceso macro','Responsable','Proveedores','Entradas','Requerimientos de entrada','Salidas','Requerimientos de salida','Clientes'],W.map((m,i)=>{const q=m.sipoc||{};return[(i+1)+'. '+m.nombre,m.responsable||'',q.p,q.e,q.re,q.s,q.rs,q.c]}))}
     if((X.ind||[]).length){P('**Indicadores**');P('');tabla(['Indicador','Cómo se calcula','Meta','Frecuencia'],X.ind.map(r=>[r.n,r.f,r.m,r.q]))}
     if((X.rie||[]).length){P('**Riesgos y controles**');P('');tabla(['Riesgo','Consecuencia','Control'],X.rie.map(r=>[r.r,r.c,r.k]))}
     const p=d.proc||{},vs=versOf(d.id);
@@ -1160,7 +1171,7 @@ function iaExport(){const emp=(S.demo?(D('raiz')||{}).nombre:(BOOT.cliente&&BOOT
 const HVID=[{f:'ayuda-1.mp4',t:'Primeros pasos',c:'Cómo se maneja',d:'Tu nombre, la barra superior, el guardado automático y la empresa de ejemplo.',s:36},
  {f:'ayuda-2.mp4',t:'Mapa de procesos',c:'Paso 1',d:'Objetivo de la empresa y cómo agregar y ordenar procesos.',s:45},
  {f:'ayuda-3.mp4',t:'Flujo',c:'Paso 2',d:'Crear un flujo, escribir sus actividades, decisiones y el diagrama.',s:47},
- {f:'ayuda-4.mp4',t:'Caracterización',c:'Paso 3',d:'Grandes actividades, SIPOC e indicadores.',s:29},
+ {f:'ayuda-4.mp4',t:'Caracterización',c:'Paso 3',d:'Procesos macro, SIPOC e indicadores.',s:29},
  {f:'ayuda-5.mp4',t:'Procedimiento',c:'Paso 4',d:'Completar el documento, aprobar la versión y descargarlo.',s:32},
  {f:'ayuda-6.mp4',t:'Oportunidades',c:'Paso 5',d:'Registrar mejoras, el portafolio y el buscador.',s:30}];
 const HV={mapa:1,area:2,flujo:2,car:3,proc:4,ops:5};
@@ -1196,7 +1207,7 @@ function buscar(q){const terms=fold(q).trim().split(/\s+/).filter(t=>t.length>1)
     else if(hit(d.nombre,d.dueno,d.objetivo)){const area=isArea(d),c=CATS.find(x=>x[0]===d.categoria);
       add({t:area?'Proceso':'Flujo',n:d.nombre,w:area?(c?c[2]:'Mapa de procesos'):'En: '+donde(par(d)),ex:hit(d.nombre)?(d.dueno?'Responsable: '+d.dueno:''):(hit(d.dueno)&&!hit(d.objetivo)?'Responsable: '+d.dueno:'Objetivo: '+recorte(d.objetivo,terms)),go:[d.id,area?'area':'flujo'],sc:hit(d.nombre)?6:3})}
     (d.actividades||[]).forEach(a=>{if(hit(a.nombre,a.responsable,a.descripcion))add({t:a.forma==='Decisión'?'Decisión':'Actividad',n:a.nombre,w:'Flujo: '+donde(d.id),ex:hit(a.nombre)?(a.responsable||''):(hit(a.responsable)&&!hit(a.descripcion)?'Responsable: '+a.responsable:recorte(a.descripcion,terms)),go:[d.id,'flujo',a.id],sc:hit(a.nombre)?5:2})});
-    (d.macro||[]).forEach(m=>{const s=m.sipoc||{};if(hit(s.p,s.e,s.s,s.c)&&!hit(m.nombre))add({t:'Caracterización (SIPOC)',n:m.nombre,w:'Flujo: '+donde(d.id),ex:recorte([s.p,s.e,s.s,s.c].filter(Boolean).join(' · '),terms),go:[d.id,'car'],sc:1})});
+    (d.macro||[]).forEach(m=>{const s=m.sipoc||{};if(hit(s.p,s.e,s.re,s.s,s.rs,s.c)&&!hit(m.nombre))add({t:'Caracterización (SIPOC)',n:m.nombre,w:'Flujo: '+donde(d.id),ex:recorte([s.p,s.e,s.re,s.s,s.rs,s.c].filter(Boolean).join(' · '),terms),go:[d.id,'car'],sc:1})});
     const X=d.carx||{};(X.ind||[]).forEach(r=>{if(hit(r.n,r.f,r.m))add({t:'Indicador',n:r.n||'Indicador',w:'Flujo: '+donde(d.id),ex:[r.m&&'Meta: '+r.m,r.q].filter(Boolean).join(' · '),go:[d.id,'car'],sc:2})});
     (X.rie||[]).forEach(r=>{if(hit(r.r,r.c,r.k))add({t:'Riesgo',n:r.r||'Riesgo',w:'Flujo: '+donde(d.id),ex:r.k?'Control: '+r.k:'',go:[d.id,'car'],sc:2})});
     const p=d.proc||{};const pt=[p.codigo,p.objetivo,p.alcance,p.definiciones,p.referencias].join(' ');if(pt.trim()&&hit(pt))add({t:'Procedimiento',n:(p.codigo?p.codigo+' · ':'')+d.nombre,w:'Flujo: '+donde(d.id),ex:recorte(pt,terms),go:[d.id,'proc'],sc:2})});
@@ -1252,15 +1263,16 @@ function demoData(){const D2={},I={},now=new Date().toISOString(),mk=(o)=>{D2[o.
   A('gc','Gestión comercial','operativo',1,'Comercial');D2.gc.objetivo='Convertir oportunidades en contratos rentables, a tiempo.';A('pr','Presupuestos','operativo',2,'Presupuesto');D2.pr.objetivo='Elaborar presupuestos completos, en plazo y con el margen esperado.';A('eo','Ejecución de obra','operativo',3,'Dirección de obras');A('ec','Entrega y cierre','operativo',4,'Dirección de obras');
   A('co','Compras','apoyo',1,'Compras');D2.co.objetivo='Abastecer a tiempo, al mejor costo y con la calidad requerida.';A('gf','Gestión financiera','apoyo',2,'Finanzas');A('rh','Recursos humanos','apoyo',3,'RR. HH.');
   const g=['Captar al cliente|Comercial','Elaborar presupuesto|Presupuesto','Firmar contrato|Gerencia','Comprar materiales|Compras','Ejecutar la obra|Dirección de obras','Facturar y cobrar|Finanzas','Entregar la obra|Dirección de obras'];
-  D2.raiz.actividades=g.map((x,i)=>{const[n,r]=x.split('|');return{id:'g'+i,orden:i+1,forma:i===0?'Inicio':i===g.length-1?'Fin':'Actividad',nombre:n,responsable:r,descripcion:'',sig:[],ramas:[]}});
+  D2.raiz.actividades=tplActs({f:g.map(x=>{const[n,r]=x.split('|');return['Actividad',n,r,'']})});
   const F=(id,par,ti,du,act)=>{const f=mk({id,nombre:PLANT[ti].n,parentId:par,parentActId:act||null,dueno:du,actividades:tplActs(PLANT[ti])});f.macro=proponer(f,defK(f));return f};
   F('f1','gc',0,'Comercial');const p=F('f2','pr',1,'Presupuesto');F('f3','co',2,'Compras');F('f4','eo',3,'Dirección de obras');F('f5','gf',4,'Finanzas');D2.f5.objetivo='Cobrar a tiempo todas las facturas y cubicaciones emitidas.';F('f6','gf',5,'Finanzas');F('f7','rh',6,'RR. HH.');
   const sp=[['Cliente\nComercial','Planos y alcance','Información verificada','Presupuesto'],['Ingeniería','Información verificada','Cantidades por partida','Compras'],['Suplidores','Lista de materiales','Cotizaciones comparadas','Presupuesto'],['Compras','Cotizaciones','Costos unitarios','Gerencia'],['Presupuesto','Presupuesto preliminar','Presupuesto aprobado','Comercial\nCliente']];
-  p.macro.forEach((m,i)=>{const s=sp[i]||sp[sp.length-1];m.sipoc={p:s[0],e:s[1],s:s[2],c:s[3]}});
+  const rq=[['Planos firmados y legibles','Información completa y sin dudas'],['Información verificada por Ingeniería','Cantidades por partida, sin omisiones'],['Lista de materiales con especificaciones','Al menos 3 cotizaciones comparables'],['Cotizaciones vigentes','Costos con margen esperado'],['Presupuesto revisado','Entregado en 5 días o menos']];
+  p.macro.forEach((m,i)=>{const s=sp[i]||sp[sp.length-1],r=rq[i]||rq[rq.length-1];m.sipoc={p:s[0],e:s[1],re:r[0],s:s[2],rs:r[1],c:s[3]}});
   p.carx={ind:[{n:'Días para entregar un presupuesto',f:'Fecha de entrega − fecha de recepción de planos',m:'≤ 5 días',q:'Mensual'},{n:'Presupuestos ganados',f:'Ganados ÷ enviados × 100',m:'≥ 30 %',q:'Trimestral'}],rie:[{r:'Precios de suplidores desactualizados',c:'Margen menor al previsto',k:'Actualizar la base de precios cada mes'},{r:'Planos incompletos',c:'Errores de cubicación',k:'Lista de verificación al recibir planos'}]};
   p.proc={codigo:'PR-PRE-01',elaboro:'Jefe de presupuesto',objetivo:'Establecer los pasos para elaborar presupuestos completos, a tiempo y con el margen esperado.',alcance:'Desde que se reciben los planos y el alcance del cliente hasta que el presupuesto aprobado se entrega a Comercial.',definiciones:'Partida: rubro del presupuesto\nCubicación: medición de cantidades de obra',referencias:'Plantilla de presupuesto\nBase de precios unitarios'};
   I.v1={id:'v1',tipo:'procver',diagramaId:'f2',version:1,fecha:now,aprobo:'Gerencia general',cambio:'Versión inicial',datos:firma(p,p.proc,p.macro,p.carx)};
-  const op=(id,fl,ai,t,i,e,st,c)=>{I[id]={id,tipo:'oportunidad',diagramaId:fl,actividadId:D2[fl].actividades[ai].id,titulo:t,impacto:i,esfuerzo:e,estado:st,categoria:c,responsable:D2[fl].actividades[ai].responsable,creadoPor:'Equipo de ejemplo',creado:now}};
+  const op=(id,fl,ai,t,i,e,st,c)=>{I[id]={id,tipo:'oportunidad',diagramaId:fl,actividadId:D2[fl].actividades[ai+1].id,titulo:t,impacto:i,esfuerzo:e,estado:st,categoria:c,responsable:D2[fl].actividades[ai+1].responsable,creadoPor:'Equipo de ejemplo',creado:now}};
   op('o1','f2',5,'Se cotiza desde cero en cada presupuesto (sin base de precios)',3,1,'En análisis','Trabajo manual');op('o2','f2',1,'Los planos llegan incompletos en 6 de cada 10 proyectos',3,2,'Identificada','Reprocesos');
   op('o3','f2',7,'La revisión de márgenes espera hasta 3 días por la gerencia',2,1,'Identificada','Esperas');op('o4','f5',2,'No hay recordatorio automático de vencimientos',3,1,'En implementación','Trabajo manual');op('o5','f3',4,'Doble aprobación para compras pequeñas',2,1,'Identificada','Aprobaciones');
   return{diag:D2,items:I}}
@@ -1309,8 +1321,8 @@ document.addEventListener('click',async e=>{
   case 'dic-apply':flushDictado(true);break;
   case 'dlg-close':closeDlg(true);break;
   case 'wz-propose':S.wz=proponer(d,+($('#wzK')||{}).value||5);marcar();content();break;
-  case 'mv-act':{const i=+b.dataset.m,dir=+b.dataset.d,W=S.wz;if(W[i].acts.length<2){toast('Cada gran actividad debe tener al menos una actividad.');break}if(dir<0)W[i-1].acts.push(W[i].acts.shift());else W[i+1].acts.unshift(W[i].acts.pop());marcar();content();break}
-  case 'wz-sug':{const W=S.wz;W.forEach((m,i)=>{m.sipoc=m.sipoc||{p:'',e:'',s:'',c:''};if(i>0&&!m.sipoc.e.trim()&&(W[i-1].sipoc||{}).s)m.sipoc.e=W[i-1].sipoc.s;if(i>0&&!m.sipoc.p.trim()&&W[i-1].responsable)m.sipoc.p=W[i-1].responsable;if(i<W.length-1&&!m.sipoc.c.trim()&&W[i+1].responsable)m.sipoc.c=W[i+1].responsable});marcar();content();toast('Conexiones sugeridas. Revisa y completa.');break}
+  case 'mv-act':{const i=+b.dataset.m,dir=+b.dataset.d,W=S.wz;if(W[i].acts.length<2){toast('Cada proceso macro debe tener al menos una actividad.');break}if(dir<0)W[i-1].acts.push(W[i].acts.shift());else W[i+1].acts.unshift(W[i].acts.pop());marcar();content();break}
+  case 'wz-sug':{const W=S.wz;W.forEach((m,i)=>{m.sipoc=m.sipoc||{p:'',e:'',re:'',s:'',rs:'',c:''};if(i>0&&!m.sipoc.e.trim()&&(W[i-1].sipoc||{}).s)m.sipoc.e=W[i-1].sipoc.s;if(i>0&&!m.sipoc.p.trim()&&W[i-1].responsable)m.sipoc.p=W[i-1].responsable;if(i<W.length-1&&!m.sipoc.c.trim()&&W[i+1].responsable)m.sipoc.c=W[i+1].responsable});marcar();content();toast('Conexiones sugeridas. Revisa y completa.');break}
   case 'x-add':{S.wx[b.dataset.t].push({});marcar();content();const ins=document.querySelectorAll(`[data-x="${b.dataset.t}"]`);if(ins.length)ins[ins.length-(b.dataset.t==='ind'?4:3)].focus();break}
   case 'x-del':S.wx[b.dataset.t].splice(+b.dataset.i,1);marcar();content();break;
   case 'aprobar':{flushAuto();const E=estadoVer(d);openDlg(`<h3>Aprobar versión ${E.n}</h3><p class="mut">Se fija una copia del procedimiento tal como está ahora. Los cambios posteriores quedarán como borrador de la versión ${E.n+1}.</p>
@@ -1347,7 +1359,7 @@ let rsT;document.addEventListener('input',e=>{const t=e.target;if(t.classList&&t
   if(!t.closest('#content'))return;
   if(t.dataset.x){S.wx[t.dataset.x][+t.dataset.i][t.dataset.f]=t.value;marcar()}
   else if(t.dataset.f!==undefined&&t.dataset.m!==undefined){S.wz[+t.dataset.m][t.dataset.f]=t.value;marcar();const cv=document.querySelectorAll('.chev .cv')[+t.dataset.m];if(cv)cv.innerHTML=`<small>${+t.dataset.m+1}</small>${esc(S.wz[+t.dataset.m].nombre||'Sin nombre')}<i>${esc(S.wz[+t.dataset.m].responsable||'')}</i>`}
-  else if(t.dataset.s&&t.dataset.m!==undefined){const m=S.wz[+t.dataset.m];m.sipoc=m.sipoc||{p:'',e:'',s:'',c:''};m.sipoc[t.dataset.s]=t.value;marcar()}
+  else if(t.dataset.s&&t.dataset.m!==undefined){const m=S.wz[+t.dataset.m];m.sipoc=m.sipoc||{p:'',e:'',re:'',s:'',rs:'',c:''};m.sipoc[t.dataset.s]=t.value;marcar()}
   else if(t.dataset.p){S.wp[t.dataset.p]=t.value;marcar();procPreview()}
   else if(t.dataset.q&&t.type==='checkbox'){const id=t.dataset.id,arr=S.wc[id]=S.wc[id]||[];if(t.checked){if(!arr.includes(t.dataset.q))arr.push(t.dataset.q)}else S.wc[id]=arr.filter(x=>x!==t.dataset.q);$('#sugBox').innerHTML=sugHTML(D(S.cur))}
   else if(t.id==='wzK'){S.wz=proponer(D(S.cur),+t.value);marcar();content()}});
