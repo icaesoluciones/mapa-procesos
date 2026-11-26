@@ -1167,6 +1167,21 @@ function iaExport(){const emp=(S.demo?(D('raiz')||{}).nombre:(BOOT.cliente&&BOOT
   <p class="hint" style="margin-top:10px">El archivo incluye nombres, responsables y oportunidades de mejora. Compártelo solo con herramientas de IA aprobadas por la empresa.</p>
   <div class="row end" style="margin-top:12px"><button type="button" class="btn pri" data-a="dlg-close">Listo</button></div>`,()=>{})}
 
+/* ================= actualización automática cuando se sube un index.html nuevo ================= */
+const UPD={base:null,nueva:false,ultimo:Date.now()};
+['pointerdown','keydown','wheel','touchstart','input'].forEach(ev=>document.addEventListener(ev,()=>{UPD.ultimo=Date.now()},{passive:true,capture:true}));
+let mvT=0;document.addEventListener('mousemove',()=>{const n=Date.now();if(n-mvT>5000){mvT=n;UPD.ultimo=n}},{passive:true});
+const hashTxt=s=>{let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return h};
+async function verVersion(){if(!/^https?:/.test(location.protocol))return;
+  try{const r=await fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'});if(!r.ok)return;const h=hashTxt(await r.text());
+    if(UPD.base===null)UPD.base=h;else if(h!==UPD.base)UPD.nueva=true}catch(e){}}
+const seguro=()=>!pending&&!S.dirty&&!listening&&!$('#dlg').open&&!$('#help').open;
+function recargar(){try{sessionStorage.setItem('mp_resume',JSON.stringify({cur:S.cur,step:S.step,view:S.view}))}catch(e){}location.reload()}
+function revisarActualizacion(volvio){if(!UPD.nueva||!seguro())return;if(volvio||Date.now()-UPD.ultimo>=180000)recargar()}
+document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'){await verVersion();revisarActualizacion(true)}});
+setInterval(async()=>{await verVersion();revisarActualizacion(false)},120000);
+setInterval(()=>revisarActualizacion(false),30000);
+
 /* ================= ayuda en video ================= */
 const HVID=[{f:'ayuda-1.mp4',t:'Primeros pasos',c:'Cómo se maneja',d:'Tu nombre, la barra superior, el guardado automático y la empresa de ejemplo.',s:36},
  {f:'ayuda-2.mp4',t:'Mapa de procesos',c:'Paso 1',d:'Objetivo de la empresa y cómo agregar y ordenar procesos.',s:45},
@@ -1421,7 +1436,8 @@ let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{if(S.view==='
   $('#banner').textContent='';
   C=BOOT.cliente.id;K=BOOT.k||'';canWrite=BOOT.mode==='gestionar';document.title='Mapa de procesos · '+BOOT.cliente.nombre;
   $('#cliName').textContent=BOOT.cliente.nombre;$('#modeTag').textContent=canWrite?'Edición':'Solo consulta';$('#modeTag').classList.toggle('g',canWrite);whoBtn();
-  $('#app').hidden=false;await load();
+  $('#app').hidden=false;await load();verVersion();
+  try{const r=JSON.parse(sessionStorage.getItem('mp_resume')||'null');sessionStorage.removeItem('mp_resume');if(r&&D(r.cur)){if(r.view==='port'){S.view='port';render(true)}else goNode(r.cur,r.step)}}catch(e){}
   if(canWrite&&!yo())nombreDlg(true);
   setTimeout(tipCheck,1200);
   setInterval(()=>{if(!pending&&!S.dirty&&!S.demo&&!$('#dlg').open&&document.visibilityState==='visible')load()},120000);
