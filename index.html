@@ -425,11 +425,27 @@ function layoutFlow(d){
   g+=`<rect x="8" y="${top}" width="${W-16}" height="${lanes.length*LH}" fill="none" stroke="#d5ddda" rx="2"/><line x1="${8+lw}" x2="${8+lw}" y1="${top}" y2="${top+lanes.length*LH}" stroke="#d5ddda"/>`;
   const back={};let nb=0;
   const pill=(x,y,txt)=>{const w=txt.length*7+12;lb+=`<rect x="${x-2}" y="${y-12}" width="${w}" height="18" rx="9" fill="#fff" stroke="#cfe3dc"/><text x="${x-2+w/2}" y="${y+1}" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0b5d4b">${esc(txt)}</text>`};
+  const tgOf=(a,i)=>{if(a.forma==='Decisión'&&Array.isArray(a.ramas)&&a.ramas.length)return a.ramas.filter(r=>P[r.dest]&&r.dest!==a.id).map(r=>({id:r.dest,lbl:r.etiqueta}));
+    let tg=(Array.isArray(a.sig)?a.sig:[]).filter(id=>P[id]&&id!==a.id).map(id=>({id,lbl:''}));if(!tg.length&&a.forma!=='Fin'&&acts[i+1])tg=[{id:acts[i+1].id,lbl:''}];return tg};
+  /* llegadas: solo una flecha entra por la izquierda; las demás entran por abajo o por arriba */
+  const inc={};acts.forEach((a,i)=>tgOf(a,i).forEach(t=>{const p=P[a.id],q=P[t.id];if(q.i>p.i)(inc[t.id]=inc[t.id]||[]).push(a.id)}));
+  const prim={};Object.entries(inc).forEach(([tid,L])=>{const q=P[tid];prim[tid]=L.slice().sort((x,y)=>(P[y].lane===q.lane)-(P[x].lane===q.lane)||P[y].i-P[x].i)[0]});
+  const secN={},isD=id=>acts[P[id].o].forma==='Decisión';
+  const okVert=(p,q)=>{if(p.lane!==q.lane&&occ[q.i+'|'+p.lane])return false;const lo=Math.min(p.lane,q.lane),hi=Math.max(p.lane,q.lane);for(let l=lo+1;l<hi;l++)if(occ[q.i+'|'+l])return false;return true};
+  /* punto de encuentro: si una llegada adicional no puede entrar por abajo/arriba, todas se unen en un punto antes de la caja */
+  const jn={};Object.entries(inc).forEach(([tid,L])=>{if(L.some(s=>s!==prim[tid]&&!okVert(P[s],P[tid])))jn[tid]=1});
   acts.forEach((a,i)=>{
-    const p=P[a.id],dec=a.forma==='Decisión';let tg;
-    if(dec&&Array.isArray(a.ramas)&&a.ramas.length)tg=a.ramas.filter(r=>P[r.dest]&&r.dest!==a.id).map(r=>({id:r.dest,lbl:r.etiqueta}));
-    else{tg=(Array.isArray(a.sig)?a.sig:[]).filter(id=>P[id]&&id!==a.id).map(id=>({id,lbl:''}));if(!tg.length&&a.forma!=='Fin'&&acts[i+1])tg=[{id:acts[i+1].id,lbl:''}]}
+    const p=P[a.id],dec=a.forma==='Decisión',tg=tgOf(a,i);
     tg.forEach((t,k)=>{const q=P[t.id],cx=p.x+bw/2,gap=(cw-bw)/2;let pts,lx,ly;
+      const clearL=l=>{for(let c=p.i+1;c<q.i;c++)if(occ[c+'|'+l])return false;return true};
+      if(q.i>p.i&&prim[t.id]!==a.id){/* llegada adicional: entra por abajo (o por arriba) del destino */
+        const n=secN[t.id]=(secN[t.id]||0)+1,fromBelow=p.lane>=q.lane,tx=q.x+bw/2+(n%2?1:-1)*Math.ceil(n/2)*16-8,qd=isD(t.id)?8:0,ty=fromBelow?q.y+bh+qd+3:q.y-qd-3;
+        if(!jn[t.id]&&okVert(p,q)){const x1=k===0?p.x+bw+(dec?6:0):cx,y1=k===0?p.y+bh/2:p.y+bh+(dec?8:0),g1=p.x+bw+gap;
+          const yc=fromBelow?top+(p.lane+1)*LH-14-(n-1)*6:top+p.lane*LH+12+(n-1)*6;
+          if(k===0&&p.lane!==q.lane&&clearL(p.lane))pts=[[x1,y1],[tx,y1],[tx,ty]];
+          else pts=k===0?[[x1,y1],[g1,y1],[g1,yc],[tx,yc],[tx,ty]]:[[x1,y1],[x1,yc],[tx,yc],[tx,ty]];
+          lx=x1+6;ly=k===0?y1-8:y1+15;
+          ed+=`<path d="${rpath(pts,8)}" fill="none" stroke="#7b8794" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#ar)"/>`;if(t.lbl)pill(lx,ly,t.lbl);return}}
       if(q.i===p.i){const dn=q.lane>p.lane,ox=(k?10:0);pts=[[cx+ox,dn?p.y+bh+(dec?8:0):p.y-(dec?8:0)],[cx+ox,dn?q.y-3:q.y+bh+3]];lx=cx+ox+6;ly=dn?p.y+bh+16:p.y-8}
       else if(q.i<p.i){/* retorno: por el canal inferior del carril más bajo */
         const L=Math.max(p.lane,q.lane),n=back[L]=(back[L]||0)+1,ch=top+(L+1)*LH-10-(n-1)*7,sx=k===0?p.x+bw+(dec?6:0):cx,sy=k===0?p.y+bh/2:p.y+bh+(dec?8:0);
@@ -441,7 +457,7 @@ function layoutFlow(d){
         else if(clear(q.lane))pts=[[x1,y1],[g1,y1],[g1,y2],[q.x-3,y2]];
         else{const yc=top+p.lane*LH+12;pts=[[x1,y1],[g1,y1],[g1,yc],[q.x-gap,yc],[q.x-gap,y2],[q.x-3,y2]]}
         lx=x1+6;ly=y1-8}
-      else{const y1=p.y+bh+(dec?8:0),yb=Math.min(top+(p.lane+1)*LH-24,y1+18+(k-1)*8),m=q.x-gap+6+(k-1)*5;
+      else{const y1=p.y+bh+(dec?8:0),yb=Math.min(top+(p.lane+1)*LH-24,y1+18+(k-1)*8),m=jn[t.id]?q.x-gap:q.x-gap+6+(k-1)*5;
         pts=q.lane===p.lane&&q.i===p.i+1?[[cx,y1],[cx,yb],[m,yb],[m,q.y+bh/2],[q.x-3,q.y+bh/2]]:[[cx,y1],[cx,yb],[m,yb],[m,q.y+bh/2],[q.x-3,q.y+bh/2]];lx=cx+6;ly=y1+15}
       ed+=`<path d="${rpath(pts,8)}" fill="none" stroke="#7b8794" stroke-width="1.6" stroke-linejoin="round" marker-end="url(#ar)"/>`;
       if(t.lbl)pill(lx,ly,t.lbl)})});
@@ -453,6 +469,7 @@ function layoutFlow(d){
     if(sub){const t=sub===1?'1 flujo de detalle':sub+' flujos de detalle',tw=t.length*5.4+14;bx+=`<rect x="${cx-tw/2}" y="${p.y+bh-9}" width="${tw}" height="17" rx="8.5" fill="#0b5d4b"/><text x="${cx}" y="${p.y+bh+3}" text-anchor="middle" font-size="9.5" font-weight="600" fill="#fff">${t}</text>`}
     const fill=f==='Inicio'||f==='Fin'?'#ffffff':'#111827';
     wrapTxt(a.nombre,f==='Decisión'?15:20).slice(0,f==='Decisión'?3:4).forEach((t,j,L)=>{bx+=`<text x="${cx}" y="${cy+(j-(L.length-1)/2)*17+5-(sub&&f!=='Decisión'?4:0)}" text-anchor="middle" font-size="13.5" font-weight="${f==='Inicio'||f==='Fin'?600:500}" fill="${fill}">${esc(t)}</text>`})});
+  Object.keys(jn).forEach(id=>{const q=P[id];ed+=`<circle cx="${q.x-(cw-bw)/2}" cy="${q.y+bh/2}" r="5" fill="#7b8794" stroke="#fff" stroke-width="1.5"/>`});
   g+=ed+bx+lb;
   const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="Inter, Arial, Helvetica, sans-serif"><defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#7b8794"/></marker><filter id="s" x="-10%" y="-10%" width="120%" height="135%"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#0f172a" flood-opacity=".10"/></filter></defs>${g}</svg>`;
   const L={svg,ar:H/W,pos,url:URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}))};
