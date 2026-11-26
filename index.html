@@ -440,14 +440,19 @@ function layoutFlow(d){
   /* puntos de salida y entrada de cada figura */
   const R=p=>p.x+bw+(p.dec?6:0),Lx=p=>p.x-(p.dec?6:0),B=p=>p.y+bh+(p.dec?8:0),T=p=>p.y-(p.dec?8:0);
   /* llegadas por la izquierda: una sola; el resto por arriba/abajo o en un punto de encuentro */
-  const E=[];acts.forEach((a,i)=>tgOf(a,i).forEach((t,k)=>E.push({a,p:P[a.id],q:P[t.id],k,lbl:t.lbl,tid:t.id})));
+  const E=[];acts.forEach((a,i)=>{const p=P[a.id],L=tgOf(a,i).map((t,k)=>({a,p,q:P[t.id],k,lbl:t.lbl,tid:t.id}));
+    if(p.dec){/* cada rama sale por el lado que evita cruces: derecha si sigue en la misma fila, abajo si regresa o baja, arriba si sube */
+      const pref=e=>{const q=e.q;if(q.i<p.i||(q.i===p.i&&q.y>p.y))return['B','R','T'];if(q.i===p.i)return['T','R','B'];if(q.g===p.g)return['R','B','T'];return q.y>p.y?['B','R','T']:['T','R','B']};
+      const rank=e=>e.q.i>p.i&&e.q.g===p.g?0:(e.q.i<p.i?1:2),taken={};
+      L.slice().sort((x,y)=>rank(x)-rank(y)||x.k-y.k).forEach(e=>{const s=pref(e).find(s=>!taken[s])||'R';taken[s]=1;e.side=s})}
+    L.forEach(e=>E.push(e))});
   const inc={};E.forEach(e=>{if(e.q.i>e.p.i)(inc[e.tid]=inc[e.tid]||[]).push(e)});
   const prim={};Object.entries(inc).forEach(([tid,L])=>{const q=P[tid];prim[tid]=L.slice().sort((x,y)=>(y.p.g===q.g)-(x.p.g===q.g)||(y.k===0)-(x.k===0)||y.p.i-x.p.i)[0]});
   const used2={},jn={},seg=[];
   const chan={};const lane0=(y,key)=>{const n=chan[key]=(chan[key]||0)+1;return y+(n-1)*7};
   const draw=(pts,e)=>{ed+=`<path d="${rpath(pts,10)}" fill="none" stroke="#7b8794" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#ar)"/>`};
   E.forEach(e=>{const{p,q,k}=e;let pts,lp=null;
-    const exitR=!p.dec||k===0,exitT=p.dec&&k>0&&q.y<p.y,exitB=p.dec&&k>0&&!exitT;
+    const exitR=!p.dec||e.side==='R',exitT=p.dec&&e.side==='T',exitB=p.dec&&e.side==='B';
     const sx=exitR?R(p):p.cx,sy=exitR?p.cy:(exitB?B(p):T(p));
     if(exitR)lp=[sx+14,sy-10];else lp=[sx+16,exitB?sy+12:sy-12];
     const gR=p.x+bw+gap;/* canal vertical a la derecha del origen */
