@@ -399,13 +399,21 @@ function layoutFlow(d){
   if(genCache.key===key)return genCache.L;
   const lk=a=>norm(a.responsable)||'sin responsable',disp={};acts.forEach(a=>{const k=lk(a);if(!disp[k])disp[k]=String(a.responsable||'').trim()||'Sin responsable'});
   const lanes=[...new Set(acts.map(lk))];
-  /* columnas: un traspaso directo a otro carril se dibuja en la misma columna (flecha vertical) */
-  const ln=a=>lanes.indexOf(lk(a)),col={},occ={};let c=-1;
-  const nx=(a,i)=>{const s=(a.sig||[]).filter(Boolean);return s.length?s[0]:(a.forma!=='Fin'&&acts[i+1]?acts[i+1].id:null)};
-  acts.forEach((a,i)=>{const pv=acts[i-1];let cc=c+1;
-    if(pv&&pv.forma!=='Decisión'&&a.forma!=='Decisión'&&ln(pv)!==ln(a)&&nx(pv,i-1)===a.id){const lo=Math.min(ln(pv),ln(a)),hi=Math.max(ln(pv),ln(a));let free=true;for(let k=lo;k<=hi;k++)if(k!==ln(pv)&&occ[c+'|'+k])free=false;if(free)cc=c}
-    col[a.id]=cc;occ[cc+'|'+ln(a)]=1;c=cc});
-  const nc=Math.max(1,c+1);
+  /* columnas por dependencia: cada actividad va justo después de la(s) que la preceden (no por su posición en la lista).
+     Un traspaso a otro carril se dibuja en la misma columna (flecha vertical) si el camino está libre. */
+  const ln=a=>lanes.indexOf(lk(a)),idx=Object.fromEntries(acts.map((a,i)=>[a.id,i])),col={},occ={},vb={};
+  const succ=(a,i)=>{if(a.forma==='Decisión'&&Array.isArray(a.ramas)&&a.ramas.length)return a.ramas.map(r=>r.dest).filter(id=>id in idx&&id!==a.id);
+    const s=(Array.isArray(a.sig)?a.sig:[]).filter(id=>id in idx&&id!==a.id);return s.length?s:(a.forma!=='Fin'&&acts[i+1]?[acts[i+1].id]:[])};
+  const preds={};acts.forEach((a,i)=>succ(a,i).forEach(t=>{if(idx[t]>i)(preds[t]=preds[t]||[]).push(a)}));
+  const blocked=(c,L)=>occ[c+'|'+L]||(vb[c]||[]).some(([lo,hi])=>lo<L&&L<hi);
+  acts.forEach((a,i)=>{const L=ln(a),pr=preds[a.id]||[];let cc=0,st=null;
+    pr.forEach(p=>{const cp=col[p.id],lp=ln(p);let r=cp+1;
+      if(p.forma!=='Decisión'&&a.forma!=='Decisión'&&lp!==L&&!blocked(cp,L)){const lo=Math.min(lp,L),hi=Math.max(lp,L);let free=true;for(let k=lo+1;k<hi;k++)if(occ[cp+'|'+k])free=false;if(free){r=cp;if(!st||cp>st.c)st={c:cp,lo,hi}}}
+      if(r>cc)cc=r});
+    if(!pr.length&&i>0)cc=Math.max(0,col[acts[i-1].id]+1);
+    while(blocked(cc,L))cc++;
+    col[a.id]=cc;occ[cc+'|'+L]=1;if(st&&st.c===cc)(vb[cc]=vb[cc]||[]).push([st.lo,st.hi])});
+  const nc=Math.max(1,...Object.values(col).map(x=>x+1));
   const lw=150,cw=204,LH=150,top=14,bw=170,bh=78,W=Math.max(900,lw+36+nc*cw),H=top+Math.max(1,lanes.length)*LH+14;
   const pos={},P={};
   acts.forEach((a,i)=>{const lane=ln(a),ci=col[a.id];const x=lw+26+ci*cw+(cw-bw)/2,y=top+lane*LH+(LH-bh)/2-6;P[a.id]={x,y,lane,i:ci,o:i};pos[a.id]={x:x/W,y:y/H,w:bw/W,h:bh/H}});
