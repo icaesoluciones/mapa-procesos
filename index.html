@@ -314,6 +314,8 @@ body{font-size:14px;letter-spacing:-.003em}
 .chev .cv{font-size:13px}
 #toast{border-radius:6px}
 dialog{border-radius:10px}
+.newact{display:flex;gap:4px;flex-wrap:wrap;margin:4px 0;padding:6px;background:var(--pri2);border-radius:6px}.newact input{flex:1 1 120px;min-height:32px;font-size:13px}
+#aedBody tr.nuevo td{background:#fff7d6;transition:background .6s}
 
 /* separación clara entre franjas */
 .iso{gap:12px}
@@ -710,12 +712,24 @@ function refreshSig(){const tb=$('#aedBody');if(!tb)return;
     const own=s.closest('tr').dataset.id,dec=s.name==='rn';
     if(s.dataset.pend){const t=byO[num(s.dataset.pend)];if(t&&t!==own){s.dataset.v=t;delete s.dataset.pend}}
     const cur=s.dataset.v||'';
-    s.innerHTML=(dec?'<option value="">— elegir actividad —</option>':'<option value="">La siguiente en la lista</option>')+rows.filter(r=>r.id!==own).map(r=>`<option value="${esc(r.id)}"${r.id===cur?' selected':''}>→ ${r.o}. ${esc(r.n||'(sin nombre)')}</option>`).join('')})}
+    s.innerHTML=(dec?'<option value="">— elegir actividad —</option>':'<option value="">La siguiente en la lista</option>')+rows.filter(r=>r.id!==own).map(r=>`<option value="${esc(r.id)}"${r.id===cur?' selected':''}>→ ${r.o}. ${esc(r.n||'(sin nombre)')}</option>`).join('')+'<option value="__new">＋ Crear nueva actividad…</option>'})}
+function nuevaDesde(s){/* crea una fila nueva desde una decisión o un "siguiente paso" y la deja conectada */
+  s.value=s.dataset.v||'';const cell=s.closest('.rama,.sg')||s.parentNode;const old=cell.parentNode.querySelector('.newact');if(old)old.remove();
+  const tr=s.closest('tr'),resp=tr.querySelector('[name=responsable]').value;
+  cell.insertAdjacentHTML('afterend',`<div class="newact"><input class="na-n" placeholder="Nombre de la nueva actividad" aria-label="Nombre de la nueva actividad"><input class="na-r" list="dlResp" value="${esc(resp)}" placeholder="Responsable" aria-label="Responsable"><button type="button" class="btn pri sm" data-a="na-ok">Crear</button><button type="button" class="btn sm" data-a="na-x" aria-label="Cancelar">×</button></div>`);
+  const box=cell.nextElementSibling;box._sel=s;box.querySelector('.na-n').focus()}
+function crearDesde(box){const n=box.querySelector('.na-n').value.trim();if(!n){box.querySelector('.na-n').focus();return}
+  const tb=$('#aedBody'),rows=[...tb.rows];let ref=null;for(let i=rows.length-1;i>=0;i--){if(rows[i].querySelector('[name=forma]').value==='Fin')ref=rows[i];else break}
+  const tmp=document.createElement('tbody');tmp.innerHTML=actRow({nombre:n,responsable:box.querySelector('.na-r').value.trim()},0);const nr=tmp.firstElementChild;
+  if(ref)tb.insertBefore(nr,ref);else tb.appendChild(nr);
+  const s=box._sel;s.dataset.v=nr.dataset.id;delete s.dataset.pend;box.remove();refreshSig();
+  nr.classList.add('nuevo');setTimeout(()=>nr.classList.remove('nuevo'),2500);
+  toast(`“${n}” se creó como actividad ${[...tb.rows].indexOf(nr)+1} y quedó conectada. Complétala o muévela con ⠿.`)}
 function actsDlg(dictar){
   const d=D(S.cur);if(!d)return;const ord=orderActs(d),ids=ord.map(a=>a.id);
   if(!canWrite){openDlg(`<h3>Actividades · ${esc(d.nombre)}</h3><div class="aed"><table><thead><tr><th>#</th><th>Actividad</th><th>Responsable</th><th>Descripción</th></tr></thead><tbody>${ord.map((a,i)=>`<tr><td>${i+1}</td><td>${esc(a.nombre)}</td><td>${esc(a.responsable||'')}</td><td>${esc(a.descripcion||'')}</td></tr>`).join('')}</tbody></table></div><div class="row end" style="margin-top:12px"><button type="button" class="btn" data-a="dlg-close">Cerrar</button></div>`,()=>{},null,true);return}
   openDlg(`<h3>Actividades · ${esc(d.raiz?'Flujo general':d.nombre)}</h3>
-  <p class="hint">Una fila por actividad, en orden. Arrastra <b>⠿</b> o usa ▲▼ para cambiar el orden. El responsable define el carril. En <b>Siguiente paso</b> elige a qué actividad pasa el flujo (normalmente “La siguiente en la lista”); si pasa a dos o más a la vez, usa <b>+ otro destino</b>. En una <b>Decisión</b> elige a dónde lleva cada opción (p. ej. Sí → Cuantificar, No → Solicitar información).</p>
+  <p class="hint">Una fila por actividad, en orden. Arrastra <b>⠿</b> o usa ▲▼ para cambiar el orden. El responsable define el carril. En <b>Siguiente paso</b> elige a qué actividad pasa el flujo (normalmente “La siguiente en la lista”); si pasa a dos o más a la vez, usa <b>+ otro destino</b>. En una <b>Decisión</b> elige a dónde lleva cada opción (p. ej. Sí → Cuantificar, No → Solicitar información). ¿La actividad todavía no existe? Elige <b>＋ Crear nueva actividad…</b> en la lista y se crea ya conectada.</p>
   <div class="dic"><div class="row"><strong style="margin-right:auto">Dictado por voz</strong><button type="button" class="btn sm" id="dicBtn" data-a="dic-start">Dictar con micrófono</button><button type="button" class="btn sm" data-a="dic-apply">Pasar texto a la tabla</button></div>
   <p class="hint" style="margin:6px 0 0">Di: “<b>actividad</b> recibir planos <b>responsable</b> presupuesto <b>descripción</b> se reciben del cliente <b>siguiente</b>”. Tipos: inicio, actividad, decisión, fin. Decisión: “<b>conecta con sí</b> cuatro <b>no</b> dos”. “<b>Borrar</b>” quita la última fila.</p>
   <textarea id="dicTxt" aria-label="Texto dictado" placeholder="Aquí aparece lo dictado. Si el micrófono no funciona, dicta aquí con el teclado del celular o con Win + H y pulsa “Pasar texto a la tabla”."></textarea><p class="hint" id="dicInterim" style="min-height:1.2em;margin:4px 0 0"></p></div>
@@ -1312,7 +1326,8 @@ $('#q').addEventListener('keydown',e=>{const bs=[...document.querySelectorAll('#
   else if(e.key==='Enter'){e.preventDefault();qGo(qSel)}else if(e.key==='Escape'){$('#qres').hidden=true;$('#q').blur()}});
 $('#qres').addEventListener('mousedown',e=>{const b=e.target.closest('.qr');if(b){e.preventDefault();qGo(+b.dataset.qi)}});
 document.addEventListener('mousedown',e=>{if(!e.target.closest('.srch'))$('#qres').hidden=true});
-document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('#q').focus();$('#q').select()}});
+document.addEventListener('keydown',e=>{const na=e.target.closest&&e.target.closest('.newact');if(na&&e.key==='Enter'){e.preventDefault();crearDesde(na);return}if(na&&e.key==='Escape'){e.preventDefault();na.remove();return}
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('#q').focus();$('#q').select()}});
 
 /* ================= diálogos ================= */
 function openDlg(html,ok,cancel,wide){const f=$('#dlgForm'),dg=$('#dlg');dg.classList.toggle('wide',!!wide);f.innerHTML=html;dlgOk=ok;dlgCancel=cancel||null;try{dg.showModal()}catch(e){dg.setAttribute('open','')}const x=f.querySelector('input:not([type=checkbox]):not([type=file]):not([type=hidden]),textarea');if(x)x.focus()}
@@ -1402,6 +1417,8 @@ document.addEventListener('click',async e=>{
   case 'act-mv':moveAct(d,S.sel,+b.dataset.d);break;
   case 'sig-add':{b.insertAdjacentHTML('beforebegin',sigRow('','',1));refreshSig();break}
   case 'sig-del':b.closest('.sg').remove();break;
+  case 'na-ok':crearDesde(b.closest('.newact'));break;
+  case 'na-x':b.closest('.newact').remove();break;
   case 'rama-add':b.insertAdjacentHTML('beforebegin',ramaRow({etiqueta:''}));refreshSig();b.previousElementSibling.querySelector('[name=rl]').focus();break;
   case 'rama-del':b.closest('.rama').remove();break;
   case 'dic-start':if(listening){stopDictado();flushDictado(false)}else startDictado();break;
@@ -1454,7 +1471,7 @@ document.addEventListener('change',e=>{const t=e.target;
   if(t.id==='pfE'||t.id==='pfP'){S.pf[t.id==='pfE'?'e':'p']=t.value;portfolio();return}
   if(t.dataset.a==='cat'){const n=D(S.selMap);if(!n)return;const c=t.value;setTimeout(()=>put('diagramas',{...n,categoria:c,ordenMapa:c?Math.max(0,...procOrd(c).filter(x=>x.id!==n.id).map(x=>num(x.ordenMapa)))+1:0}),0);return}
   if(t.name==='forma'&&t.closest('#aedBody')){const tr=t.closest('tr'),cell=tr.querySelector('td.s');cell.innerHTML=sigCell(t.value==='Decisión'?{forma:'Decisión',ramas:[{etiqueta:'Sí'},{etiqueta:'No'}]}:{forma:t.value,sig:[]});refreshSig();return}
-  if((t.name==='sig'||t.name==='rn')&&t.closest('#aedBody')){t.dataset.v=t.value;delete t.dataset.pend}});
+  if((t.name==='sig'||t.name==='rn')&&t.closest('#aedBody')){if(t.value==='__new'){nuevaDesde(t);return}t.dataset.v=t.value;delete t.dataset.pend}});
 document.addEventListener('submit',async e=>{const f=e.target;e.preventDefault();
   if(f.id==='dlgForm'&&dlgOk){const btn=f.querySelector('.btn.pri');if(btn)btn.disabled=true;let r;try{r=await dlgOk(new FormData(f))}finally{if(btn)btn.disabled=false}if(r!==false){dlgCancel=null;closeDlg(false)}}});
 $('#dlg').addEventListener('cancel',e=>{if(!dlgCancel&&$('#dlgForm').querySelector('[name=n]')&&!yo()){e.preventDefault();return}stopDictado();if(dlgCancel)dlgCancel();dlgOk=dlgCancel=null});
