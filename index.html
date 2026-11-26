@@ -314,6 +314,7 @@ body{font-size:14px;letter-spacing:-.003em}
 .chev .cv{font-size:13px}
 #toast{border-radius:6px}
 dialog{border-radius:10px}
+#aedBody tr.mk .hdl,#aedBody tr.mk .ud{visibility:hidden}#aedBody tr.mk .rnum{font-size:11px;color:var(--mut);font-weight:600}#aedBody tr.mk td{background:#f8fafc}
 .newact{display:flex;gap:4px;flex-wrap:wrap;margin:4px 0;padding:6px;background:var(--pri2);border-radius:6px}.newact input{flex:1 1 120px;min-height:32px;font-size:13px}
 #aedBody tr.nuevo td{background:#fff7d6;transition:background .6s}
 
@@ -704,15 +705,25 @@ function actRow(a,i){const id=a.id||uid();return `<tr data-id="${esc(id)}"><td c
   <td><textarea name="descripcion" rows="1" placeholder="Breve descripción" aria-label="Descripción">${esc(a.descripcion||'')}</textarea></td>
   <td class="s">${sigCell(a)}</td><td class="d"><button type="button" class="x" data-a="row-del" aria-label="Quitar fila">×</button></td></tr>`}
 /* Llena las listas "Siguiente paso" con las actividades actuales de la tabla */
-function refreshSig(){const tb=$('#aedBody');if(!tb)return;
-  [...tb.rows].forEach((tr,i)=>{const n=tr.querySelector('.rnum');if(n)n.textContent=i+1});
-  const rows=[...tb.rows].map((tr,i)=>({id:tr.dataset.id,o:i+1,i,n:tr.querySelector('[name=nombre]').value.trim()}));
-  const byO={};rows.forEach(r=>{if(!(r.o in byO))byO[r.o]=r.id});
+function ordenarMarcas(tb){/* Inicio siempre primero y Fin siempre último; antes de moverlos se fija a dónde iba cada uno para no cambiar el flujo */
+  const fm=tr=>tr.querySelector('[name=forma]').value,sig0=tr=>tr.querySelector('select[name=sig]');
+  const fijar=(tr,id)=>{const s=tr&&sig0(tr);if(s&&!(s.dataset.v||'')&&!s.dataset.pend&&id){s.dataset.v=id}};
+  const mover=(tr,arriba)=>{const prev=tr.previousElementSibling,next=tr.nextElementSibling;
+    if(prev&&fm(prev)!=='Decisión'&&fm(prev)!=='Fin')fijar(prev,tr.dataset.id);
+    if(fm(tr)==='Inicio'&&next)fijar(tr,next.dataset.id);
+    if(arriba)tb.insertBefore(tr,tb.firstElementChild);else tb.appendChild(tr)};
+  let rows=[...tb.rows];const ini=rows.filter(r=>fm(r)==='Inicio'),fin=rows.filter(r=>fm(r)==='Fin');
+  ini.slice().reverse().forEach((tr,k)=>{const r=[...tb.rows];if(r.indexOf(tr)!==ini.length-1-k)mover(tr,true)});
+  fin.forEach(tr=>{const r=[...tb.rows],pos=r.indexOf(tr),after=r.slice(pos+1);if(after.some(x=>fm(x)!=='Fin'))mover(tr,false)})}
+function refreshSig(){const tb=$('#aedBody');if(!tb)return;ordenarMarcas(tb);
+  let k=0;const num={};[...tb.rows].forEach(tr=>{const f=tr.querySelector('[name=forma]').value,mk=f==='Inicio'||f==='Fin';tr.classList.toggle('mk',mk);if(!mk)num[tr.dataset.id]=++k;const n=tr.querySelector('.rnum');if(n)n.textContent=mk?f:num[tr.dataset.id]});
+  const rows=[...tb.rows].map((tr,i)=>({id:tr.dataset.id,o:num[tr.dataset.id]||null,mk:tr.querySelector('[name=forma]').value,i,n:tr.querySelector('[name=nombre]').value.trim()}));
+  const byO={};rows.forEach(r=>{if(r.o&&!(r.o in byO))byO[r.o]=r.id});
   tb.querySelectorAll('select[name=sig],select[name=rn]').forEach(s=>{
     const own=s.closest('tr').dataset.id,dec=s.name==='rn';
     if(s.dataset.pend){const t=byO[num(s.dataset.pend)];if(t&&t!==own){s.dataset.v=t;delete s.dataset.pend}}
     const cur=s.dataset.v||'';
-    s.innerHTML=(dec?'<option value="">— elegir actividad —</option>':'<option value="">La siguiente en la lista</option>')+rows.filter(r=>r.id!==own).map(r=>`<option value="${esc(r.id)}"${r.id===cur?' selected':''}>→ ${r.o}. ${esc(r.n||'(sin nombre)')}</option>`).join('')+'<option value="__new">＋ Crear nueva actividad…</option>'})}
+    s.innerHTML=(dec?'<option value="">— elegir actividad —</option>':'<option value="">La siguiente en la lista</option>')+rows.filter(r=>r.id!==own).map(r=>`<option value="${esc(r.id)}"${r.id===cur?' selected':''}>→ ${r.o?r.o+'. ':''}${esc(r.n||'(sin nombre)')}${r.o?'':' ('+r.mk.toLowerCase()+')'}</option>`).join('')+'<option value="__new">＋ Crear nueva actividad…</option>'})}
 function nuevaDesde(s){/* crea una fila nueva desde una decisión o un "siguiente paso" y la deja conectada */
   s.value=s.dataset.v||'';const cell=s.closest('.rama,.sg')||s.parentNode;const old=cell.parentNode.querySelector('.newact');if(old)old.remove();
   const tr=s.closest('tr'),resp=tr.querySelector('[name=responsable]').value;
@@ -727,7 +738,7 @@ function crearDesde(box){const n=box.querySelector('.na-n').value.trim();if(!n){
   toast(`“${n}” se creó como actividad ${[...tb.rows].indexOf(nr)+1} y quedó conectada. Complétala o muévela con ⠿.`)}
 function actsDlg(dictar){
   const d=D(S.cur);if(!d)return;const ord=orderActs(d),ids=ord.map(a=>a.id);
-  if(!canWrite){openDlg(`<h3>Actividades · ${esc(d.nombre)}</h3><div class="aed"><table><thead><tr><th>#</th><th>Actividad</th><th>Responsable</th><th>Descripción</th></tr></thead><tbody>${ord.map((a,i)=>`<tr><td>${i+1}</td><td>${esc(a.nombre)}</td><td>${esc(a.responsable||'')}</td><td>${esc(a.descripcion||'')}</td></tr>`).join('')}</tbody></table></div><div class="row end" style="margin-top:12px"><button type="button" class="btn" data-a="dlg-close">Cerrar</button></div>`,()=>{},null,true);return}
+  if(!canWrite){openDlg(`<h3>Actividades · ${esc(d.nombre)}</h3><div class="aed"><table><thead><tr><th>#</th><th>Actividad</th><th>Responsable</th><th>Descripción</th></tr></thead><tbody>${(()=>{let k=0;const L=[...ord.filter(a=>a.forma==='Inicio'),...ord.filter(a=>!isMark(a)),...ord.filter(a=>a.forma==='Fin')];return L.map(a=>`<tr><td>${isMark(a)?`<small class="mut">${a.forma}</small>`:++k}</td><td>${esc(a.nombre)}</td><td>${esc(a.responsable||'')}</td><td>${esc(a.descripcion||'')}</td></tr>`).join('')})()}</tbody></table></div><div class="row end" style="margin-top:12px"><button type="button" class="btn" data-a="dlg-close">Cerrar</button></div>`,()=>{},null,true);return}
   openDlg(`<h3>Actividades · ${esc(d.raiz?'Flujo general':d.nombre)}</h3>
   <p class="hint">Una fila por actividad, en orden. Arrastra <b>⠿</b> o usa ▲▼ para cambiar el orden. El responsable define el carril. En <b>Siguiente paso</b> elige a qué actividad pasa el flujo (normalmente “La siguiente en la lista”); si pasa a dos o más a la vez, usa <b>+ otro destino</b>. En una <b>Decisión</b> elige a dónde lleva cada opción (p. ej. Sí → Cuantificar, No → Solicitar información). ¿La actividad todavía no existe? Elige <b>＋ Crear nueva actividad…</b> en la lista y se crea ya conectada.</p>
   <div class="dic"><div class="row"><strong style="margin-right:auto">Dictado por voz</strong><button type="button" class="btn sm" id="dicBtn" data-a="dic-start">Dictar con micrófono</button><button type="button" class="btn sm" data-a="dic-apply">Pasar texto a la tabla</button></div>
