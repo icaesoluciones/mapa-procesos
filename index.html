@@ -71,8 +71,8 @@ label textarea{resize:vertical}
 .band h3{display:flex;align-items:center;justify-content:space-between;margin:0 0 10px;font-size:13px;text-transform:none;color:var(--ink);font-weight:700}
 .band h3 small{font-weight:400;color:var(--mut);margin-left:6px}
 .band.est{background:#f3f6fb;border-color:#dfe6f1}.band.ope{background:var(--pri2);border-color:#c5e2d7}.band.apo{background:#f7f7f5}
-.boxes{display:flex;flex-wrap:wrap;gap:10px}
-.pbox{flex:1 1 180px;max-width:300px;min-height:92px;text-align:left;border:1px solid var(--line2);background:#fff;border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;box-shadow:var(--sh);transition:transform .12s}
+.boxes{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.pbox{flex:0 0 var(--bw,210px);max-width:300px;min-height:92px;text-align:left;border:1px solid var(--line2);background:#fff;border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;box-shadow:var(--sh);transition:transform .12s}
 .pbox:hover{transform:translateY(-1px);border-color:var(--ink)}.pbox.sel{border-color:var(--pri);box-shadow:0 0 0 2px var(--pri)}
 .pbox b{font-size:15px;line-height:1.25}.pbox small{color:var(--mut);font-size:12px}
 .meta2{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:6px;font-size:12px;color:var(--mut)}
@@ -473,7 +473,7 @@ let ck='';
 function content(){
   const d=D(S.cur),key=d.id+'|'+S.step,el=$('#content');
   const rebuild=key!==ck||S.step!=='flujo';ck=key;
-  if(S.step==='mapa'){el.innerHTML=isoHTML();return}
+  if(S.step==='mapa'){el.innerHTML=isoHTML();fitBands();return}
   if(S.step==='area'){el.innerHTML=areaHTML(d);return}
   if(S.step==='flujo'){if(rebuild||!$('#viewport')){el.innerHTML=flujoShell(d);lastKey=''}flujoBar(d);drawStage();return}
   wzInit(d);
@@ -502,6 +502,10 @@ function areaHTML(d){const fl=flowsOf(d),c=CATS.find(x=>x[0]===d.categoria);
   ${(d.actividades||[]).length?`<div class="card pad" style="margin-top:14px"><p class="mut" style="margin:0">Este proceso tenía actividades registradas en su propio flujo (versión anterior). ${canWrite?`<button class="lnk" data-a="area-migrar">Convertirlas en un flujo de este proceso</button>`:''}</p></div>`:''}
   <div class="foot noprint"><button class="btn ghost" data-a="node" data-id="raiz" data-s="mapa">‹ Mapa de procesos</button><span></span></div>`}
 function objBox(d,lbl,ph){if(!d.objetivo&&!canWrite)return'';return `<div class="objb${d.objetivo?'':' vac noprint'}"><b>${lbl}</b><span class="tx">${d.objetivo?esc(d.objetivo):esc(ph)}</span>${canWrite?`<button class="lnk noprint" data-a="obj-edit" data-id="${esc(d.id)}">${d.objetivo?'Editar':'+ Escribir'}</button>`:''}</div>`}
+/* reparte las cajas de cada franja en filas parejas y centradas */
+function fitBands(){document.querySelectorAll('.band:not(.ope) .boxes').forEach(bx=>{const it=[...bx.querySelectorAll('.pbox')],n=it.length;if(!n)return;const W=bx.clientWidth,g=10,min=Math.min(180,W);
+  let cols=Math.min(n,Math.max(1,Math.floor((W+g)/(min+g))));const rows=Math.ceil(n/cols);cols=Math.ceil(n/rows);
+  const w=Math.min(300,Math.floor((W-(cols-1)*g)/cols));bx.style.setProperty('--bw',w+'px')})}
 function isoHTML(){
   const cf=cfg(),unc=mapKids().filter(d=>!CATS.some(c=>c[0]===d.categoria)),root=D('raiz');
   const band=c=>{const l=procOrd(c[0]);return `<section class="band ${c[3]}"><h3><span>${c[2]}<small>${c[4]}</small></span>${canWrite?`<button class="lnk noprint" data-a="proc-new" data-cat="${c[0]}">+ Agregar</button>`:''}</h3><div class="boxes">${l.length?l.map(d=>{const ops=openIn(new Set(subtree(d.id))),nf=flowsOf(d).length;return `<button class="pbox${S.selMap===d.id?' sel':''}" data-a="mapsel" data-id="${esc(d.id)}"${d.objetivo?` title="${esc(d.objetivo)}"`:''}><b>${esc(d.nombre)}</b>${d.dueno?`<small>${esc(d.dueno)}</small>`:'<small>&nbsp;</small>'}${d.objetivo?`<span class="obj">${esc(d.objetivo)}</span>`:''}<span class="meta2"><span>${nf?nf+(nf===1?' flujo':' flujos'):'Sin flujos'}</span>${ops?`<span class="op">${ops} abiertas</span>`:''}</span></button>`}).join(''):`<span class="emptyb">Aún no hay procesos aquí.</span>`}</div></section>`};
@@ -563,6 +567,7 @@ function drawer(){
     <div class="dsec"><h4>Oportunidades en esta actividad</h4>${opsA.length?opsA.map(o=>`<p class="mut" style="margin:2px 0">• ${esc(o.titulo)} <span class="chip ${prioCls(prio(o))}">${prio(o)}</span></p>`).join(''):'<p class="mut">Ninguna registrada.</p>'}
     ${canWrite&&!d.raiz?`<button class="btn sm" data-a="op-new" data-act="${esc(a.id)}" style="margin-top:6px">+ Registrar oportunidad</button>`:''}</div>`}
   dr.hidden=!h;wrap.classList.toggle('withd',!!h);if(h)dr.innerHTML=h;
+  if(S.step==='mapa')fitBands();
   if(S.step==='flujo'){const L=$('#viewport');if(L&&L.dataset.w!==String(!!h)){L.dataset.w=String(!!h);lastKey='';drawStage()}}}
 
 /* ================= editor de actividades (formulario + dictado) ================= */
@@ -1290,7 +1295,7 @@ document.addEventListener('mouseover',e=>{const b=e.target.closest('.hs');if(b&&
 document.addEventListener('mousemove',e=>{if(!tip.hidden){if(!e.target.closest('.hs')||(mv&&mv.on))tip.hidden=true;else moveTip(e)}});
 document.addEventListener('scroll',()=>{tip.hidden=true},true);
 
-let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{if(S.view==='app'&&S.step==='flujo'){lastKey='';drawStage()}},150)}).observe(document.body);
+let rt;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{if(S.view==='app'&&S.step==='mapa')fitBands();if(S.view==='app'&&S.step==='flujo'){lastKey='';drawStage()}},150)}).observe(document.body);
 
 /* ================= arranque ================= */
 (async()=>{
